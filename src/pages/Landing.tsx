@@ -3,20 +3,6 @@ import { RingProgress } from "../components/ui/RingProgress";
 import { Button } from "../components/ui/Button";
 import { DynamicIsland } from "../components/ui/DynamicIsland";
 
-// TODO: replace with your real Lemon Squeezy checkout URL once the product is live.
-// Dashboard → Products → (your product) → Copy checkout URL.
-const CHECKOUT_URL = "https://YOUR-STORE.lemonsqueezy.com/checkout/buy/YOUR-VARIANT-ID";
-
-function CheckoutButton({ className = "" }: { className?: string }) {
-  return (
-    <a href={CHECKOUT_URL}>
-      <Button variant="primary" className={`px-7 py-3.5 text-sm ${className}`}>
-        Get Instant Access — £29
-      </Button>
-    </a>
-  );
-}
-
 export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) {
   return (
     <div className="relative text-slate-100 min-h-screen overflow-x-hidden">
@@ -40,14 +26,21 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             can't answer.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-2">
-            <CheckoutButton />
-            <button
+            <Button
+              variant="primary"
               onClick={() => onNavigate("/app")}
+              className="px-7 py-3.5 text-sm"
+            >
+              Start Free 72-Hour Trial
+            </Button>
+            <a
+              href="#pricing"
               className="text-sm text-slate-400 hover:text-white transition-colors underline underline-offset-4 decoration-white/20"
             >
-              Try the live tool first →
-            </button>
+              See pricing ↓
+            </a>
           </div>
+          <p className="text-[11px] text-slate-600">No card required to start.</p>
         </header>
 
         {/* Before / After — left is an illustrative mockup of spreadsheet chaos,
@@ -166,23 +159,52 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
         </section>
 
         {/* Pricing */}
-        <section className="max-w-sm mx-auto">
-          <GlassCard strong className="relative overflow-hidden text-center p-8 space-y-5">
-            <div className="mesh-glow opacity-50" />
-            <p className="relative text-xs text-slate-400 uppercase tracking-wider">
-              One-time payment
+        <section id="pricing" className="max-w-sm mx-auto space-y-4 scroll-mt-8">
+          <div className="text-center space-y-1.5">
+            <p className="text-xs font-semibold text-violet-300 uppercase tracking-wider">
+              ✨ Free for 72 hours
             </p>
-            <p className="relative text-5xl font-extrabold tracking-tight tabular-nums text-white">
-              £29 <span className="text-base font-normal text-slate-500">/ $37</span>
-            </p>
-            <ul className="relative text-xs text-slate-400 space-y-2 text-left max-w-[220px] mx-auto">
-              <li>✓ Lifetime access, no subscription</li>
-              <li>✓ Core numbers are local-first — nothing leaves your browser until you ask the AI</li>
-              <li>✓ AI copilot: ask, scan receipts, daily briefing</li>
-              <li>✓ Source included</li>
-            </ul>
-            <CheckoutButton className="relative w-full" />
-          </GlassCard>
+            <p className="text-xs text-slate-500">Full access to everything. Cancel anytime, no card required to start.</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <GlassCard className="p-4 space-y-1 text-center">
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                Monthly
+              </p>
+              <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
+                £2.99
+              </p>
+              <p className="text-[10px] text-slate-500">/ month</p>
+            </GlassCard>
+
+            <GlassCard strong className="relative p-4 space-y-1 text-center border border-sky-400/40">
+              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 whitespace-nowrap">
+                Most Popular · Save 30%
+              </span>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1.5">
+                Annual
+              </p>
+              <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
+                £25.00
+              </p>
+              <p className="text-[10px] text-slate-500">/ year</p>
+            </GlassCard>
+          </div>
+
+          <ul className="text-xs text-slate-400 space-y-2 text-left max-w-[220px] mx-auto">
+            <li>✓ Unlimited Projection Lab scenarios</li>
+            <li>✓ Money Copilot: ask, scan receipts, daily briefing</li>
+            <li>✓ Core numbers are local-first — nothing leaves your browser until you ask the AI</li>
+          </ul>
+
+          <Button
+            variant="primary"
+            onClick={() => onNavigate("/app")}
+            className="w-full py-3.5 text-sm"
+          >
+            Start Free 72-Hour Trial
+          </Button>
         </section>
 
         <footer className="text-center text-[11px] text-slate-600 pt-8 border-t border-white/[0.06]">
