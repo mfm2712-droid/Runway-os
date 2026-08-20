@@ -2,11 +2,7 @@ import { useState } from "react";
 import { Button } from "./ui/Button";
 import { isValidLicenseFormat } from "../lib/trial";
 import { track } from "../lib/analytics";
-
-// TODO: replace with real Lemon Squeezy checkout URLs once the products are live.
-// Dashboard → Products → (variant) → Copy checkout URL.
-const MONTHLY_CHECKOUT_URL = "https://YOUR-STORE.lemonsqueezy.com/checkout/buy/MONTHLY-VARIANT-ID";
-const ANNUAL_CHECKOUT_URL = "https://YOUR-STORE.lemonsqueezy.com/checkout/buy/ANNUAL-VARIANT-ID";
+import { ANNUAL_CHECKOUT_URL, MONTHLY_CHECKOUT_URL } from "../lib/checkout";
 
 type KeyState = "idle" | "invalid" | "valid";
 

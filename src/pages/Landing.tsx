@@ -2,6 +2,8 @@ import { GlassCard } from "../components/ui/GlassCard";
 import { RingProgress } from "../components/ui/RingProgress";
 import { Button } from "../components/ui/Button";
 import { DynamicIsland } from "../components/ui/DynamicIsland";
+import { ANNUAL_CHECKOUT_URL, MONTHLY_CHECKOUT_URL } from "../lib/checkout";
+import { track } from "../lib/analytics";
 
 export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) {
   return (
@@ -168,28 +170,49 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <GlassCard className="p-4 space-y-1 text-center">
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                Monthly
-              </p>
-              <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
-                £2.99
-              </p>
-              <p className="text-[10px] text-slate-500">/ month</p>
-            </GlassCard>
+            <a
+              href={MONTHLY_CHECKOUT_URL}
+              onClick={() => track({ name: "checkout_clicked", plan: "monthly" })}
+              className="block"
+            >
+              <GlassCard
+                interactive
+                className="p-4 space-y-1 text-center h-full hover:border-sky-400/40 transition-colors"
+              >
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Monthly
+                </p>
+                <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
+                  £2.99
+                </p>
+                <p className="text-[10px] text-slate-500 mb-2">/ month</p>
+                <p className="text-[11px] font-semibold text-sky-300">Choose Monthly →</p>
+              </GlassCard>
+            </a>
 
-            <GlassCard strong className="relative p-4 space-y-1 text-center border border-sky-400/40">
-              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 whitespace-nowrap">
-                Most Popular · Save 30%
-              </span>
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1.5">
-                Annual
-              </p>
-              <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
-                £25.00
-              </p>
-              <p className="text-[10px] text-slate-500">/ year</p>
-            </GlassCard>
+            <a
+              href={ANNUAL_CHECKOUT_URL}
+              onClick={() => track({ name: "checkout_clicked", plan: "annual" })}
+              className="block"
+            >
+              <GlassCard
+                strong
+                interactive
+                className="relative p-4 space-y-1 text-center h-full border border-sky-400/40"
+              >
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 whitespace-nowrap">
+                  Most Popular · Save 30%
+                </span>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1.5">
+                  Annual
+                </p>
+                <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
+                  £25.00
+                </p>
+                <p className="text-[10px] text-slate-500 mb-2">/ year</p>
+                <p className="text-[11px] font-semibold text-emerald-300">Choose Annual →</p>
+              </GlassCard>
+            </a>
           </div>
 
           <ul className="text-xs text-slate-400 space-y-2 text-left max-w-[220px] mx-auto">
