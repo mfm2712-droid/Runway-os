@@ -10,6 +10,8 @@
 // (e.g. to open the Billing Portal). Restoring on a second device works via
 // restore-by-email (see restore-by-email.ts), not this endpoint.
 
+/// <reference types="node" />
+
 import Stripe from "stripe";
 
 export const config = { runtime: "edge" };
