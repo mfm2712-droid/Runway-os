@@ -3,6 +3,8 @@
 // Falls back client-side (src/lib/ai/client.ts) to a local heuristic parse
 // if this endpoint is unavailable or errors.
 
+/// <reference types="node" />
+
 export const config = { runtime: "edge" };
 
 const EXTRACT_PROMPT = `Extract the following fields from this receipt image and respond with ONLY a JSON object, no prose, no markdown fences:
