@@ -8,6 +8,8 @@
 // than distinguishing "no such customer" vs "customer exists but expired" —
 // avoids leaking which emails have ever been customers.
 
+/// <reference types="node" />
+
 import Stripe from "stripe";
 
 export const config = { runtime: "edge" };
