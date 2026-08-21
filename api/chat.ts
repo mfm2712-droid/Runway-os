@@ -8,6 +8,8 @@
 // Local `vite dev` does NOT run this file — Vite only serves the frontend.
 // To test it locally, either `vercel dev` (runs both) or deploy to Vercel.
 
+/// <reference types="node" />
+
 export const config = { runtime: "edge" };
 
 const ADVISOR_SYSTEM_PROMPT = `You are Money Copilot, the built-in financial advisor for Runway OS, a minimalist personal finance tool.
