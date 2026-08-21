@@ -44,10 +44,31 @@ export function SettingsModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [restoreStatus, setRestoreStatus] = useState<"idle" | "error" | "success">("idle");
   const [restoreMessage, setRestoreMessage] = useState("");
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
   if (!open) return null;
 
   const handleExport = () => downloadBackup(buildBackup(state, meta));
+
+  const openBillingPortal = async () => {
+    if (!meta.licenseKey) return;
+    setPortalError(null);
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/create-portal-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: meta.licenseKey }),
+      });
+      if (!res.ok) throw new Error("request failed");
+      const data = (await res.json()) as { url: string };
+      window.location.href = data.url;
+    } catch {
+      setPortalError("Couldn't open billing portal — try again in a moment.");
+      setPortalLoading(false);
+    }
+  };
 
   const handleFile = async (file: File) => {
     try {
@@ -98,6 +119,19 @@ export function SettingsModal({
           )}
           {trialStatus.kind === "expired" && (
             <p className="text-sm text-rose-300 font-semibold">🔒 Trial Expired</p>
+          )}
+          {trialStatus.kind === "pro" && meta.licenseKey?.startsWith("cus_") && (
+            <div className="pt-1">
+              <Button
+                variant="glass"
+                onClick={openBillingPortal}
+                disabled={portalLoading}
+                className="w-full py-2.5 text-xs"
+              >
+                {portalLoading ? "Opening…" : "Manage Billing"}
+              </Button>
+              {portalError && <p className="text-[10px] text-rose-400 mt-1.5">{portalError}</p>}
+            </div>
           )}
         </div>
 

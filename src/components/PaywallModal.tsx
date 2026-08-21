@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Button } from "./ui/Button";
 import { isValidLicenseFormat } from "../lib/trial";
 import { track } from "../lib/analytics";
-import { ANNUAL_CHECKOUT_URL, MONTHLY_CHECKOUT_URL } from "../lib/checkout";
+import { startCheckout, type Plan } from "../lib/checkout";
 
 type KeyState = "idle" | "invalid" | "valid";
+type RestoreState = "idle" | "checking" | "not-found" | "found" | "error";
 
 export function PaywallModal({
   open,
@@ -17,6 +18,10 @@ export function PaywallModal({
 }) {
   const [key, setKey] = useState("");
   const [keyState, setKeyState] = useState<KeyState>("idle");
+  const [email, setEmail] = useState("");
+  const [restoreState, setRestoreState] = useState<RestoreState>("idle");
+  const [checkoutLoading, setCheckoutLoading] = useState<Plan | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   if (!open) return null;
 
@@ -26,6 +31,44 @@ export function PaywallModal({
       onActivate(key.trim().toUpperCase());
     } else {
       setKeyState("invalid");
+    }
+  };
+
+  const choosePlan = async (plan: Plan) => {
+    setCheckoutError(null);
+    setCheckoutLoading(plan);
+    track({ name: "checkout_clicked", plan });
+    try {
+      await startCheckout(plan);
+      // startCheckout redirects the browser on success — if we're still
+      // here, the promise resolved without a redirect happening, which
+      // shouldn't occur, but leave the loading state cleared just in case.
+    } catch {
+      setCheckoutError("Couldn't start checkout — Stripe may not be configured yet.");
+      setCheckoutLoading(null);
+    }
+  };
+
+  const restoreByEmail = async () => {
+    const trimmed = email.trim();
+    if (!trimmed) return;
+    setRestoreState("checking");
+    try {
+      const res = await fetch("/api/restore-by-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      if (!res.ok) throw new Error("request failed");
+      const data = (await res.json()) as { found: boolean; customerId?: string };
+      if (data.found && data.customerId) {
+        onActivate(data.customerId);
+        setRestoreState("found");
+      } else {
+        setRestoreState("not-found");
+      }
+    } catch {
+      setRestoreState("error");
     }
   };
 
@@ -60,10 +103,10 @@ export function PaywallModal({
         </p>
 
         <div className="relative grid grid-cols-2 gap-3">
-          <a
-            href={MONTHLY_CHECKOUT_URL}
-            className="block"
-            onClick={() => track({ name: "checkout_clicked", plan: "monthly" })}
+          <button
+            onClick={() => choosePlan("monthly")}
+            disabled={checkoutLoading !== null}
+            className="text-left disabled:opacity-50"
           >
             <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 h-full flex flex-col hover:border-sky-400/40 transition-colors">
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -74,15 +117,15 @@ export function PaywallModal({
               </p>
               <p className="text-[10px] text-slate-500 mb-3">/ month</p>
               <span className="mt-auto text-[11px] font-semibold text-sky-300">
-                Choose Monthly →
+                {checkoutLoading === "monthly" ? "Redirecting…" : "Choose Monthly →"}
               </span>
             </div>
-          </a>
+          </button>
 
-          <a
-            href={ANNUAL_CHECKOUT_URL}
-            className="block"
-            onClick={() => track({ name: "checkout_clicked", plan: "annual" })}
+          <button
+            onClick={() => choosePlan("annual")}
+            disabled={checkoutLoading !== null}
+            className="text-left disabled:opacity-50"
           >
             <div className="relative rounded-2xl bg-gradient-to-b from-sky-400/[0.08] to-emerald-400/[0.08] border border-sky-400/40 p-4 h-full flex flex-col">
               <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 whitespace-nowrap">
@@ -96,11 +139,15 @@ export function PaywallModal({
               </p>
               <p className="text-[10px] text-slate-500 mb-3">/ year</p>
               <span className="mt-auto text-[11px] font-semibold text-emerald-300">
-                Choose Annual →
+                {checkoutLoading === "annual" ? "Redirecting…" : "Choose Annual →"}
               </span>
             </div>
-          </a>
+          </button>
         </div>
+
+        {checkoutError && (
+          <p className="relative text-[10px] text-rose-400 -mt-2">{checkoutError}</p>
+        )}
 
         <ul className="relative text-[11px] text-slate-400 space-y-1.5 pl-1">
           <li>✓ Unlimited Projection Lab scenarios</li>
@@ -110,8 +157,45 @@ export function PaywallModal({
 
         <div className="relative pt-3 border-t border-white/[0.08] space-y-2.5">
           <label className="text-xs text-slate-500 block">
-            Already purchased? Enter / restore your license key
+            Already subscribed? Restore access with your email
           </label>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setRestoreState("idle");
+              }}
+              placeholder="you@example.com"
+              className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+            />
+            <Button
+              variant="glass"
+              onClick={restoreByEmail}
+              disabled={restoreState === "checking"}
+              className="px-4 py-2.5 text-xs shrink-0"
+            >
+              {restoreState === "checking" ? "Checking…" : "Restore"}
+            </Button>
+          </div>
+          {restoreState === "not-found" && (
+            <p className="text-[10px] text-rose-400">
+              No active subscription found for that email.
+            </p>
+          )}
+          {restoreState === "found" && (
+            <p className="text-[10px] text-emerald-400">✓ Subscription restored — welcome back.</p>
+          )}
+          {restoreState === "error" && (
+            <p className="text-[10px] text-rose-400">
+              Couldn't check that right now — try again in a moment.
+            </p>
+          )}
+        </div>
+
+        <div className="relative space-y-2.5">
+          <label className="text-xs text-slate-500 block">Or enter a license key</label>
           <div className="flex gap-2">
             <input
               value={key}
@@ -141,9 +225,10 @@ export function PaywallModal({
             <p className="text-[10px] text-emerald-400">✓ License activated — welcome back.</p>
           )}
           <p className="text-[9px] text-slate-600 leading-relaxed">
-            Runway OS is client-only: license checks run locally in your browser,
-            not against a server. This keeps your data private but isn't
-            tamper-proof — treat it as an honor system, not DRM.
+            Runway OS keeps your financial data local to your browser. Checkout,
+            subscription status, and restore-by-email are verified against
+            Stripe server-side — the manual key field above stays as a
+            fallback for hand-issued access.
           </p>
         </div>
       </div>

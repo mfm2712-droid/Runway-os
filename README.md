@@ -71,6 +71,54 @@ you real Anthropic API spend. This is fine for testing/demoing, but
 before running ads, and the pricing-model implications of ongoing AI costs
 against a one-time payment.
 
+## Payments (Stripe)
+
+The 72-hour trial and Pro paywall (`src/components/PaywallModal.tsx`) use
+real Stripe Checkout for Monthly (£2.99) and Annual (£25) subscriptions.
+Like the AI backend, this is a set of Vercel Edge Functions
+(`api/create-checkout-session.ts`, `api/verify-checkout-session.ts`,
+`api/create-portal-session.ts`, `api/restore-by-email.ts`,
+`api/stripe-webhook.ts`) — the app has no server-side database, so all of
+these call Stripe directly rather than a datastore of ours.
+
+### Setup
+
+1. Create a [Stripe](https://dashboard.stripe.com/register) account.
+2. **Products → New Product** → subscription with two prices: Monthly
+   (£2.99/month, recurring) and Annual (£25.00/year, recurring). Copy each
+   price's ID (`price_...`).
+3. **Developers → API keys** → copy the Secret key (`sk_test_...` while
+   testing, `sk_live_...` in production — never the Publishable key for
+   these server-side calls, and never commit either).
+4. Set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_ANNUAL` in
+   your Vercel project's Environment Variables — see
+   [`.env.example`](.env.example).
+5. **Developers → Webhooks → Add endpoint** →
+   `https://<your-domain>/api/stripe-webhook`, subscribed to at least
+   `checkout.session.completed`. Copy the signing secret into
+   `STRIPE_WEBHOOK_SECRET`.
+
+### How activation works without a database
+
+- Checkout success redirects to `/app?checkout=success&session_id=...`.
+  `Dashboard.tsx` calls `verify-checkout-session` to confirm the session
+  really was paid (never trusts the query param alone), then stores the
+  Stripe customer id locally as the "license key" — `computeTrialStatus`
+  only checks that a license key is present, not its shape.
+- **Restoring on a new device** doesn't need our own accounts system: enter
+  the email used at checkout in the paywall, and `restore-by-email.ts` asks
+  Stripe directly whether that email has an active subscription.
+- **Managing/cancelling** goes through Stripe's own hosted Billing Portal
+  (`create-portal-session.ts`, surfaced as "Manage Billing" in Settings once
+  Pro is active) — invoices, plan switches, and cancellation are all handled
+  by Stripe, not built here.
+- `stripe-webhook.ts` verifies and logs events but doesn't persist
+  anything — there's nowhere to persist it. It's wired up so Stripe has a
+  valid endpoint and so the signature-verification path is real, but
+  reacting to renewals/cancellations server-side (rather than only at
+  restore-by-email time) would need an actual datastore. That's a real gap
+  for a production launch, not a "todo you can ignore."
+
 ## Local development
 
 ```bash

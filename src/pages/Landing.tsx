@@ -1,11 +1,27 @@
+import { useState } from "react";
 import { GlassCard } from "../components/ui/GlassCard";
 import { RingProgress } from "../components/ui/RingProgress";
 import { Button } from "../components/ui/Button";
 import { DynamicIsland } from "../components/ui/DynamicIsland";
-import { ANNUAL_CHECKOUT_URL, MONTHLY_CHECKOUT_URL } from "../lib/checkout";
+import { startCheckout, type Plan } from "../lib/checkout";
 import { track } from "../lib/analytics";
 
 export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const [checkoutLoading, setCheckoutLoading] = useState<Plan | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const choosePlan = async (plan: Plan) => {
+    setCheckoutError(null);
+    setCheckoutLoading(plan);
+    track({ name: "checkout_clicked", plan });
+    try {
+      await startCheckout(plan);
+    } catch {
+      setCheckoutError("Couldn't start checkout — Stripe may not be configured yet.");
+      setCheckoutLoading(null);
+    }
+  };
+
   return (
     <div className="relative text-slate-100 min-h-screen overflow-x-hidden">
       <div className="mesh-glow" />
@@ -170,10 +186,10 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <a
-              href={MONTHLY_CHECKOUT_URL}
-              onClick={() => track({ name: "checkout_clicked", plan: "monthly" })}
-              className="block"
+            <button
+              onClick={() => choosePlan("monthly")}
+              disabled={checkoutLoading !== null}
+              className="text-left disabled:opacity-50"
             >
               <GlassCard
                 interactive
@@ -186,14 +202,16 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                   £2.99
                 </p>
                 <p className="text-[10px] text-slate-500 mb-2">/ month</p>
-                <p className="text-[11px] font-semibold text-sky-300">Choose Monthly →</p>
+                <p className="text-[11px] font-semibold text-sky-300">
+                  {checkoutLoading === "monthly" ? "Redirecting…" : "Choose Monthly →"}
+                </p>
               </GlassCard>
-            </a>
+            </button>
 
-            <a
-              href={ANNUAL_CHECKOUT_URL}
-              onClick={() => track({ name: "checkout_clicked", plan: "annual" })}
-              className="block"
+            <button
+              onClick={() => choosePlan("annual")}
+              disabled={checkoutLoading !== null}
+              className="text-left disabled:opacity-50"
             >
               <GlassCard
                 strong
@@ -210,10 +228,16 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                   £25.00
                 </p>
                 <p className="text-[10px] text-slate-500 mb-2">/ year</p>
-                <p className="text-[11px] font-semibold text-emerald-300">Choose Annual →</p>
+                <p className="text-[11px] font-semibold text-emerald-300">
+                  {checkoutLoading === "annual" ? "Redirecting…" : "Choose Annual →"}
+                </p>
               </GlassCard>
-            </a>
+            </button>
           </div>
+
+          {checkoutError && (
+            <p className="text-[10px] text-rose-400 text-center">{checkoutError}</p>
+          )}
 
           <ul className="text-xs text-slate-400 space-y-2 text-left max-w-[220px] mx-auto">
             <li>✓ Unlimited Projection Lab scenarios</li>

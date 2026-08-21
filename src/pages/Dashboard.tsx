@@ -126,6 +126,34 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
     return () => window.clearInterval(id);
   }, []);
 
+  // Landing on /app?checkout=success&session_id=... after Stripe Checkout —
+  // verify server-side (a bare query param alone would be trivial to fake)
+  // before activating Pro locally.
+  const [checkoutBanner, setCheckoutBanner] = useState<"verifying" | "success" | "error" | null>(
+    null,
+  );
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (params.get("checkout") !== "success" || !sessionId) return;
+
+    window.history.replaceState({}, "", window.location.pathname);
+    setCheckoutBanner("verifying");
+
+    fetch(`/api/verify-checkout-session?session_id=${encodeURIComponent(sessionId)}`)
+      .then((res) => res.json())
+      .then((data: { valid: boolean; customerId: string | null }) => {
+        if (data.valid && data.customerId) {
+          setLicenseKey(data.customerId);
+          setCheckoutBanner("success");
+          window.setTimeout(() => setCheckoutBanner(null), 6000);
+        } else {
+          setCheckoutBanner("error");
+        }
+      })
+      .catch(() => setCheckoutBanner("error"));
+  }, []);
+
   const trialStatus = computeTrialStatus(trialStartedAt, licenseKey, devOverride);
 
   const patch = (p: Partial<FinanceState>) => setState((s) => ({ ...s, ...p }));
@@ -218,6 +246,22 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
           onOpenAdvisor={openAdvisor}
           onOpenSettings={() => setSettingsOpen(true)}
         />
+
+        {checkoutBanner === "verifying" && (
+          <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.1] text-slate-300">
+            Confirming your subscription…
+          </div>
+        )}
+        {checkoutBanner === "success" && (
+          <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+            ✓ Subscription active — full access unlocked.
+          </div>
+        )}
+        {checkoutBanner === "error" && (
+          <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300">
+            Couldn't confirm that payment — contact support if you were charged.
+          </div>
+        )}
 
         {trialStatus.kind === "trial" && (
           <button
