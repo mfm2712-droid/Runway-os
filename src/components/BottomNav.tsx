@@ -1,4 +1,6 @@
+import { motion } from "motion/react";
 import { ClockIcon, DialIcon, HomeIcon, PlusIcon, TagIcon } from "./ui/Icons";
+import { springTransition } from "../lib/motionPresets";
 
 export type DashboardTab = "overview" | "simulate" | "subscriptions" | "history";
 
@@ -70,7 +72,13 @@ function TabButton({
         style={active ? { filter: "drop-shadow(0 0 6px rgba(56,189,248,0.8))" } : undefined}
       />
       <span className="text-[9px] font-medium">{tab.label}</span>
-      {active && <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-sky-400" />}
+      {active && (
+        <motion.span
+          layoutId="bottomNavIndicator"
+          className="absolute -bottom-1 h-1 w-1 rounded-full bg-sky-400"
+          transition={springTransition}
+        />
+      )}
     </button>
   );
 }

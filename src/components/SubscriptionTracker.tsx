@@ -227,7 +227,7 @@ export function SubscriptionTracker({
         )}
 
         {subscriptions.length === 0 && !adding && (
-          <p className="text-xs text-slate-600 py-2">No subscriptions tracked yet.</p>
+          <p className="text-xs text-slate-400 py-2">No subscriptions tracked yet.</p>
         )}
 
         <ul className="space-y-2">
@@ -269,8 +269,10 @@ export function SubscriptionTracker({
                         onToggleFlag(s.id);
                       }}
                       title="Toggle unused"
+                      aria-label={s.flaggedUnused ? "Unflag as unused" : "Flag as unused"}
+                      aria-pressed={s.flaggedUnused}
                       className={`transition-colors ${
-                        s.flaggedUnused ? "text-rose-400" : "text-slate-600 hover:text-rose-400"
+                        s.flaggedUnused ? "text-rose-400" : "text-slate-400 hover:text-rose-400"
                       }`}
                     >
                       <FlagIcon width={15} height={15} />
@@ -281,7 +283,8 @@ export function SubscriptionTracker({
                         onRemove(s.id);
                       }}
                       title="Remove"
-                      className="text-slate-600 hover:text-white transition-colors"
+                      aria-label="Remove subscription"
+                      className="text-slate-400 hover:text-white transition-colors"
                     >
                       <TrashIcon width={15} height={15} />
                     </button>

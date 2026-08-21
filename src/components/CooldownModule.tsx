@@ -91,7 +91,7 @@ export function CooldownModule({
       )}
 
       {wishlist.length === 0 && !adding && (
-        <p className="text-xs text-slate-600 py-2">
+        <p className="text-xs text-slate-400 py-2">
           Nothing cooling off. Log an impulse buy here before you make it.
         </p>
       )}

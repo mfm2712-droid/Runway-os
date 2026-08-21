@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { FinanceState } from "../../types";
 import { streamAdvisorReply } from "../../lib/ai/client";
 import { uid } from "../../lib/id";
 import { ChatBubble, type DisplayMessage } from "./ChatBubble";
 import { PromptChips } from "./PromptChips";
+import { backdropVariants, panelVariants } from "../../lib/motionPresets";
 
 export function AdvisorDrawer({
   open,
@@ -18,12 +20,11 @@ export function AdvisorDrawer({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
-
-  if (!open) return null;
 
   const send = async (prompt: string) => {
     const text = prompt.trim();
@@ -60,14 +61,27 @@ export function AdvisorDrawer({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full md:max-w-md h-[85vh] md:h-[640px] glass-strong ai-border-glow rounded-t-[32px] md:rounded-[32px] flex flex-col overflow-hidden animate-[slideUp_0.25s_var(--ease-spring)]"
-      >
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={onClose}
+          variants={backdropVariants(!!reduceMotion)}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full md:max-w-md h-[85vh] md:h-[640px] glass-strong ai-border-glow rounded-t-[32px] md:rounded-[32px] flex flex-col overflow-hidden"
+            variants={panelVariants(!!reduceMotion)}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Money Copilot"
+          >
         <div className="mesh-glow opacity-50" />
 
         <div className="relative flex justify-center md:hidden pt-3">
@@ -127,7 +141,9 @@ export function AdvisorDrawer({
             </button>
           </form>
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { FinanceState } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
 import { Button } from "./ui/Button";
+import { backdropVariants, panelVariants } from "../lib/motionPresets";
 
 export function QuickTuneModal({
   open,
@@ -18,8 +20,7 @@ export function QuickTuneModal({
   const [buffer, setBuffer] = useState(String(state.safetyBuffer || 0));
   const [paydayEnabled, setPaydayEnabled] = useState(state.paydayDay != null);
   const [paydayDay, setPaydayDay] = useState(String(state.paydayDay ?? 28));
-
-  if (!open) return null;
+  const reduceMotion = useReducedMotion();
 
   const save = () => {
     onChange({
@@ -31,14 +32,27 @@ export function QuickTuneModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 animate-[slideUp_0.25s_var(--ease-spring)]"
-      >
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={onClose}
+          variants={backdropVariants(!!reduceMotion)}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6"
+            variants={panelVariants(!!reduceMotion)}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Quick Tune"
+          >
         <div className="mesh-glow opacity-60" />
         <div className="relative flex justify-center md:hidden -mt-1">
           <div className="h-1 w-10 rounded-full bg-white/[0.15]" />
@@ -72,7 +86,7 @@ export function QuickTuneModal({
 
         <div className="relative space-y-2">
           <label className="text-xs text-slate-500 block">Monthly Safety Buffer</label>
-          <p className="text-[10px] text-slate-600">
+          <p className="text-[10px] text-slate-400">
             Kept aside, excluded from what's shown as safe to spend.
           </p>
           <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-sky-500 transition-colors">
@@ -115,12 +129,12 @@ export function QuickTuneModal({
                 onChange={(e) => setPaydayDay(e.target.value)}
                 className="w-20 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white tabular-nums focus:outline-none focus:border-sky-500"
               />
-              <span className="text-[10px] text-slate-600">
+              <span className="text-[10px] text-slate-400">
                 Daily Safe Spend spreads to payday instead of month-end.
               </span>
             </div>
           ) : (
-            <p className="text-[10px] text-slate-600">
+            <p className="text-[10px] text-slate-400">
               Off — Daily Safe Spend spreads to the end of the calendar month.
             </p>
           )}
@@ -129,7 +143,9 @@ export function QuickTuneModal({
         <Button variant="primary" onClick={save} className="relative w-full py-3.5 text-sm">
           Save
         </Button>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -66,7 +66,7 @@ export function HeroSpendCard({
       <p className="relative text-[11px] text-slate-500 mt-6">
         Runway health · {Number.isFinite(runway) ? `${runway.toFixed(1)} mo` : "∞"}
       </p>
-      <p className="relative text-[10px] text-slate-600 mt-1">Tap the ring to tune your numbers</p>
+      <p className="relative text-[10px] text-slate-400 mt-1">Tap the ring to tune your numbers</p>
 
       <QuickTuneModal
         open={tuneOpen}

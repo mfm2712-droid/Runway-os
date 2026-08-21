@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Button } from "./ui/Button";
 import { isValidLicenseFormat } from "../lib/trial";
 import { track } from "../lib/analytics";
 import { startCheckout, type Plan } from "../lib/checkout";
+import { backdropVariants, panelVariants } from "../lib/motionPresets";
 
 type KeyState = "idle" | "invalid" | "valid";
 type RestoreState = "idle" | "checking" | "not-found" | "found" | "error";
@@ -22,8 +24,7 @@ export function PaywallModal({
   const [restoreState, setRestoreState] = useState<RestoreState>("idle");
   const [checkoutLoading, setCheckoutLoading] = useState<Plan | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-
-  if (!open) return null;
+  const reduceMotion = useReducedMotion();
 
   const submitKey = () => {
     if (isValidLicenseFormat(key)) {
@@ -73,14 +74,27 @@ export function PaywallModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[70] flex items-end md:items-center justify-center bg-black/85 backdrop-blur-md"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto animate-[slideUp_0.3s_var(--ease-spring)]"
-      >
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-[70] flex items-end md:items-center justify-center bg-black/85 backdrop-blur-md"
+          onClick={onClose}
+          variants={backdropVariants(!!reduceMotion)}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto"
+            variants={panelVariants(!!reduceMotion)}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Unlock Full Access"
+          >
         <div className="mesh-glow opacity-60" />
 
         <div className="relative flex justify-between items-center">
@@ -224,14 +238,16 @@ export function PaywallModal({
           {keyState === "valid" && (
             <p className="text-[10px] text-emerald-400">✓ License activated — welcome back.</p>
           )}
-          <p className="text-[9px] text-slate-600 leading-relaxed">
+          <p className="text-[9px] text-slate-400 leading-relaxed">
             Runway OS keeps your financial data local to your browser. Checkout,
             subscription status, and restore-by-email are verified against
             Stripe server-side — the manual key field above stays as a
             fallback for hand-issued access.
           </p>
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

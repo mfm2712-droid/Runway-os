@@ -376,13 +376,12 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         onRestore={restoreBackup}
       />
 
-      {!onboarded && (
-        <OnboardingModal
-          currency={state.currency}
-          onComplete={completeOnboarding}
-          onLoadDemo={loadDemoData}
-        />
-      )}
+      <OnboardingModal
+        open={!onboarded}
+        currency={state.currency}
+        onComplete={completeOnboarding}
+        onLoadDemo={loadDemoData}
+      />
     </div>
   );
 }

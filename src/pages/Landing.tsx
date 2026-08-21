@@ -196,7 +196,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               </div>
 
               <div className="space-y-1.5">
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider px-1">
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider px-1">
                   Example conversation
                 </p>
                 <div className="space-y-2">
@@ -307,7 +307,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             <p className="text-[10px] text-rose-400 text-center">{checkoutError}</p>
           )}
 
-          <p className="text-[10px] text-slate-600 text-center">
+          <p className="text-[10px] text-slate-400 text-center">
             You're only charged if you pick a plan above. The free trial itself
             (button below) never asks for a card.
           </p>
@@ -354,7 +354,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               </a>
             </nav>
           </div>
-          <p className="text-[11px] text-slate-600 text-center sm:text-left">
+          <p className="text-[11px] text-slate-400 text-center sm:text-left">
             Runway OS is an independent tool and is not financial advice.
           </p>
         </footer>

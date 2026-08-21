@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Currency } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
+import { backdropVariants, panelVariants } from "../lib/motionPresets";
 
 export interface OnboardingResult {
   cashBalance: number;
@@ -9,10 +11,12 @@ export interface OnboardingResult {
 }
 
 export function OnboardingModal({
+  open,
   currency,
   onComplete,
   onLoadDemo,
 }: {
+  open: boolean;
   currency: Currency;
   onComplete: (result: OnboardingResult) => void;
   onLoadDemo: () => void;
@@ -21,6 +25,7 @@ export function OnboardingModal({
   const [cash, setCash] = useState("");
   const [outflows, setOutflows] = useState("");
   const [paydayDay, setPaydayDay] = useState("28");
+  const reduceMotion = useReducedMotion();
 
   const sym = CURRENCY_SYMBOLS[currency];
 
@@ -44,8 +49,25 @@ export function OnboardingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-md">
-      <div className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-7 animate-[slideUp_0.3s_var(--ease-spring)]">
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-md"
+          variants={backdropVariants(!!reduceMotion)}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div
+            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-7"
+            variants={panelVariants(!!reduceMotion)}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Welcome to Runway OS"
+          >
         <div className="mesh-glow opacity-60" />
 
         <div className="relative flex items-center justify-center gap-1.5">
@@ -144,11 +166,13 @@ export function OnboardingModal({
 
         <button
           onClick={onLoadDemo}
-          className="relative w-full text-center text-[11px] text-slate-600 hover:text-slate-400 transition-colors"
+          className="relative w-full text-center text-[11px] text-slate-400 hover:text-slate-300 transition-colors"
         >
           Load Demo Data instead
         </button>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

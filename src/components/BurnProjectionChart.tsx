@@ -162,7 +162,7 @@ export function BurnProjectionChart({
             </span>
           </p>
         ) : (
-          <p className="text-[10px] text-slate-600">Drag the scrub bar to inspect any month</p>
+          <p className="text-[10px] text-slate-400">Drag the scrub bar to inspect any month</p>
         )}
       </div>
 

@@ -1,3 +1,7 @@
+import { useId } from "react";
+import { motion } from "motion/react";
+import { springTransition } from "../../lib/motionPresets";
+
 export function SegmentedControl<T extends string>({
   options,
   value,
@@ -9,7 +13,7 @@ export function SegmentedControl<T extends string>({
   onChange: (v: T) => void;
   className?: string;
 }) {
-  const index = Math.max(0, options.findIndex((o) => o.value === value));
+  const layoutId = useId();
   const n = options.length;
 
   return (
@@ -17,22 +21,21 @@ export function SegmentedControl<T extends string>({
       className={`relative grid p-1 rounded-full glass ${className}`}
       style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
     >
-      <div
-        className="absolute top-1 bottom-1 rounded-full bg-white/[0.1] border border-white/[0.12] transition-transform duration-300"
-        style={{
-          width: `calc(${100 / n}% - 4px)`,
-          transform: `translateX(calc(${index * 100}% + ${index * 4}px))`,
-          transitionTimingFunction: "var(--ease-spring)",
-        }}
-      />
       {options.map((o) => (
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`relative z-10 py-2 text-xs font-medium rounded-full transition-colors ${
+          className={`relative py-2 text-xs font-medium rounded-full transition-colors ${
             o.value === value ? "text-white" : "text-slate-500 hover:text-slate-300"
           }`}
         >
+          {o.value === value && (
+            <motion.div
+              layoutId={`${layoutId}-indicator`}
+              className="absolute inset-0 -z-10 rounded-full bg-white/[0.1] border border-white/[0.12]"
+              transition={springTransition}
+            />
+          )}
           {o.label}
         </button>
       ))}

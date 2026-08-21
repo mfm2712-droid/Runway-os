@@ -135,7 +135,7 @@ export function ReceiptDropzone({
             Add Expense
           </button>
         )}
-        <button onClick={reset} className="w-full text-xs text-slate-600 hover:text-slate-400">
+        <button onClick={reset} className="w-full text-xs text-slate-400 hover:text-slate-300">
           Discard
         </button>
       </div>
@@ -189,10 +189,10 @@ export function ReceiptDropzone({
           📸
         </span>
         <span className="text-xs text-slate-300 font-medium">Tap to choose a receipt photo</span>
-        <span className="text-[10px] text-slate-600">or drag & drop an image</span>
+        <span className="text-[10px] text-slate-400">or drag & drop an image</span>
       </label>
 
-      <div className="flex items-center gap-2 text-[10px] text-slate-600">
+      <div className="flex items-center gap-2 text-[10px] text-slate-400">
         <span className="flex-1 h-px bg-white/[0.08]" />
         or paste receipt text
         <span className="flex-1 h-px bg-white/[0.08]" />

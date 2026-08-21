@@ -45,7 +45,7 @@ export function ExpenseHistory({
         <h4 className="text-sm font-semibold text-white">Recent Expenses</h4>
 
         {sorted.length === 0 && (
-          <p className="text-xs text-slate-600 py-2">
+          <p className="text-xs text-slate-400 py-2">
             No expenses logged yet. Tap the + button to start tracking.
           </p>
         )}
@@ -74,7 +74,8 @@ export function ExpenseHistory({
                 <button
                   onClick={() => onRemove(e.id)}
                   title="Remove"
-                  className="text-slate-600 hover:text-white transition-colors"
+                  aria-label="Remove expense"
+                  className="text-slate-400 hover:text-white transition-colors"
                 >
                   <TrashIcon width={15} height={15} />
                 </button>

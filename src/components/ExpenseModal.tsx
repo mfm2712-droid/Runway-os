@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Currency, Expense, ExpenseCategory, Subscription } from "../types";
 import { CATEGORY_ICONS, CATEGORY_LABELS, CURRENCY_SYMBOLS } from "../types";
 import { Button } from "./ui/Button";
 import { SegmentedControl } from "./ui/SegmentedControl";
 import { ReceiptDropzone } from "./ai/ReceiptDropzone";
+import { backdropVariants, panelVariants } from "../lib/motionPresets";
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ExpenseCategory[];
 
@@ -30,8 +32,7 @@ export function ExpenseModal({
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("food");
   const [date, setDate] = useState(todayISO());
-
-  if (!open) return null;
+  const reduceMotion = useReducedMotion();
 
   const amt = Number(amount);
   const valid = amt > 0;
@@ -51,14 +52,27 @@ export function ExpenseModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
-      onClick={close}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto animate-[slideUp_0.25s_var(--ease-spring)]"
-      >
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={close}
+          variants={backdropVariants(!!reduceMotion)}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto"
+            variants={panelVariants(!!reduceMotion)}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add Expense"
+          >
         <div className="mesh-glow opacity-60" />
         <div className="relative flex justify-center md:hidden -mt-1">
           <div className="h-1 w-10 rounded-full bg-white/[0.15]" />
@@ -150,7 +164,9 @@ export function ExpenseModal({
             </Button>
           </>
         )}
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

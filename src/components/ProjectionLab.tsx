@@ -71,7 +71,7 @@ function ScenarioField({
       />
       <button
         onClick={() => setEditing(true)}
-        className="text-[10px] text-slate-600 hover:text-slate-400 mt-1.5 transition-colors"
+        className="text-[10px] text-slate-400 hover:text-slate-300 mt-1.5 transition-colors"
       >
         enter exact amount →
       </button>
@@ -257,7 +257,7 @@ export function ProjectionLab({
           >
             {applied ? "✓ Applied to your real numbers" : "Apply Cash & Burn to my real numbers"}
           </button>
-          <p className="text-[10px] text-slate-600 text-center">
+          <p className="text-[10px] text-slate-400 text-center">
             Income is exploratory only — Runway OS doesn't track income elsewhere, so it's never saved.
           </p>
         </div>

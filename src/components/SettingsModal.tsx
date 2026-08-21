@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Currency, FinanceState } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
 import type { DevOverride, TrialStatus } from "../lib/trial";
@@ -10,6 +11,7 @@ import {
   type BackupMeta,
 } from "../lib/backupUtils";
 import { Button } from "./ui/Button";
+import { backdropVariants, panelVariants } from "../lib/motionPresets";
 
 const CURRENCIES: Currency[] = ["GBP", "EUR", "USD"];
 
@@ -46,8 +48,7 @@ export function SettingsModal({
   const [restoreMessage, setRestoreMessage] = useState("");
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
-
-  if (!open) return null;
+  const reduceMotion = useReducedMotion();
 
   const handleExport = () => downloadBackup(buildBackup(state, meta));
 
@@ -84,14 +85,27 @@ export function SettingsModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[65] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-md"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto animate-[slideUp_0.25s_var(--ease-spring)]"
-      >
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-[65] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-md"
+          onClick={onClose}
+          variants={backdropVariants(!!reduceMotion)}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto"
+            variants={panelVariants(!!reduceMotion)}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Settings"
+          >
         <div className="mesh-glow opacity-60" />
 
         <div className="relative flex justify-between items-center">
@@ -204,13 +218,15 @@ export function SettingsModal({
               </button>
             ))}
           </div>
-          <p className="text-[9px] text-slate-600 leading-relaxed">
+          <p className="text-[9px] text-slate-400 leading-relaxed">
             Overrides the real trial calculation for testing this build. It's a client-side
             switch, not hidden from end users — remove this panel (or gate it behind a build
             flag) before shipping to production.
           </p>
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
