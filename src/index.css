@@ -1,7 +1,26 @@
 @import "tailwindcss";
 
+/* Self-hosted (SIL OFL) — see public/fonts. Variable weight 100–900 in a
+   single file, no external font request. */
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/Geist-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
 
   --color-brand-400: #7dd3fc;
   --color-brand-500: #38bdf8;
@@ -32,6 +51,7 @@ body {
   background: var(--color-obsidian-950);
   min-height: 100svh;
   position: relative;
+  font-family: var(--font-sans);
 }
 
 /* Ambient full-viewport backdrop — fixed so it reads as a designed

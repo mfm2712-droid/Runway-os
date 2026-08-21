@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { GlassCard } from "../components/ui/GlassCard";
 import { RingProgress } from "../components/ui/RingProgress";
 import { Button } from "../components/ui/Button";
-import { DynamicIsland } from "../components/ui/DynamicIsland";
 import { startCheckout, type Plan } from "../lib/checkout";
 import { track } from "../lib/analytics";
 
@@ -43,8 +42,21 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
       <div className="relative max-w-3xl mx-auto px-4 md:px-8 py-16 space-y-24">
         {/* Hero */}
         <header className="text-center space-y-6">
-          <DynamicIsland label="Runway OS" />
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-[1.05]">
+          <div className="relative inline-flex items-center gap-2.5 mx-auto">
+            <div className="absolute -inset-3 rounded-full bg-sky-400/25 blur-xl" aria-hidden />
+            <img
+              src="/app-icon.png"
+              alt="Runway OS"
+              className="relative w-11 h-11 rounded-2xl border border-white/15 shadow-lg shadow-cyan-500/30 object-cover"
+            />
+            <span className="relative flex items-center gap-1.5">
+              <span className="font-bold text-white tracking-tight text-lg">Runway</span>
+              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-md border border-cyan-400/40 text-cyan-300 bg-cyan-400/5">
+                OS
+              </span>
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-[1.05] text-balance">
             The friction-free
             <br />
             <span className="bg-gradient-to-r from-sky-300 via-sky-400 to-emerald-300 bg-clip-text text-transparent">
@@ -165,16 +177,49 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
 
         {/* AI Copilot showcase */}
         <section>
-          <GlassCard strong className="ai-border-glow relative overflow-hidden p-6 md:p-8 space-y-6">
+          <GlassCard strong className="ai-border-glow relative overflow-hidden p-6 md:p-8 space-y-8">
             <div className="mesh-glow opacity-50" />
-            <div className="relative text-center space-y-2">
-              <p className="text-[11px] font-semibold ai-gradient-text uppercase tracking-[0.2em]">
-                ✨ AI Financial Copilot
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-white">
-                Not just numbers — answers.
-              </h2>
+
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div className="text-center md:text-left space-y-3">
+                <p className="text-[11px] font-semibold ai-gradient-text uppercase tracking-[0.2em]">
+                  ✨ AI Financial Copilot
+                </p>
+                <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight text-balance">
+                  Not just numbers — answers.
+                </h2>
+                <p className="text-sm text-slate-400 leading-relaxed max-w-sm mx-auto md:mx-0">
+                  Your numbers stay local by default. AI features send only what's
+                  needed — your financial snapshot and the question you ask — to a
+                  secured endpoint, only when you use them.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-slate-600 uppercase tracking-wider px-1">
+                  Example conversation
+                </p>
+                <div className="space-y-2">
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md bg-sky-500 text-obsidian-950 text-sm font-medium">
+                      Can I afford £120 for a flight this weekend?
+                    </div>
+                  </div>
+                  <div className="flex justify-start">
+                    <div className="max-w-[90%] space-y-1.5">
+                      <span className="text-[11px] ai-gradient-text font-semibold px-1">
+                        ✨ Money Copilot
+                      </span>
+                      <div className="px-4 py-3 rounded-2xl rounded-bl-md glass border border-violet-400/15 text-sm text-slate-200 leading-relaxed">
+                        Yes — you'd have £84 left in this month's safe-to-spend
+                        after that. Runway drops from 4.2 to 4.0 months.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+
             <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 {
@@ -196,11 +241,6 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 </div>
               ))}
             </div>
-            <p className="relative text-[11px] text-slate-500 text-center">
-              Your numbers stay local by default. AI features send only what's needed —
-              your financial snapshot and the question you ask — to a secured endpoint,
-              only when you use them.
-            </p>
           </GlassCard>
         </section>
 
@@ -221,7 +261,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             >
               <GlassCard
                 interactive
-                className="p-4 space-y-1 text-center h-full hover:border-sky-400/40 transition-colors"
+                className="p-4 pb-5 space-y-1 text-center h-full hover:border-sky-400/40 transition-colors"
               >
                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                   Monthly
@@ -244,7 +284,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               <GlassCard
                 strong
                 interactive
-                className="relative p-4 space-y-1 text-center h-full border border-sky-400/40"
+                className="relative p-4 pb-5 space-y-1 text-center h-full border border-sky-400/40"
               >
                 <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 whitespace-nowrap">
                   Most Popular · Save 30%
@@ -287,8 +327,36 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
           </Button>
         </section>
 
-        <footer className="text-center text-[11px] text-slate-600 pt-8 border-t border-white/[0.06]">
-          Runway OS is an independent tool and is not financial advice.
+        <footer className="pt-8 border-t border-white/[0.06] space-y-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <img
+                src="/app-icon.png"
+                alt="Runway OS"
+                className="w-6 h-6 rounded-lg border border-white/10 object-cover"
+              />
+              <span className="text-xs font-semibold text-slate-400">Runway OS</span>
+            </div>
+            <nav className="flex items-center gap-5 text-xs text-slate-500">
+              <button onClick={() => onNavigate("/privacy")} className="hover:text-white transition-colors">
+                Privacy
+              </button>
+              <button onClick={() => onNavigate("/terms")} className="hover:text-white transition-colors">
+                Terms
+              </button>
+              <a
+                href="https://github.com/mfm2712-droid/Runway-os"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-white transition-colors"
+              >
+                Built in the open ↗
+              </a>
+            </nav>
+          </div>
+          <p className="text-[11px] text-slate-600 text-center sm:text-left">
+            Runway OS is an independent tool and is not financial advice.
+          </p>
         </footer>
       </div>
     </div>
