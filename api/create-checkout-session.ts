@@ -6,6 +6,8 @@
 // see .env.example. The Price IDs (price_...) are not secret; the secret
 // key must never be exposed client-side.
 
+/// <reference types="node" />
+
 import Stripe from "stripe";
 
 export const config = { runtime: "edge" };
