@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GlassCard } from "../components/ui/GlassCard";
 import { RingProgress } from "../components/ui/RingProgress";
 import { Button } from "../components/ui/Button";
@@ -9,6 +9,20 @@ import { track } from "../lib/analytics";
 export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [checkoutLoading, setCheckoutLoading] = useState<Plan | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  // Ring fills in from empty on first paint — a small, honest reveal (no
+  // fake product video), skipped entirely for reduced-motion users since
+  // RingProgress's own transition already respects that intent.
+  const [ringValue, setRingValue] = useState(0);
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      setRingValue(0.72);
+      return;
+    }
+    const id = window.setTimeout(() => setRingValue(0.72), 200);
+    return () => window.clearTimeout(id);
+  }, []);
 
   const choosePlan = async (plan: Plan) => {
     setCheckoutError(null);
@@ -37,20 +51,26 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               financial operating system.
             </span>
           </h1>
-          <p className="text-slate-400 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+          <p className="text-slate-300 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
             One number that matters: your safe daily spending limit. No manual
             categorization, no linked bank accounts, no subscription you forget to
             cancel — plus a built-in AI copilot for the questions a spreadsheet
             can't answer.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-2">
-            <Button
-              variant="primary"
-              onClick={() => onNavigate("/app")}
-              className="px-7 py-3.5 text-sm"
-            >
-              Start Free 72-Hour Trial
-            </Button>
+            <div className="relative">
+              <div
+                className="absolute inset-0 rounded-2xl bg-sky-400/50 blur-xl opacity-70"
+                aria-hidden
+              />
+              <Button
+                variant="primary"
+                onClick={() => onNavigate("/app")}
+                className="relative px-7 py-3.5 text-sm"
+              >
+                Start Free 72-Hour Trial
+              </Button>
+            </div>
             <a
               href="#pricing"
               className="text-sm text-slate-400 hover:text-white transition-colors underline underline-offset-4 decoration-white/20"
@@ -58,7 +78,9 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               See pricing ↓
             </a>
           </div>
-          <p className="text-[11px] text-slate-600">No card required to start.</p>
+          <p className="text-[11px] text-slate-500">
+            No card required to start · cancel anytime · set up in under 2 minutes
+          </p>
         </header>
 
         {/* Before / After — left is an illustrative mockup of spreadsheet chaos,
@@ -96,16 +118,22 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider text-center">
               After
             </p>
-            <GlassCard strong className="relative overflow-hidden flex flex-col items-center py-8">
-              <RingProgress value={0.72} size={132} strokeWidth={8} color="#34d399">
-                <div className="flex flex-col items-center">
-                  <span className="text-xl font-extrabold tracking-tight tabular-nums text-white glow-text" style={{ color: "#34d399" }}>
-                    £45.00
-                  </span>
-                  <span className="text-[9px] text-slate-400 mt-1">safe / day</span>
-                </div>
-              </RingProgress>
-            </GlassCard>
+            <div className="relative">
+              <div
+                className="absolute -inset-4 rounded-[32px] bg-emerald-400/15 blur-2xl"
+                aria-hidden
+              />
+              <GlassCard strong className="relative overflow-hidden flex flex-col items-center py-8">
+                <RingProgress value={ringValue} size={132} strokeWidth={8} color="#34d399">
+                  <div className="flex flex-col items-center">
+                    <span className="text-xl font-extrabold tracking-tight tabular-nums text-white glow-text" style={{ color: "#34d399" }}>
+                      £45.00
+                    </span>
+                    <span className="text-[9px] text-slate-400 mt-1">safe / day</span>
+                  </div>
+                </RingProgress>
+              </GlassCard>
+            </div>
             <p className="text-[11px] text-slate-500 text-center">
               One glanceable number. That's the whole app.
             </p>
@@ -238,6 +266,11 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
           {checkoutError && (
             <p className="text-[10px] text-rose-400 text-center">{checkoutError}</p>
           )}
+
+          <p className="text-[10px] text-slate-600 text-center">
+            You're only charged if you pick a plan above. The free trial itself
+            (button below) never asks for a card.
+          </p>
 
           <ul className="text-xs text-slate-400 space-y-2 text-left max-w-[220px] mx-auto">
             <li>✓ Unlimited Projection Lab scenarios</li>
