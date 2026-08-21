@@ -13,6 +13,8 @@
 // checkout.session.completed. Set STRIPE_WEBHOOK_SECRET to the signing
 // secret shown there.
 
+/// <reference types="node" />
+
 import Stripe from "stripe";
 
 export const config = { runtime: "edge" };
