@@ -2,6 +2,8 @@
 // customer id, so Pro users can update payment method, switch plan, view
 // invoices, or cancel entirely without us building any of that UI ourselves.
 
+/// <reference types="node" />
+
 import Stripe from "stripe";
 
 export const config = { runtime: "edge" };
