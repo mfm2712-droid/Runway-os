@@ -9,7 +9,7 @@ export function BackgroundRing() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed top-[-100px] left-1/2 -translate-x-1/2 z-[-1] opacity-20 will-change-transform [transform:translateZ(0)] animate-[spin_40s_linear_infinite] motion-reduce:animate-none"
+      className="pointer-events-none fixed top-[-100px] left-1/2 -translate-x-1/2 z-[-1] opacity-40 will-change-transform [transform:translateZ(0)] animate-[spin_11s_linear_infinite] motion-reduce:animate-none"
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -26,10 +26,10 @@ export function BackgroundRing() {
           r={size / 2 - 30}
           fill="none"
           stroke="url(#bg-ring-gradient)"
-          strokeWidth={2.5}
+          strokeWidth={4}
           strokeDasharray="3 18"
           strokeLinecap="round"
-          style={{ filter: "blur(0.5px)" }}
+          style={{ filter: "drop-shadow(0 0 10px rgba(56,189,248,0.45))" }}
         />
       </svg>
     </div>
