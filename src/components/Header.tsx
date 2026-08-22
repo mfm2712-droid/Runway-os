@@ -25,12 +25,16 @@ export function Header({
         className="flex items-center gap-2.5 shrink-0 group"
         aria-label="Runway OS home"
       >
-        <img
-          src="/app-icon.png"
-          alt="Runway OS Logo"
-          className="w-8 h-8 rounded-xl border border-white/10 shadow-lg shadow-cyan-500/20 object-cover transition-transform duration-200 group-active:scale-90"
+        <span
+          className="relative w-8 h-8 shrink-0 rounded-xl border border-white/10 shadow-lg shadow-cyan-500/20 overflow-hidden transition-transform duration-200 group-active:scale-90"
           style={{ transitionTimingFunction: "var(--ease-spring)" }}
-        />
+        >
+          <img
+            src="/app-icon.png"
+            alt="Runway OS Logo"
+            className="absolute inset-0 w-full h-full scale-150 object-cover animate-[spin_6s_linear_infinite] motion-reduce:animate-none"
+          />
+        </span>
         <span className="flex items-center gap-1.5">
           <span className="font-bold text-white tracking-tight text-lg">Runway</span>
           <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-md border border-cyan-400/40 text-cyan-300 bg-cyan-400/5">
