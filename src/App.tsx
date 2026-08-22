@@ -3,7 +3,6 @@ import { Landing } from "./pages/Landing";
 import { Dashboard } from "./pages/Dashboard";
 import { Privacy } from "./pages/Privacy";
 import { Terms } from "./pages/Terms";
-import { BackgroundRing } from "./components/BackgroundRing";
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname);
@@ -30,10 +29,5 @@ export default function App() {
     <Landing onNavigate={navigate} />
   );
 
-  return (
-    <>
-      <BackgroundRing />
-      {page}
-    </>
-  );
+  return page;
 }
