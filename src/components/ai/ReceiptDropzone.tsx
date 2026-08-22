@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Currency, Expense, Subscription } from "../../types";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "../../types";
 import { formatCurrency } from "../../lib/calculations";
@@ -11,10 +11,14 @@ export function ReceiptDropzone({
   currency,
   onAddExpense,
   onAddSubscription,
+  initialFile,
+  initialText,
 }: {
   currency: Currency;
   onAddExpense: (expense: Omit<Expense, "id">) => void;
   onAddSubscription: (sub: Omit<Subscription, "id">) => void;
+  initialFile?: File;
+  initialText?: string;
 }) {
   const [stage, setStage] = useState<Stage>("idle");
   const [dragOver, setDragOver] = useState(false);
@@ -31,6 +35,14 @@ export function ReceiptDropzone({
     setResult(parsed);
     setStage("result");
   };
+
+  // A shared image/text (from the OS share sheet, via the PWA share target)
+  // arrives as props once — run it straight through the same parse path a
+  // manual drop would use.
+  useEffect(() => {
+    if (initialFile || initialText) runParse({ file: initialFile, text: initialText });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { GlassCard } from "../components/ui/GlassCard";
 import { RingProgress } from "../components/ui/RingProgress";
 import { Button } from "../components/ui/Button";
+import { LandingCalculator } from "../components/LandingCalculator";
 import { startCheckout, type Plan } from "../lib/checkout";
 import { track } from "../lib/analytics";
 
@@ -151,6 +152,11 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             </p>
           </div>
         </section>
+
+        {/* Interactive calculator — real dailySafeSpend/runwayMonths math, no signup */}
+        <div className="max-w-sm mx-auto w-full">
+          <LandingCalculator onNavigate={onNavigate} />
+        </div>
 
         {/* Features */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">

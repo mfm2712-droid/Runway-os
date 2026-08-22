@@ -10,6 +10,8 @@ import {
   readFileAsText,
   type BackupMeta,
 } from "../lib/backupUtils";
+import { downloadExpensesCsv } from "../lib/csvExport";
+import { isAudioMuted, setAudioMuted } from "../lib/audio";
 import { Button } from "./ui/Button";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 
@@ -48,9 +50,16 @@ export function SettingsModal({
   const [restoreMessage, setRestoreMessage] = useState("");
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
+  const [audioMuted, setAudioMutedState] = useState(() => isAudioMuted());
   const reduceMotion = useReducedMotion();
 
   const handleExport = () => downloadBackup(buildBackup(state, meta));
+  const handleExportCsv = () => downloadExpensesCsv(state);
+  const toggleAudio = () => {
+    const next = !audioMuted;
+    setAudioMuted(next);
+    setAudioMutedState(next);
+  };
 
   const openBillingPortal = async () => {
     if (!meta.licenseKey) return;
@@ -171,6 +180,29 @@ export function SettingsModal({
         </div>
 
         <div className="relative space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-slate-500">Tap Sounds</label>
+            <button
+              onClick={toggleAudio}
+              aria-pressed={!audioMuted}
+              className={`relative h-6 w-11 rounded-full transition-colors duration-200 ${
+                audioMuted ? "bg-white/[0.1]" : "bg-sky-500"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ${
+                  audioMuted ? "translate-x-0.5" : "translate-x-[22px]"
+                }`}
+                style={{ transitionTimingFunction: "var(--ease-spring)" }}
+              />
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-400">
+            {audioMuted ? "Off — muted." : "On — light clicks and pops for taps and confirmations."}
+          </p>
+        </div>
+
+        <div className="relative space-y-2">
           <label className="text-xs text-slate-500 block">Data</label>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="glass" onClick={handleExport} className="py-3 text-xs">
@@ -184,6 +216,9 @@ export function SettingsModal({
               Restore Backup (.json)
             </Button>
           </div>
+          <Button variant="glass" onClick={handleExportCsv} className="w-full py-3 text-xs">
+            Export Expenses & Subs (.csv)
+          </Button>
           <input
             ref={fileInputRef}
             type="file"

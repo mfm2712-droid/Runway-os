@@ -129,6 +129,29 @@ export function parsedReceiptToExpense(r: ParsedReceipt): Omit<Expense, "id"> {
   return { amount: r.amount, category: r.category, date: r.date };
 }
 
+export function simulateNegotiationScript(sub: Subscription, currency: Currency): string {
+  const target = formatCurrency(sub.amount * 0.65, currency);
+  const current = formatCurrency(sub.amount, currency);
+  return `CALL / CHAT SCRIPT — ${sub.name}
+
+Opening:
+"Hi, I've been a subscriber on the ${sub.name} plan at ${current}/month, and I'm reviewing my subscriptions before deciding whether to keep it. Is there a loyalty or retention rate you can offer?"
+
+If they ask why:
+"The price is the main thing — I'd like to stay, but only if it's closer to ${target}/month. What can you do?"
+
+If they offer a discount:
+"That works if it's for at least 3 months — can you confirm that in writing/email before I accept?"
+
+If they offer nothing:
+"Understood — in that case, please go ahead and cancel my subscription effective immediately, and send written confirmation."
+
+Tips:
+- Ask for the retention team specifically if the first rep can't discount.
+- Most providers can approve 20-40% off for a limited period — don't accept the first "no".
+- Get any offer in writing before hanging up or ending the chat.`;
+}
+
 export function simulateCancellationEmail(sub: Subscription, currency: Currency): string {
   const annual = formatCurrency(sub.amount * 12, currency);
   return `Subject: Cancel my subscription — ${sub.name}

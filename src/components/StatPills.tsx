@@ -7,12 +7,14 @@ import {
   unusedSubscriptionsTotal,
 } from "../lib/calculations";
 import { GlassCard } from "./ui/GlassCard";
+import { AnimatedNumber } from "./ui/AnimatedNumber";
 
-export function StatPills({ state }: { state: FinanceState }) {
+export function StatPills({ state, stealth = false }: { state: FinanceState; stealth?: boolean }) {
   const runway = runwayMonths(state);
   const subsTotal = subscriptionsTotal(state);
   const unusedTotal = unusedSubscriptionsTotal(state);
   const unusedCount = state.subscriptions.filter((s) => s.flaggedUnused).length;
+  const maskClass = `transition-all duration-300 ${stealth ? "blur-sm select-none" : ""}`;
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -20,19 +22,20 @@ export function StatPills({ state }: { state: FinanceState }) {
         <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
           Runway
         </p>
-        <p className="text-xl font-bold tracking-tight text-white mt-1 tabular-nums">
-          {formatMonths(runway)} <span className="text-xs font-normal text-slate-500">mo</span>
+        <p className={`text-xl font-bold tracking-tight text-white mt-1 tabular-nums ${maskClass}`}>
+          <AnimatedNumber value={runway} format={formatMonths} />{" "}
+          <span className="text-xs font-normal text-slate-500">mo</span>
         </p>
       </GlassCard>
       <GlassCard className="px-4 py-4">
         <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
           Recurring Leaks
         </p>
-        <p className="text-xl font-bold tracking-tight text-white mt-1 tabular-nums">
-          {formatCurrency(subsTotal, state.currency)}
+        <p className={`text-xl font-bold tracking-tight text-white mt-1 tabular-nums ${maskClass}`}>
+          <AnimatedNumber value={subsTotal} format={(v) => formatCurrency(v, state.currency)} />
         </p>
         {unusedCount > 0 && (
-          <p className="text-[10px] text-rose-400 mt-0.5">
+          <p className={`text-[10px] text-rose-400 mt-0.5 ${maskClass}`}>
             {unusedCount} unused · {formatCurrency(unusedTotal, state.currency)}
           </p>
         )}

@@ -1,6 +1,8 @@
 import { motion } from "motion/react";
 import { ClockIcon, DialIcon, HomeIcon, PlusIcon, TagIcon } from "./ui/Icons";
 import { springTransition } from "../lib/motionPresets";
+import { triggerHaptic } from "../lib/haptics";
+import { playClick } from "../lib/audio";
 
 export type DashboardTab = "overview" | "simulate" | "subscriptions" | "history";
 
@@ -23,11 +25,23 @@ export function BottomNav({
   const leftTabs = TABS.slice(0, 2);
   const rightTabs = TABS.slice(2);
 
+  const changeTab = (t: DashboardTab) => {
+    if (t !== active) {
+      triggerHaptic("light");
+      playClick();
+    }
+    onChange(t);
+  };
+
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))] px-4 pointer-events-none">
       <div className="relative pointer-events-auto">
         <button
-          onClick={onQuickAdd}
+          onClick={() => {
+            triggerHaptic("medium");
+            playClick();
+            onQuickAdd();
+          }}
           aria-label="Add expense"
           className="absolute z-20 left-1/2 -translate-x-1/2 -top-7 h-14 w-14 rounded-full bg-gradient-to-b from-sky-400 to-sky-500 flex items-center justify-center text-obsidian-950 shadow-[0_0_0_6px_rgba(5,5,10,1),0_8px_28px_-6px_rgba(56,189,248,0.7)] active:scale-90 transition-transform duration-150 [transition-timing-function:var(--ease-spring)]"
         >
@@ -36,11 +50,11 @@ export function BottomNav({
 
         <div className="relative z-10 flex items-center gap-1 rounded-full glass-strong glass-inset px-2 py-2">
           {leftTabs.map((t) => (
-            <TabButton key={t.id} tab={t} active={active === t.id} onClick={() => onChange(t.id)} />
+            <TabButton key={t.id} tab={t} active={active === t.id} onClick={() => changeTab(t.id)} />
           ))}
           <span className="w-14" aria-hidden />
           {rightTabs.map((t) => (
-            <TabButton key={t.id} tab={t} active={active === t.id} onClick={() => onChange(t.id)} />
+            <TabButton key={t.id} tab={t} active={active === t.id} onClick={() => changeTab(t.id)} />
           ))}
         </div>
       </div>

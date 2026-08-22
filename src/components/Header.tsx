@@ -1,6 +1,6 @@
 import { DynamicIsland } from "./ui/DynamicIsland";
 import { AdvisorFab } from "./ai/AdvisorFab";
-import { GearIcon } from "./ui/Icons";
+import { EyeIcon, EyeOffIcon, GearIcon } from "./ui/Icons";
 import type { FinanceState } from "../types";
 
 export function Header({
@@ -8,11 +8,15 @@ export function Header({
   onNavigate,
   onOpenAdvisor,
   onOpenSettings,
+  stealthMode,
+  onToggleStealth,
 }: {
   state: FinanceState;
   onNavigate: (path: string) => void;
   onOpenAdvisor: () => void;
   onOpenSettings: () => void;
+  stealthMode: boolean;
+  onToggleStealth: () => void;
 }) {
   return (
     <div className="relative flex items-center justify-between gap-2">
@@ -37,6 +41,18 @@ export function Header({
 
       <div className="flex items-center gap-2 min-w-0">
         <DynamicIsland label="Saved locally" />
+        <button
+          onClick={onToggleStealth}
+          aria-label={stealthMode ? "Turn off Stealth Mode" : "Turn on Stealth Mode"}
+          aria-pressed={stealthMode}
+          title="Stealth Mode"
+          className={`h-9 w-9 shrink-0 flex items-center justify-center rounded-full glass active:scale-90 transition-transform duration-150 ${
+            stealthMode ? "text-sky-300" : "text-slate-400 hover:text-white"
+          }`}
+          style={{ transitionTimingFunction: "var(--ease-spring)" }}
+        >
+          {stealthMode ? <EyeOffIcon width={16} height={16} /> : <EyeIcon width={16} height={16} />}
+        </button>
         <button
           onClick={onOpenSettings}
           aria-label="Open Settings"

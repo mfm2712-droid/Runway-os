@@ -21,6 +21,13 @@ import { uid } from "../lib/id";
 import { computeTrialStatus, type DevOverride } from "../lib/trial";
 import { track } from "../lib/analytics";
 import type { BackupMeta } from "../lib/backupUtils";
+import {
+  STORAGE_KEY,
+  ONBOARDED_KEY,
+  TRIAL_STARTED_KEY,
+  LICENSE_KEY,
+  DEV_OVERRIDE_KEY,
+} from "../lib/storageKeys";
 import type { Currency, Expense, FinanceState, Subscription, WishlistItem } from "../types";
 
 function todayISO(): string {
@@ -28,12 +35,6 @@ function todayISO(): string {
   const off = d.getTimezoneOffset();
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
-
-const STORAGE_KEY = "runway-os:v3";
-const ONBOARDED_KEY = "runway-os:onboarded";
-const TRIAL_STARTED_KEY = "runway-os:trialStartedAt";
-const LICENSE_KEY = "runway-os:licenseKey";
-const DEV_OVERRIDE_KEY = "runway-os:devOverride";
 
 function daysAgoISO(days: number): string {
   return new Date(Date.now() - days * 86400000).toISOString();
@@ -104,10 +105,14 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
   const [licenseKey, setLicenseKey] = useLocalStorage<string | null>(LICENSE_KEY, null);
   const [devOverride, setDevOverride] = useLocalStorage<DevOverride>(DEV_OVERRIDE_KEY, null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"manual" | "scan">("manual");
+  const [sharedInput, setSharedInput] = useState<{ file?: File; text?: string } | null>(null);
   const [advisorOpen, setAdvisorOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tab, setTab] = useState<DashboardTab>("overview");
+  const [stealthMode, setStealthMode] = useLocalStorage<boolean>("runway-os:stealthMode", false);
+  const [savedTotal, setSavedTotal] = useLocalStorage<number>("runway-os:saved-total", 0);
 
   // Captured once, before the useLocalStorage default below ever gets
   // persisted, so it reflects whether this is truly the first launch.
@@ -152,6 +157,48 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         }
       })
       .catch(() => setCheckoutBanner("error"));
+  }, []);
+
+  // PWA app-shortcut deep links (Add Expense / Scan Receipt from the home
+  // screen icon's long-press menu, or an OS share-sheet share) — open the
+  // modal in the right mode, then strip the param without a full reload.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get("action");
+    if (action !== "add" && action !== "scan" && action !== "share") return;
+
+    setModalMode(action === "add" ? "manual" : "scan");
+    setModalOpen(true);
+
+    if (action === "share") {
+      // The service worker's share-target handler stashed the shared
+      // file/text in Cache Storage (the only store both it and this tab can
+      // reach) before redirecting here — pick it up once, then clear it.
+      caches
+        .open("runway-os-share-v1")
+        .then(async (cache) => {
+          const [fileRes, textRes] = await Promise.all([
+            cache.match("/__shared-file"),
+            cache.match("/__shared-text"),
+          ]);
+          const file = fileRes
+            ? new File([await fileRes.blob()], "shared-image", {
+                type: fileRes.headers.get("Content-Type") || "image/jpeg",
+              })
+            : undefined;
+          const text = textRes ? await textRes.text() : undefined;
+          if (file || text) setSharedInput({ file, text });
+          await Promise.all([cache.delete("/__shared-file"), cache.delete("/__shared-text")]);
+        })
+        .catch(() => {
+          // Cache Storage unavailable (e.g. no service worker in dev) — the
+          // share still opens the scan mode, just without prefilled input.
+        });
+    }
+
+    params.delete("action");
+    const search = params.toString();
+    window.history.replaceState({}, "", window.location.pathname + (search ? `?${search}` : ""));
   }, []);
 
   const trialStatus = computeTrialStatus(trialStartedAt, licenseKey, devOverride);
@@ -200,6 +247,15 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
   const removeSubscription = (id: string) =>
     setState((s) => ({ ...s, subscriptions: s.subscriptions.filter((x) => x.id !== id) }));
 
+  // Cancelling/deleting a tracked subscription banks its monthly cost into a
+  // lifetime "recovered savings" counter — the Subscriptions tab celebrates
+  // the running annualized total.
+  const cancelSubscription = (id: string) => {
+    const sub = state.subscriptions.find((x) => x.id === id);
+    if (sub) setSavedTotal((t) => t + sub.amount);
+    removeSubscription(id);
+  };
+
   const toggleSubscriptionFlag = (id: string) =>
     setState((s) => ({
       ...s,
@@ -245,6 +301,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
           onNavigate={onNavigate}
           onOpenAdvisor={openAdvisor}
           onOpenSettings={() => setSettingsOpen(true)}
+          stealthMode={stealthMode}
+          onToggleStealth={() => setStealthMode((v) => !v)}
         />
 
         {checkoutBanner === "verifying" && (
@@ -287,9 +345,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
           {tab === "overview" && (
             <>
               <SmartBriefingCard state={state} />
-              <HeroSpendCard state={state} onChange={patch} />
-              <StatPills state={state} />
-              <SpendDonutChart state={state} />
+              <HeroSpendCard state={state} onChange={patch} stealth={stealthMode} />
+              <StatPills state={state} stealth={stealthMode} />
+              <SpendDonutChart state={state} stealth={stealthMode} />
               <CooldownModule
                 wishlist={state.wishlist}
                 state={state}
@@ -334,8 +392,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
             <SubscriptionTracker
               subscriptions={state.subscriptions}
               state={state}
+              savedTotal={savedTotal}
               onAdd={addSubscription}
-              onRemove={removeSubscription}
+              onRemove={cancelSubscription}
               onToggleFlag={toggleSubscriptionFlag}
             />
           )}
@@ -345,16 +404,30 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
               expenses={state.expenses}
               currency={state.currency}
               onRemove={removeExpense}
+              stealth={stealthMode}
             />
           )}
         </div>
       </main>
 
-      <BottomNav active={tab} onChange={setTab} onQuickAdd={() => setModalOpen(true)} />
+      <BottomNav
+        active={tab}
+        onChange={setTab}
+        onQuickAdd={() => {
+          setModalMode("manual");
+          setModalOpen(true);
+        }}
+      />
       <ExpenseModal
         open={modalOpen}
         currency={state.currency}
-        onClose={() => setModalOpen(false)}
+        initialMode={modalMode}
+        initialFile={sharedInput?.file}
+        initialText={sharedInput?.text}
+        onClose={() => {
+          setModalOpen(false);
+          setSharedInput(null);
+        }}
         onAdd={addExpense}
         onAddSubscription={addSubscription}
       />

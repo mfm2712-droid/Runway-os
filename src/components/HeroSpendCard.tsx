@@ -10,6 +10,9 @@ import { usePulseOnChange } from "../hooks/usePulseOnChange";
 import { GlassCard } from "./ui/GlassCard";
 import { RingProgress } from "./ui/RingProgress";
 import { QuickTuneModal } from "./QuickTuneModal";
+import { AnimatedNumber } from "./ui/AnimatedNumber";
+import { triggerHaptic } from "../lib/haptics";
+import { playClick } from "../lib/audio";
 
 function healthColor(months: number): string {
   if (!Number.isFinite(months) || months >= 4) return "#34d399";
@@ -20,9 +23,11 @@ function healthColor(months: number): string {
 export function HeroSpendCard({
   state,
   onChange,
+  stealth = false,
 }: {
   state: FinanceState;
   onChange: (patch: Partial<FinanceState>) => void;
+  stealth?: boolean;
 }) {
   const [tuneOpen, setTuneOpen] = useState(false);
   const safeSpend = dailySafeSpend(state);
@@ -40,7 +45,11 @@ export function HeroSpendCard({
       </p>
 
       <button
-        onClick={() => setTuneOpen(true)}
+        onClick={() => {
+          triggerHaptic("light");
+          playClick();
+          setTuneOpen(true);
+        }}
         aria-label="Tune your numbers"
         className={`relative rounded-full active:scale-[0.97] transition-transform duration-200 ${
           pulsing ? "ring-pulse" : ""
@@ -48,13 +57,13 @@ export function HeroSpendCard({
         style={{ transitionTimingFunction: "var(--ease-spring)" }}
       >
         <RingProgress value={ringValue} size={232} strokeWidth={12} color={color}>
-          <div className="flex flex-col items-center">
-            <span
+          <div className={`flex flex-col items-center transition-all duration-300 ${stealth ? "blur-md select-none" : ""}`}>
+            <AnimatedNumber
+              value={safeSpend}
+              format={(v) => formatCurrency(v, state.currency)}
               className="text-5xl font-extrabold tracking-tight tabular-nums text-white glow-text"
               style={{ color }}
-            >
-              {formatCurrency(safeSpend, state.currency)}
-            </span>
+            />
             <span className="text-xs text-slate-400 mt-2">
               safe for the next {days} day{days === 1 ? "" : "s"}
               {state.paydayDay ? " · to payday" : ""}
@@ -63,7 +72,7 @@ export function HeroSpendCard({
         </RingProgress>
       </button>
 
-      <p className="relative text-[11px] text-slate-500 mt-6">
+      <p className={`relative text-[11px] text-slate-500 mt-6 transition-all duration-300 ${stealth ? "blur-sm select-none" : ""}`}>
         Runway health · {Number.isFinite(runway) ? `${runway.toFixed(1)} mo` : "∞"}
       </p>
       <p className="relative text-[10px] text-slate-400 mt-1">Tap the ring to tune your numbers</p>

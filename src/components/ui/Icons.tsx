@@ -91,6 +91,25 @@ export function PencilIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function EyeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="2.8" />
+    </svg>
+  );
+}
+
+export function EyeOffIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M3 3l18 18" />
+      <path d="M10.6 5.68A10.4 10.4 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a15.6 15.6 0 0 1-3.44 4.06M6.5 6.86C4.06 8.53 2.5 12 2.5 12s3.5 6.5 9.5 6.5a9.7 9.7 0 0 0 3.24-.56" />
+      <path d="M9.9 10.1a2.8 2.8 0 0 0 3.96 3.96" />
+    </svg>
+  );
+}
+
 export function GearIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>

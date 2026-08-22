@@ -20,6 +20,7 @@ export function QuickTuneModal({
   const [buffer, setBuffer] = useState(String(state.safetyBuffer || 0));
   const [paydayEnabled, setPaydayEnabled] = useState(state.paydayDay != null);
   const [paydayDay, setPaydayDay] = useState(String(state.paydayDay ?? 28));
+  const [weekendBooster, setWeekendBooster] = useState(!!state.weekendBooster);
   const reduceMotion = useReducedMotion();
 
   const save = () => {
@@ -27,6 +28,7 @@ export function QuickTuneModal({
       cashBalance: Number(cash) || 0,
       safetyBuffer: Math.max(0, Number(buffer) || 0),
       paydayDay: paydayEnabled ? Math.min(31, Math.max(1, Number(paydayDay) || 1)) : undefined,
+      weekendBooster,
     });
     onClose();
   };
@@ -138,6 +140,31 @@ export function QuickTuneModal({
               Off — Daily Safe Spend spreads to the end of the calendar month.
             </p>
           )}
+        </div>
+
+        <div className="relative space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-slate-500">Weekend Booster</label>
+            <button
+              onClick={() => setWeekendBooster((v) => !v)}
+              aria-pressed={weekendBooster}
+              className={`relative h-6 w-11 rounded-full transition-colors duration-200 ${
+                weekendBooster ? "bg-sky-500" : "bg-white/[0.1]"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ${
+                  weekendBooster ? "translate-x-[22px]" : "translate-x-0.5"
+                }`}
+                style={{ transitionTimingFunction: "var(--ease-spring)" }}
+              />
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-400">
+            {weekendBooster
+              ? "On — Fri-Sun get 1.4x the daily allowance of Mon-Thu, same total budget."
+              : "Off — every remaining day gets an equal share of the budget."}
+          </p>
         </div>
 
         <Button variant="primary" onClick={save} className="relative w-full py-3.5 text-sm">

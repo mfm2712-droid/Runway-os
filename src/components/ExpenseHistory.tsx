@@ -10,14 +10,28 @@ function isThisMonth(dateStr: string): boolean {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
 }
 
-function SummaryBar({ expenses, currency }: { expenses: Expense[]; currency: Currency }) {
+function SummaryBar({
+  expenses,
+  currency,
+  stealth,
+}: {
+  expenses: Expense[];
+  currency: Currency;
+  stealth: boolean;
+}) {
   const thisMonth = expenses.filter((e) => isThisMonth(e.date));
   const total = thisMonth.reduce((sum, e) => sum + e.amount, 0);
 
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-xs">
       <span className="text-slate-400">This Month</span>
-      <span className="font-semibold tracking-tight tabular-nums text-white">{formatCurrency(total, currency)}</span>
+      <span
+        className={`font-semibold tracking-tight tabular-nums text-white transition-all duration-300 ${
+          stealth ? "blur-sm select-none" : ""
+        }`}
+      >
+        {formatCurrency(total, currency)}
+      </span>
       <span className="text-slate-600">•</span>
       <span className="text-slate-400">
         {thisMonth.length} transaction{thisMonth.length === 1 ? "" : "s"}
@@ -30,16 +44,18 @@ export function ExpenseHistory({
   expenses,
   currency,
   onRemove,
+  stealth = false,
 }: {
   expenses: Expense[];
   currency: Currency;
   onRemove: (id: string) => void;
+  stealth?: boolean;
 }) {
   const sorted = [...expenses].sort((a, b) => b.date.localeCompare(a.date));
 
   return (
     <div className="space-y-4">
-      <SummaryBar expenses={expenses} currency={currency} />
+      <SummaryBar expenses={expenses} currency={currency} stealth={stealth} />
 
       <GlassCard className="p-6 space-y-4">
         <h4 className="text-sm font-semibold text-white">Recent Expenses</h4>
@@ -68,7 +84,11 @@ export function ExpenseHistory({
                 </div>
               </div>
               <div className="flex items-center gap-3 shrink-0">
-                <span className="font-semibold tracking-tight text-slate-200 tabular-nums">
+                <span
+                  className={`font-semibold tracking-tight text-slate-200 tabular-nums transition-all duration-300 ${
+                    stealth ? "blur-sm select-none" : ""
+                  }`}
+                >
                   {formatCurrency(e.amount, currency)}
                 </span>
                 <button

@@ -2,9 +2,10 @@ import { useState } from "react";
 import type { Currency, FinanceState, Subscription } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
 import { formatCurrency } from "../lib/calculations";
-import { generateCancellationEmail } from "../lib/ai/client";
+import { generateCancellationEmail, generateNegotiationScript } from "../lib/ai/client";
 import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
+import { SegmentedControl } from "./ui/SegmentedControl";
 import { SkeletonLines } from "./ai/Skeleton";
 import { FlagIcon, PlusIcon, TrashIcon } from "./ui/Icons";
 
@@ -46,6 +47,8 @@ function SummaryBar({
   );
 }
 
+type CancelMode = "cancel" | "negotiate";
+
 function CancelDrawer({
   sub,
   state,
@@ -55,6 +58,7 @@ function CancelDrawer({
   state: FinanceState;
   onMarkCancelled: (id: string) => void;
 }) {
+  const [mode, setMode] = useState<CancelMode>("negotiate");
   const [draft, setDraft] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [isLive, setIsLive] = useState(false);
@@ -63,10 +67,18 @@ function CancelDrawer({
   const generate = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setGenerating(true);
-    const result = await generateCancellationEmail(sub, state);
+    const result =
+      mode === "negotiate"
+        ? await generateNegotiationScript(sub, state)
+        : await generateCancellationEmail(sub, state);
     setDraft(result.draft);
     setIsLive(result.isLive);
     setGenerating(false);
+  };
+
+  const switchMode = (m: CancelMode) => {
+    setMode(m);
+    setDraft(null);
   };
 
   const copy = async (e: React.MouseEvent) => {
@@ -86,19 +98,30 @@ function CancelDrawer({
       onClick={(e) => e.stopPropagation()}
       className="mt-3 pt-3 border-t border-white/[0.08] space-y-3 animate-[floatIn_0.2s_var(--ease-spring)]"
     >
+      <SegmentedControl
+        value={mode}
+        onChange={switchMode}
+        options={[
+          { value: "negotiate", label: "☎️ Negotiate First" },
+          { value: "cancel", label: "✨ Cancel Draft" },
+        ]}
+      />
+
       {!draft && !generating && (
         <Button
           variant="primary"
           onClick={generate}
           className="w-full py-3 text-xs bg-gradient-to-r from-violet-400 to-sky-400"
         >
-          ✨ Cancel Draft
+          {mode === "negotiate" ? "☎️ Generate Negotiation Script" : "✨ Cancel Draft"}
         </Button>
       )}
 
       {generating && (
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-3 space-y-2">
-          <p className="text-[10px] ai-gradient-text font-semibold animate-pulse">✨ Drafting…</p>
+          <p className="text-[10px] ai-gradient-text font-semibold animate-pulse">
+            {mode === "negotiate" ? "☎️ Drafting script…" : "✨ Drafting…"}
+          </p>
           <SkeletonLines lines={4} />
         </div>
       )}
@@ -106,7 +129,9 @@ function CancelDrawer({
       {draft && !generating && (
         <div className="space-y-2">
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] ai-gradient-text font-semibold">✨ Draft ready</span>
+            <span className="text-[10px] ai-gradient-text font-semibold">
+              {mode === "negotiate" ? "☎️ Script ready" : "✨ Draft ready"}
+            </span>
             {!isLive && (
               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/[0.06] text-slate-500">
                 Simulated
@@ -143,12 +168,14 @@ function CancelDrawer({
 export function SubscriptionTracker({
   subscriptions,
   state,
+  savedTotal,
   onAdd,
   onRemove,
   onToggleFlag,
 }: {
   subscriptions: Subscription[];
   state: FinanceState;
+  savedTotal: number;
   onAdd: (sub: Omit<Subscription, "id">) => void;
   onRemove: (id: string) => void;
   onToggleFlag: (id: string) => void;
@@ -176,6 +203,20 @@ export function SubscriptionTracker({
 
   return (
     <div className="space-y-4">
+      {savedTotal > 0 && (
+        <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400/10 to-sky-400/10 border border-emerald-400/25">
+          <span className="text-xl" aria-hidden>
+            🎉
+          </span>
+          <p className="text-xs text-emerald-200">
+            <span className="font-bold tabular-nums">
+              {formatCurrency(savedTotal * 12, state.currency)}/yr
+            </span>{" "}
+            saved by trimming inactive leaks
+          </p>
+        </div>
+      )}
+
       <SummaryBar subscriptions={subscriptions} currency={state.currency} />
 
       <GlassCard className="p-6 space-y-4">

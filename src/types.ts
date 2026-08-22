@@ -55,6 +55,7 @@ export interface FinanceState {
   paydayDay?: number; // day of month, 1-31 — when set, spending horizon runs to payday instead of month-end
   safetyBuffer: number; // kept aside, excluded from Daily Safe Spend
   currency: Currency;
+  weekendBooster?: boolean; // when true, Daily Safe Spend weights Fri-Sun 1.4x vs Mon-Thu
 }
 
 export const CATEGORY_LABELS: Record<ExpenseCategory, string> = {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Currency, Expense, ExpenseCategory, Subscription } from "../types";
 import { CATEGORY_ICONS, CATEGORY_LABELS, CURRENCY_SYMBOLS } from "../types";
@@ -6,6 +6,8 @@ import { Button } from "./ui/Button";
 import { SegmentedControl } from "./ui/SegmentedControl";
 import { ReceiptDropzone } from "./ai/ReceiptDropzone";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
+import { triggerHaptic } from "../lib/haptics";
+import { playPop } from "../lib/audio";
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ExpenseCategory[];
 
@@ -18,12 +20,18 @@ function todayISO(): string {
 export function ExpenseModal({
   open,
   currency,
+  initialMode,
+  initialFile,
+  initialText,
   onClose,
   onAdd,
   onAddSubscription,
 }: {
   open: boolean;
   currency: Currency;
+  initialMode?: "manual" | "scan";
+  initialFile?: File;
+  initialText?: string;
   onClose: () => void;
   onAdd: (expense: Omit<Expense, "id">) => void;
   onAddSubscription: (sub: Omit<Subscription, "id">) => void;
@@ -33,6 +41,10 @@ export function ExpenseModal({
   const [category, setCategory] = useState<ExpenseCategory>("food");
   const [date, setDate] = useState(todayISO());
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (open) setMode(initialMode ?? "manual");
+  }, [open, initialMode]);
 
   const amt = Number(amount);
   const valid = amt > 0;
@@ -47,6 +59,8 @@ export function ExpenseModal({
 
   const submit = () => {
     if (!valid) return;
+    triggerHaptic("success");
+    playPop();
     onAdd({ amount: amt, category, date });
     close();
   };
@@ -101,7 +115,13 @@ export function ExpenseModal({
 
         {mode === "scan" ? (
           <div className="relative">
-            <ReceiptDropzone currency={currency} onAddExpense={onAdd} onAddSubscription={onAddSubscription} />
+            <ReceiptDropzone
+              currency={currency}
+              onAddExpense={onAdd}
+              onAddSubscription={onAddSubscription}
+              initialFile={initialFile}
+              initialText={initialText}
+            />
           </div>
         ) : (
           <>

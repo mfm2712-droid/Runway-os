@@ -10,7 +10,7 @@ const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const GAP_PCT = 1.5; // visual gap between segments, in % of circumference
 
-export function SpendDonutChart({ state }: { state: FinanceState }) {
+export function SpendDonutChart({ state, stealth = false }: { state: FinanceState; stealth?: boolean }) {
   const [selected, setSelected] = useState<string | null>(null);
   const slices = computeSpendBreakdown(state);
   const total = spendBreakdownTotal(state);
@@ -71,7 +71,11 @@ export function SpendDonutChart({ state }: { state: FinanceState }) {
           </svg>
 
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="flex flex-col items-center text-center px-4">
+            <div
+              className={`flex flex-col items-center text-center px-4 transition-all duration-300 ${
+                stealth ? "blur-sm select-none" : ""
+              }`}
+            >
               {active ? (
                 <>
                   <span className="text-xl" aria-hidden>
@@ -109,7 +113,11 @@ export function SpendDonutChart({ state }: { state: FinanceState }) {
             />
             <div className="min-w-0">
               <p className="text-[11px] text-slate-300 truncate">{s.label}</p>
-              <p className="text-[10px] text-slate-500 tracking-tight tabular-nums">
+              <p
+                className={`text-[10px] text-slate-500 tracking-tight tabular-nums transition-all duration-300 ${
+                  stealth ? "blur-sm select-none" : ""
+                }`}
+              >
                 <span className="font-semibold text-slate-300">{formatCurrency(s.amount, state.currency)}</span> ·{" "}
                 {s.pct.toFixed(0)}%
               </p>

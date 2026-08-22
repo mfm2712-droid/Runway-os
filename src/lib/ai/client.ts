@@ -2,7 +2,12 @@ import type { FinanceState, Subscription } from "../../types";
 import { CURRENCY_SYMBOLS } from "../../types";
 import { buildFinancialContext } from "./context";
 import type { ParsedReceipt } from "./simulate";
-import { simulateAdvisorReply, simulateCancellationEmail, simulateReceiptParse } from "./simulate";
+import {
+  simulateAdvisorReply,
+  simulateCancellationEmail,
+  simulateNegotiationScript,
+  simulateReceiptParse,
+} from "./simulate";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -165,5 +170,46 @@ export async function generateCancellationEmail(
     return { draft, isLive: true };
   } catch {
     return { draft: simulateCancellationEmail(sub, state.currency), isLive: false };
+  }
+}
+
+/**
+ * Generates a retention negotiation script for a call or chat with the
+ * provider — asking for a discount before resorting to cancelling outright.
+ * Same live/fallback pattern as generateCancellationEmail.
+ */
+export async function generateNegotiationScript(
+  sub: Subscription,
+  state: FinanceState,
+): Promise<GeneratedEmailResult> {
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: "user",
+            content: `Write a short call/chat retention negotiation script for cancelling the "${sub.name}" subscription (currently ${CURRENCY_SYMBOLS[state.currency]}${sub.amount.toFixed(2)}/month). The goal is to ask the provider's retention team for a 30-40% discount before agreeing to cancel. Structure it as: an opening line, a response if they ask why, a response if they offer a discount, a response if they offer nothing, and 2-3 short tips. Output only the script, no commentary.`,
+          },
+        ],
+        context: buildFinancialContext(state),
+      }),
+    });
+
+    if (!res.ok || !res.body) throw new Error(`AI endpoint returned ${res.status}`);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let draft = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      draft += decoder.decode(value, { stream: true });
+    }
+    if (!draft.trim()) throw new Error("Empty AI response");
+    return { draft, isLive: true };
+  } catch {
+    return { draft: simulateNegotiationScript(sub, state.currency), isLive: false };
   }
 }

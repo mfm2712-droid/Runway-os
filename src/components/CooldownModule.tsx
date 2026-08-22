@@ -6,6 +6,8 @@ import { dailyLimitImpact, formatCountdown, isExpired, msRemaining, runwayDaysCo
 import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
 import { PlusIcon } from "./ui/Icons";
+import { triggerHaptic } from "../lib/haptics";
+import { playPop } from "../lib/audio";
 
 export function CooldownModule({
   wishlist,
@@ -152,14 +154,22 @@ export function CooldownModule({
               {expired ? (
                 <div className="flex gap-2">
                   <button
-                    onClick={() => onBuySafely(item)}
+                    onClick={() => {
+                      triggerHaptic("medium");
+                      playPop();
+                      onBuySafely(item);
+                    }}
                     className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold bg-sky-500/15 border border-sky-500/30 text-sky-300 active:scale-[0.97] transition-transform"
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
                     Buy Safely
                   </button>
                   <button
-                    onClick={() => onDiscard(item)}
+                    onClick={() => {
+                      triggerHaptic("success");
+                      playPop();
+                      onDiscard(item);
+                    }}
                     className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 active:scale-[0.97] transition-transform"
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
