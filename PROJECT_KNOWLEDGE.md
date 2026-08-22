@@ -247,6 +247,20 @@ alone (no `vercel dev`, no API keys) exercises the full simulated path.
 
 ### Unreleased (post-3.1.0, header/ambient-visual follow-ups)
 
+- **`vercel dev` was silently not loading `.env.local`** (observed on Vercel
+  CLI 59.4.0) — confirmed via `--debug` output, which never logged parsing
+  `.env.local` as key/value pairs (only "ignoring" it during an unrelated
+  file-bundling scan), even with the `--local` flag. This made AI features
+  look broken (chat fell back to "Simulated," receipt OCR threw "Couldn't
+  read that receipt") when the actual cause was the API key never reaching
+  the Edge Function's `process.env`, not a bug in `api/chat.ts` or
+  `api/parse-receipt.ts` (both were verified correct — exporting the same
+  key directly in the parent shell before spawning `vercel dev` worked
+  immediately). Added **`scripts/dev-ai.sh`** as the reliable workaround: it
+  sources `.env.local` itself, exports every var, then execs `vercel dev
+  --local`. If a future Vercel CLI version fixes this upstream, this script
+  becomes redundant but harmless — safe to keep or delete either way. See
+  §3.3 for usage.
 - **Header logo now spins in place; the giant ambient background ring was
   removed entirely.** Original attempt combined `scale-150` (a `transform:
   scale()`) with a `transform: rotate()` keyframe on the same `<img>` —
@@ -540,19 +554,40 @@ mentioned inline in several source-code comments; it's the single most
 common cause of "why did my endpoint return an unexpected response" in this
 repo. Two ways to actually test the backend:
 
-**Option A — `vercel dev` (recommended for full-stack local testing):**
+**Option A — `./scripts/dev-ai.sh` (recommended — works around a real `vercel dev` bug):**
 
 ```bash
-npm install -g vercel
-vercel link          # one-time, links this folder to a Vercel project
+cp .env.example .env.local   # one-time — then fill in ANTHROPIC_API_KEY (and Stripe vars) in .env.local
+./scripts/dev-ai.sh
+```
+
+This runs the Vite frontend *and* the `api/` Edge Functions together, same
+as plain `vercel dev` — **use this instead of calling `vercel dev` directly.**
+On at least one observed machine/CLI version (Vercel CLI 59.4.0), `vercel
+dev` silently failed to load `.env.local` into the Edge Function runtime —
+confirmed by `--debug` output that never showed `.env.local` being parsed
+for key/value pairs, even with `vercel dev --local`. Both `/api/chat` and
+`/api/parse-receipt` kept returning `"AI backend not configured"` (500) as
+a result, which looks exactly like a missing/wrong API key from the
+outside. The workaround: `scripts/dev-ai.sh` sources `.env.local` and
+exports each variable in the *parent shell* before spawning `vercel dev`
+— exporting the var directly (bypassing the CLI's own `.env.local`
+loading entirely) reliably works. If you don't have the Vercel CLI
+installed and a global `npm install -g vercel` fails with `EACCES` (common
+when `/usr/local/lib/node_modules` isn't user-writable), the script handles
+that too via `npx --cache ~/.npm-vercel-cache -y vercel@latest dev` under
+the hood — no global install, no sudo.
+
+If you'd rather run the plain CLI yourself:
+
+```bash
+npm install -g vercel   # or the npx workaround above if this EACCES's
+vercel link             # one-time, links this folder to a Vercel project
 vercel dev
 ```
 
-This runs the Vite frontend *and* the `api/` Edge Functions together,
-reading env vars from `.env.local` (copy the shape from
-[`.env.example`](.env.example) — never commit real values). Set
-`STRIPE_SECRET_KEY` (use `sk_test_...`), `STRIPE_PRICE_MONTHLY`,
-`STRIPE_PRICE_ANNUAL` here.
+— just be aware of the `.env.local`-loading bug above if AI features look
+"simulated" even with a real key set; reach for `dev-ai.sh` if so.
 
 **Option B — Stripe CLI for webhook testing specifically:**
 
