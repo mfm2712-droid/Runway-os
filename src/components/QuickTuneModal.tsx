@@ -30,10 +30,14 @@ export function QuickTuneModal({
   };
 
   const save = () => {
+    const num = (val: string) => {
+      const n = parseFloat(val);
+      return Number.isFinite(n) ? n : 0;
+    };
     onChange({
-      cashBalance: Number(cash) || 0,
-      safetyBuffer: Math.max(0, Number(buffer) || 0),
-      paydayDay: paydayEnabled ? Math.min(31, Math.max(1, Number(paydayDay) || 1)) : undefined,
+      cashBalance: num(cash),
+      safetyBuffer: Math.max(0, num(buffer)),
+      paydayDay: paydayEnabled ? Math.min(31, Math.max(1, num(paydayDay) || 1)) : undefined,
       weekendBooster,
     });
     onClose();
@@ -87,6 +91,7 @@ export function QuickTuneModal({
               inputMode="decimal"
               value={cash}
               onChange={(e) => setCash(e.target.value)}
+              onFocus={(e) => e.target.select()}
               className="w-full bg-transparent text-xl font-bold tracking-tight text-white tabular-nums focus:outline-none"
             />
           </div>
@@ -104,6 +109,7 @@ export function QuickTuneModal({
               inputMode="decimal"
               value={buffer}
               onChange={(e) => setBuffer(e.target.value)}
+              onFocus={(e) => e.target.select()}
               className="w-full bg-transparent text-xl font-bold tracking-tight text-white tabular-nums focus:outline-none"
             />
           </div>
@@ -136,6 +142,7 @@ export function QuickTuneModal({
                 max={31}
                 value={paydayDay}
                 onChange={(e) => setPaydayDay(e.target.value)}
+                onFocus={(e) => e.target.select()}
                 className="w-20 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white tabular-nums focus:outline-none focus:border-sky-500"
               />
               <span className="text-[10px] text-slate-400">

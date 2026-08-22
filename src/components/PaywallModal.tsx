@@ -6,6 +6,7 @@ import { track } from "../lib/analytics";
 import { startCheckout, type Plan } from "../lib/checkout";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 import { playClick } from "../lib/audio";
+import { useSyncSubscriptionCheck } from "../hooks/useSyncSubscriptionCheck";
 
 type TokenState = "idle" | "checking" | "invalid" | "valid" | "error";
 type RestoreState = "idle" | "checking" | "not-found" | "found" | "error";
@@ -14,11 +15,16 @@ export function PaywallModal({
   open,
   onClose,
   onActivate,
+  licenseKey,
+  onLicenseInvalid,
 }: {
   open: boolean;
   onClose: () => void;
   onActivate: (key: string) => void;
+  licenseKey: string | null;
+  onLicenseInvalid: () => void;
 }) {
+  useSyncSubscriptionCheck(open, licenseKey, onLicenseInvalid);
   const [token, setToken] = useState("");
   const [tokenState, setTokenState] = useState<TokenState>("idle");
   const [email, setEmail] = useState("");

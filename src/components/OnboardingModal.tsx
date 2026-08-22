@@ -30,11 +30,16 @@ export function OnboardingModal({
   const sym = CURRENCY_SYMBOLS[currency];
 
   const stepValid =
-    step === 1 ? cash.trim() !== "" && Number(cash) >= 0
-    : step === 2 ? outflows.trim() !== "" && Number(outflows) >= 0
+    step === 1 ? cash.trim() !== "" && parseFloat(cash) >= 0
+    : step === 2 ? outflows.trim() !== "" && parseFloat(outflows) >= 0
     : true;
 
   const back = () => setStep((s) => Math.max(1, s - 1));
+
+  const num = (val: string, fallback: number) => {
+    const n = parseFloat(val);
+    return Number.isFinite(n) ? n : fallback;
+  };
 
   const advance = () => {
     if (step < 3) {
@@ -42,9 +47,9 @@ export function OnboardingModal({
       return;
     }
     onComplete({
-      cashBalance: Number(cash) || 0,
-      fixedMonthlyOutflows: Number(outflows) || 0,
-      paydayDay: Math.min(31, Math.max(1, Number(paydayDay) || 28)),
+      cashBalance: num(cash, 0),
+      fixedMonthlyOutflows: num(outflows, 0),
+      paydayDay: Math.min(31, Math.max(1, num(paydayDay, 28))),
     });
   };
 
@@ -105,6 +110,7 @@ export function OnboardingModal({
                 placeholder="0.00"
                 value={cash}
                 onChange={(e) => setCash(e.target.value)}
+                onFocus={(e) => e.target.select()}
                 onKeyDown={(e) => e.key === "Enter" && stepValid && advance()}
                 className="w-full bg-transparent text-3xl font-bold tracking-tight text-white tabular-nums focus:outline-none glow-text"
               />
@@ -122,6 +128,7 @@ export function OnboardingModal({
                 placeholder="0.00"
                 value={outflows}
                 onChange={(e) => setOutflows(e.target.value)}
+                onFocus={(e) => e.target.select()}
                 onKeyDown={(e) => e.key === "Enter" && stepValid && advance()}
                 className="w-full bg-transparent text-3xl font-bold tracking-tight text-white tabular-nums focus:outline-none glow-text"
               />

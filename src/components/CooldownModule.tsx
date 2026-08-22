@@ -34,8 +34,8 @@ export function CooldownModule({
   }, []);
 
   const submit = () => {
-    const p = Number(price);
-    if (!name.trim() || !p || p <= 0) return;
+    const p = parseFloat(price);
+    if (!name.trim() || !Number.isFinite(p) || p <= 0) return;
     onAdd({ name: name.trim(), price: p, reason: reason.trim() });
     setName("");
     setPrice("");
@@ -78,6 +78,7 @@ export function CooldownModule({
             placeholder={`Price (${CURRENCY_SYMBOLS[state.currency]})`}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
+            onFocus={(e) => e.target.select()}
             className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
           />
           <input

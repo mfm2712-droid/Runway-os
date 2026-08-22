@@ -17,6 +17,23 @@ interface VerifyBody {
   token: string;
 }
 
+async function sha256(input: string): Promise<Uint8Array> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return new Uint8Array(digest);
+}
+
+// Comparing the raw strings directly (or any early-exit loop over them)
+// leaks how many leading characters matched via response timing. Hashing
+// both sides first fixes the comparison to a constant 32-byte digest
+// regardless of input length, then XOR-accumulating without branching
+// keeps the byte comparison itself constant-time.
+async function timingSafeStringEqual(a: string, b: string): Promise<boolean> {
+  const [ha, hb] = await Promise.all([sha256(a), sha256(b)]);
+  let diff = 0;
+  for (let i = 0; i < ha.length; i++) diff |= ha[i] ^ hb[i];
+  return diff === 0;
+}
+
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
@@ -37,7 +54,7 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const token = (body.token ?? "").trim();
-  const valid = token.length > 0 && token === secret;
+  const valid = token.length > 0 && (await timingSafeStringEqual(token, secret));
 
   return new Response(JSON.stringify({ valid }), {
     headers: { "Content-Type": "application/json" },

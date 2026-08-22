@@ -14,6 +14,7 @@ import { downloadExpensesCsv } from "../lib/csvExport";
 import { isAudioMuted, playClick, setAudioMuted } from "../lib/audio";
 import { Button } from "./ui/Button";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
+import { useSyncSubscriptionCheck } from "../hooks/useSyncSubscriptionCheck";
 
 const CURRENCIES: Currency[] = ["GBP", "EUR", "USD"];
 
@@ -34,6 +35,7 @@ export function SettingsModal({
   onChangeDevOverride,
   meta,
   onRestore,
+  onLicenseInvalid,
 }: {
   open: boolean;
   onClose: () => void;
@@ -44,7 +46,9 @@ export function SettingsModal({
   onChangeDevOverride: (v: DevOverride) => void;
   meta: BackupMeta;
   onRestore: (state: FinanceState, meta: BackupMeta) => void;
+  onLicenseInvalid: () => void;
 }) {
+  useSyncSubscriptionCheck(open, meta.licenseKey, onLicenseInvalid);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [restoreStatus, setRestoreStatus] = useState<"idle" | "error" | "success">("idle");
   const [restoreMessage, setRestoreMessage] = useState("");

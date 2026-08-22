@@ -10,7 +10,7 @@ export interface SpendSlice {
   pct: number;
 }
 
-const LEISURE_CATEGORIES: Expense["category"][] = [
+export const LEISURE_CATEGORIES: Expense["category"][] = [
   "transport",
   "shopping",
   "health",
@@ -48,7 +48,7 @@ export function computeSpendBreakdown(state: FinanceState): SpendSlice[] {
   ];
 }
 
-function isThisMonth(dateStr: string): boolean {
+export function isThisMonth(dateStr: string): boolean {
   const d = new Date(dateStr);
   const now = new Date();
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();

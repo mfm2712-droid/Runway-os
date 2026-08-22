@@ -65,16 +65,21 @@ the copy above assumes (a).
 
 ## Before you publish — read this, not just skim it
 
-1. **The AI endpoints have no rate limiting or auth.** `api/chat.ts` and
-   `api/parse-receipt.ts` will answer any request that reaches them, from
-   anyone — not just people who paid. Once the URL is public (and it will be,
-   via ads and the Lemon Squeezy delivery screen), your `ANTHROPIC_API_KEY` is
-   effectively exposed to unlimited use by anyone who finds it, capped only by
-   `max_tokens` per request. **Do not turn on paid ad traffic before adding
-   rate limiting** — at minimum, per-IP throttling (e.g. Vercel's built-in
-   Firewall rate-limit rules, or `@upstash/ratelimit` with a free Upstash
-   Redis instance is a common lightweight option). This is the single most
-   important item on this list.
+1. **The AI and billing endpoints have no auth, and rate limiting is
+   best-effort only.** `api/chat.ts`, `api/parse-receipt.ts`, and
+   `api/verify-subscription.ts` each throttle per-IP via an in-memory sliding
+   window (`api/_lib/rateLimit.ts` — currently 15 req/min for chat and
+   receipt parsing, 30 req/min for subscription re-verification). This is
+   real protection against a runaway client or a simple abuse script, but it
+   is **not a hard guarantee**: Vercel Edge Functions run as multiple,
+   ephemeral, per-region instances with no shared state, so the limit caps
+   each hot instance rather than the true global rate for an IP. There's
+   still no auth, so anyone with the URL — not just people who paid — can
+   call these endpoints up to that limit. **Before turning on paid ad
+   traffic at meaningful volume**, put a real distributed limiter in front
+   (e.g. Vercel's built-in Firewall rate-limit rules, or `@upstash/ratelimit`
+   with a free Upstash Redis instance) if you need a strict per-IP cap rather
+   than this best-effort one.
 2. **AI usage costs are now a real, ongoing marginal cost per user** — this
    changes your unit economics from "£29 once, zero marginal cost" to "£29
    once, plus however many Claude API calls each buyer makes, forever." A

@@ -35,15 +35,52 @@ export function totalMonthlyOutflow(state: FinanceState): number {
   return state.fixedMonthlyOutflows + subscriptionsTotal(state);
 }
 
-export function spentThisMonth(state: FinanceState, today: Date = new Date()): number {
-  const y = today.getFullYear();
-  const m = today.getMonth();
+export function spentInMonth(state: FinanceState, year: number, month: number): number {
   return state.expenses
     .filter((e) => {
       const d = new Date(e.date);
-      return d.getFullYear() === y && d.getMonth() === m;
+      return d.getFullYear() === year && d.getMonth() === month;
     })
     .reduce((sum, e) => sum + e.amount, 0);
+}
+
+export function spentThisMonth(state: FinanceState, today: Date = new Date()): number {
+  return spentInMonth(state, today.getFullYear(), today.getMonth());
+}
+
+/** Sum of logged expenses dated exactly `dateISO` (YYYY-MM-DD). */
+export function dailySpend(state: FinanceState, dateISO: string): number {
+  return state.expenses
+    .filter((e) => e.date === dateISO)
+    .reduce((sum, e) => sum + e.amount, 0);
+}
+
+function hasDataInMonth(state: FinanceState, year: number, month: number): boolean {
+  return state.expenses.some((e) => {
+    const d = new Date(e.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+}
+
+/**
+ * % change in total monthly footprint (fixed outflows + subscriptions +
+ * logged expenses) vs the previous calendar month. Fixed outflows and
+ * subscriptions are treated as constant across both months (this app has no
+ * historical record of them), so the delta is really driven by the change
+ * in logged expenses — returns null when the previous month has no logged
+ * expenses at all, since there's nothing real to compare against yet.
+ */
+export function monthOverMonthDelta(state: FinanceState, today: Date = new Date()): number | null {
+  const prevMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const prevYear = prevMonthDate.getFullYear();
+  const prevMonth = prevMonthDate.getMonth();
+  if (!hasDataInMonth(state, prevYear, prevMonth)) return null;
+
+  const recurring = state.fixedMonthlyOutflows + subscriptionsTotal(state);
+  const currentTotal = recurring + spentThisMonth(state, today);
+  const previousTotal = recurring + spentInMonth(state, prevYear, prevMonth);
+  if (previousTotal <= 0) return null;
+  return ((currentTotal - previousTotal) / previousTotal) * 100;
 }
 
 /** Worst-case runway: months until cash truly hits zero at zero income. Not reduced by the safety buffer — that's what Daily Safe Spend is for. */
@@ -124,4 +161,11 @@ export function formatCurrency(amount: number, currency: Currency = "GBP"): stri
 export function formatMonths(months: number): string {
   if (!Number.isFinite(months)) return "∞";
   return months.toFixed(1);
+}
+
+/** Runway display for the headline stat: months normally, years past a year, ∞/Sustainable at zero burn. */
+export function formatRunwayDisplay(months: number): { value: string; unit: string } {
+  if (!Number.isFinite(months)) return { value: "∞", unit: "Sustainable" };
+  if (months > 12) return { value: (months / 12).toFixed(1), unit: "yr" };
+  return { value: months.toFixed(1), unit: "mo" };
 }

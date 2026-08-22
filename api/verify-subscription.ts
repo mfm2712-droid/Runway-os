@@ -7,12 +7,23 @@
 /// <reference types="node" />
 
 import Stripe from "stripe";
+import { checkRateLimit, getClientIp } from "./_lib/rateLimit";
 
 export const config = { runtime: "edge" };
+
+const RATE_LIMIT = 30; // requests
+const RATE_WINDOW_MS = 60_000; // per minute
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== "GET") {
     return new Response("Method not allowed", { status: 405 });
+  }
+
+  if (!checkRateLimit(getClientIp(req), RATE_LIMIT, RATE_WINDOW_MS)) {
+    return new Response("Too many requests — please slow down.", {
+      status: 429,
+      headers: { "Retry-After": "60" },
+    });
   }
 
   const secretKey = process.env.STRIPE_SECRET_KEY;

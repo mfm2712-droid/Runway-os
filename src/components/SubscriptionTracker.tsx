@@ -187,12 +187,13 @@ export function SubscriptionTracker({
   const [renewsOn, setRenewsOn] = useState("1");
 
   const submit = () => {
-    const amt = Number(amount);
-    if (!name.trim() || !amt || amt <= 0) return;
+    const amt = parseFloat(amount);
+    if (!name.trim() || !Number.isFinite(amt) || amt <= 0) return;
+    const renewsN = parseFloat(renewsOn);
     onAdd({
       name: name.trim(),
       amount: amt,
-      renewsOn: Math.min(31, Math.max(1, Number(renewsOn) || 1)),
+      renewsOn: Math.min(31, Math.max(1, Number.isFinite(renewsN) ? renewsN : 1)),
       flaggedUnused: false,
     });
     setName("");
@@ -249,6 +250,7 @@ export function SubscriptionTracker({
                 placeholder={`${CURRENCY_SYMBOLS[state.currency]}/mo`}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                onFocus={(e) => e.target.select()}
                 className="w-1/2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
               />
               <input
@@ -258,6 +260,7 @@ export function SubscriptionTracker({
                 placeholder="Renews on (day)"
                 value={renewsOn}
                 onChange={(e) => setRenewsOn(e.target.value)}
+                onFocus={(e) => e.target.select()}
                 className="w-1/2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
               />
             </div>

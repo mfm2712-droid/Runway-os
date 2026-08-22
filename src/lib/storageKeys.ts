@@ -3,3 +3,5 @@ export const ONBOARDED_KEY = "runway-os:onboarded";
 export const TRIAL_STARTED_KEY = "runway-os:trialStartedAt";
 export const LICENSE_KEY = "runway-os:licenseKey";
 export const DEV_OVERRIDE_KEY = "runway-os:devOverride";
+export const STREAK_KEY = "runway-os:streak";
+export const DAILY_SERIES_KEY = "runway-os:dailySeries";

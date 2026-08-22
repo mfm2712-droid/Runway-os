@@ -9,6 +9,8 @@ import { BottomNav, type DashboardTab } from "../components/BottomNav";
 import { AdvisorDrawer } from "../components/ai/AdvisorDrawer";
 import { SmartBriefingCard } from "../components/ai/SmartBriefingCard";
 import { SpendDonutChart } from "../components/SpendDonutChart";
+import { CategoryDetailModal } from "../components/CategoryDetailModal";
+import type { SpendSlice } from "../lib/spendBreakdown";
 import { CooldownModule } from "../components/CooldownModule";
 import { Header } from "../components/Header";
 import { AmbientLogoAura } from "../components/AmbientLogoAura";
@@ -23,12 +25,16 @@ import { uid } from "../lib/id";
 import { computeTrialStatus, type DevOverride } from "../lib/trial";
 import { track } from "../lib/analytics";
 import type { BackupMeta } from "../lib/backupUtils";
+import { BLANK_STREAK, updateStreak, type StreakData } from "../lib/streak";
+import { upsertToday, type DailySeries } from "../lib/dailySeries";
 import {
   STORAGE_KEY,
   ONBOARDED_KEY,
   TRIAL_STARTED_KEY,
   LICENSE_KEY,
   DEV_OVERRIDE_KEY,
+  STREAK_KEY,
+  DAILY_SERIES_KEY,
 } from "../lib/storageKeys";
 import type { Currency, Expense, FinanceState, Subscription, WishlistItem } from "../types";
 
@@ -111,9 +117,21 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
   const [advisorOpen, setAdvisorOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [detailBucket, setDetailBucket] = useState<SpendSlice["key"] | null>(null);
   const [tab, setTab] = useState<DashboardTab>("overview");
   const [stealthMode, setStealthMode] = useLocalStorage<boolean>("runway-os:stealthMode", false);
   const [savedTotal, setSavedTotal] = useLocalStorage<number>("runway-os:saved-total", 0);
+  const [streak, setStreak] = useLocalStorage<StreakData>(STREAK_KEY, BLANK_STREAK);
+  const [dailySeries, setDailySeries] = useLocalStorage<DailySeries>(DAILY_SERIES_KEY, []);
+
+  // Refresh the streak and today's sparkline entry once per app open — safe
+  // to call repeatedly since both are idempotent for a day already recorded.
+  useEffect(() => {
+    if (!onboarded) return;
+    setStreak((s) => updateStreak(state, s));
+    setDailySeries((series) => upsertToday(series, state));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onboarded]);
 
   // Re-render periodically so the trial countdown stays accurate without
   // requiring user interaction.
@@ -203,8 +221,11 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
       ),
     }));
 
-  const addExpense = (expense: Omit<Expense, "id">) =>
-    setState((s) => ({ ...s, expenses: [...s.expenses, { ...expense, id: uid() }] }));
+  const addExpense = (expense: Omit<Expense, "id">) => {
+    const nextState = { ...state, expenses: [...state.expenses, { ...expense, id: uid() }] };
+    setState(nextState);
+    setDailySeries((series) => upsertToday(series, nextState));
+  };
 
   const removeExpense = (id: string) =>
     setState((s) => ({ ...s, expenses: s.expenses.filter((x) => x.id !== id) }));
@@ -278,9 +299,15 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
           {tab === "overview" && (
             <>
               <SmartBriefingCard state={state} />
-              <HeroSpendCard state={state} onChange={patch} stealth={stealthMode} />
+              <HeroSpendCard
+                state={state}
+                onChange={patch}
+                stealth={stealthMode}
+                streak={streak}
+                series={dailySeries}
+              />
               <StatPills state={state} stealth={stealthMode} />
-              <SpendDonutChart state={state} stealth={stealthMode} />
+              <SpendDonutChart state={state} stealth={stealthMode} onOpenDetail={setDetailBucket} />
               <CooldownModule
                 wishlist={state.wishlist}
                 state={state}
@@ -359,6 +386,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         open={paywallOpen}
         onClose={() => setPaywallOpen(false)}
         onActivate={activateLicense}
+        licenseKey={licenseKey}
+        onLicenseInvalid={() => setLicenseKey(null)}
       />
       <SettingsModal
         open={settingsOpen}
@@ -370,6 +399,13 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         onChangeDevOverride={setDevOverride}
         meta={backupMeta}
         onRestore={restoreBackup}
+        onLicenseInvalid={() => setLicenseKey(null)}
+      />
+      <CategoryDetailModal
+        bucketKey={detailBucket}
+        state={state}
+        onClose={() => setDetailBucket(null)}
+        onRemoveExpense={removeExpense}
       />
 
       <OnboardingModal

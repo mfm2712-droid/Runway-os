@@ -151,6 +151,7 @@ export function ExpenseModal({
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
+                  onFocus={(e) => e.target.select()}
                   className="w-full bg-transparent text-3xl font-bold tracking-tight text-white tabular-nums focus:outline-none glow-text"
                   style={{ color: valid ? "#38bdf8" : undefined }}
                 />

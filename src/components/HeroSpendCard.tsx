@@ -6,11 +6,14 @@ import {
   runwayMonths,
   spendingHorizonDays,
 } from "../lib/calculations";
+import type { StreakData } from "../lib/streak";
+import type { DailySeries } from "../lib/dailySeries";
 import { usePulseOnChange } from "../hooks/usePulseOnChange";
 import { GlassCard } from "./ui/GlassCard";
 import { RingProgress } from "./ui/RingProgress";
 import { QuickTuneModal } from "./QuickTuneModal";
 import { AnimatedNumber } from "./ui/AnimatedNumber";
+import { SafeSpendSparkline } from "./SafeSpendSparkline";
 import { triggerHaptic } from "../lib/haptics";
 import { playClick } from "../lib/audio";
 
@@ -24,10 +27,14 @@ export function HeroSpendCard({
   state,
   onChange,
   stealth = false,
+  streak,
+  series,
 }: {
   state: FinanceState;
   onChange: (patch: Partial<FinanceState>) => void;
   stealth?: boolean;
+  streak?: StreakData;
+  series?: DailySeries;
 }) {
   const [tuneOpen, setTuneOpen] = useState(false);
   const safeSpend = dailySafeSpend(state);
@@ -76,6 +83,18 @@ export function HeroSpendCard({
         Runway health · {Number.isFinite(runway) ? `${runway.toFixed(1)} mo` : "∞"}
       </p>
       <p className="relative text-[10px] text-slate-400 mt-1">Tap the ring to tune your numbers</p>
+
+      {!!streak && streak.count > 0 && (
+        <p className="relative text-[11px] font-medium text-amber-300 mt-3">
+          🔥 {streak.count}-day safe spend streak
+        </p>
+      )}
+
+      {!!series && series.length >= 2 && (
+        <div className="relative w-full mt-5">
+          <SafeSpendSparkline series={series} />
+        </div>
+      )}
 
       <QuickTuneModal
         open={tuneOpen}

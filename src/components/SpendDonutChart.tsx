@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { FinanceState } from "../types";
-import { computeSpendBreakdown, spendBreakdownTotal } from "../lib/spendBreakdown";
-import { formatCurrency } from "../lib/calculations";
+import { computeSpendBreakdown, spendBreakdownTotal, type SpendSlice } from "../lib/spendBreakdown";
+import { formatCurrency, monthOverMonthDelta } from "../lib/calculations";
 import { GlassCard } from "./ui/GlassCard";
+import { playClick } from "../lib/audio";
 
 const SIZE = 200;
 const STROKE = 26;
@@ -10,19 +11,43 @@ const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const GAP_PCT = 1.5; // visual gap between segments, in % of circumference
 
-export function SpendDonutChart({ state, stealth = false }: { state: FinanceState; stealth?: boolean }) {
+export function SpendDonutChart({
+  state,
+  stealth = false,
+  onOpenDetail,
+}: {
+  state: FinanceState;
+  stealth?: boolean;
+  onOpenDetail: (key: SpendSlice["key"]) => void;
+}) {
   const [selected, setSelected] = useState<string | null>(null);
   const slices = computeSpendBreakdown(state);
   const total = spendBreakdownTotal(state);
   const active = slices.find((s) => s.key === selected) ?? null;
+  const momDelta = monthOverMonthDelta(state);
 
   let cumulativePct = 0;
 
   return (
     <GlassCard className="p-6 space-y-5">
-      <div className="flex justify-between items-center">
-        <h4 className="text-sm font-semibold text-white">Spend Breakdown</h4>
-        <span className="text-[10px] text-slate-500">tap a slice</span>
+      <div className="flex justify-between items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <h4 className="text-sm font-semibold text-white shrink-0">Spend Breakdown</h4>
+          {momDelta !== null && (
+            <span
+              className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full tabular-nums shrink-0 ${
+                momDelta > 0.5
+                  ? "bg-rose-500/15 text-rose-300"
+                  : momDelta < -0.5
+                  ? "bg-emerald-500/15 text-emerald-300"
+                  : "bg-white/[0.06] text-slate-400"
+              }`}
+            >
+              {momDelta > 0.5 ? "↑" : momDelta < -0.5 ? "↓" : "•"} {Math.abs(momDelta).toFixed(0)}% vs last mo
+            </span>
+          )}
+        </div>
+        <span className="text-[10px] text-slate-500 shrink-0">tap a row for details</span>
       </div>
 
       <div className="flex justify-center">
@@ -101,17 +126,18 @@ export function SpendDonutChart({ state, stealth = false }: { state: FinanceStat
         {slices.map((s) => (
           <button
             key={s.key}
-            onClick={() => setSelected(selected === s.key ? null : s.key)}
-            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all duration-150 active:scale-[0.97] ${
-              selected === s.key ? "bg-white/[0.06] border border-white/[0.12]" : "border border-transparent"
-            }`}
+            onClick={() => {
+              playClick();
+              onOpenDetail(s.key);
+            }}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-left border border-transparent transition-all duration-150 active:scale-[0.97] hover:bg-white/[0.04]"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
             <span
               className="h-2 w-2 rounded-full shrink-0"
               style={{ background: s.color, boxShadow: `0 0 6px ${s.color}aa` }}
             />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-[11px] text-slate-300 truncate">{s.label}</p>
               <p
                 className={`text-[10px] text-slate-500 tracking-tight tabular-nums transition-all duration-300 ${
@@ -122,6 +148,9 @@ export function SpendDonutChart({ state, stealth = false }: { state: FinanceStat
                 {s.pct.toFixed(0)}%
               </p>
             </div>
+            <span className="text-slate-600 shrink-0" aria-hidden>
+              ›
+            </span>
           </button>
         ))}
       </div>

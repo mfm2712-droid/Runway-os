@@ -35,6 +35,18 @@ function ScenarioField({
   onChange: (v: number) => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+
+  const startEditing = () => {
+    setDraft(String(value));
+    setEditing(true);
+  };
+
+  const commit = () => {
+    const n = parseFloat(draft);
+    onChange(Number.isFinite(n) ? n : 0);
+    setEditing(false);
+  };
 
   if (editing) {
     return (
@@ -47,10 +59,11 @@ function ScenarioField({
           autoFocus
           type="number"
           inputMode="decimal"
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value) || 0)}
-          onBlur={() => setEditing(false)}
-          onKeyDown={(e) => e.key === "Enter" && setEditing(false)}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === "Enter" && commit()}
           className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500"
         />
       </div>
@@ -58,7 +71,7 @@ function ScenarioField({
   }
 
   return (
-    <div onDoubleClick={() => setEditing(true)}>
+    <div onDoubleClick={startEditing}>
       <PremiumSlider
         label={label}
         value={value}
@@ -70,7 +83,7 @@ function ScenarioField({
         color={color}
       />
       <button
-        onClick={() => setEditing(true)}
+        onClick={startEditing}
         className="text-[10px] text-slate-400 hover:text-slate-300 mt-1.5 transition-colors"
       >
         enter exact amount →
@@ -90,6 +103,7 @@ export function ProjectionLab({
   const [sandbox, setSandbox] = useState<ScenarioInput>(() => defaultScenario(state, initialBurn));
   const [applied, setApplied] = useState(false);
   const [sideHustleAmount, setSideHustleAmount] = useState(600);
+  const [sideHustleDraft, setSideHustleDraft] = useState(String(600));
   const [editingAmount, setEditingAmount] = useState(false);
 
   const points = useMemo(() => projectBalances(sandbox, 12), [sandbox]);
@@ -136,7 +150,10 @@ export function ProjectionLab({
                   🚀 +{formatCurrency(sideHustleAmount, state.currency)} {preset.editableAmount.suffix}
                 </button>
                 <button
-                  onClick={() => setEditingAmount((v) => !v)}
+                  onClick={() => {
+                    setSideHustleDraft(String(sideHustleAmount));
+                    setEditingAmount((v) => !v);
+                  }}
                   aria-label="Edit side hustle amount"
                   className={`px-2.5 flex items-center border-l border-white/[0.08] transition-colors ${
                     editingAmount ? "text-sky-400 bg-white/[0.04]" : "text-slate-500 hover:text-slate-300"
@@ -166,14 +183,25 @@ export function ProjectionLab({
               autoFocus
               type="number"
               inputMode="decimal"
-              value={sideHustleAmount}
-              onChange={(e) => setSideHustleAmount(Number(e.target.value) || 0)}
+              value={sideHustleDraft}
+              onChange={(e) => setSideHustleDraft(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              onBlur={() => {
+                const n = parseFloat(sideHustleDraft);
+                const clean = Number.isFinite(n) ? n : 0;
+                setSideHustleAmount(clean);
+                setSideHustleDraft(String(clean));
+              }}
+              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
               className="flex-1 bg-transparent text-sm font-semibold tracking-tight tabular-nums text-white focus:outline-none"
             />
             {[300, 600, 1200].map((v) => (
               <button
                 key={v}
-                onClick={() => setSideHustleAmount(v)}
+                onClick={() => {
+                  setSideHustleAmount(v);
+                  setSideHustleDraft(String(v));
+                }}
                 className={`text-[10px] px-2.5 py-1.5 rounded-full border transition-colors ${
                   sideHustleAmount === v
                     ? "border-sky-400/50 text-sky-300 bg-sky-400/10"

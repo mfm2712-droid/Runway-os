@@ -110,6 +110,16 @@ export function EyeOffIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function InfoIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5.5" />
+      <circle cx="12" cy="7.8" r="0.15" fill="currentColor" stroke="currentColor" strokeWidth={2.6} />
+    </svg>
+  );
+}
+
 export function GearIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>
