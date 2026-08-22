@@ -78,9 +78,11 @@ export function ExpenseHistory({
                 </span>
                 <div className="min-w-0">
                   <p className="font-medium text-slate-200 truncate">
-                    {CATEGORY_LABELS[e.category]}
+                    {e.note || CATEGORY_LABELS[e.category]}
                   </p>
-                  <p className="text-[10px] text-slate-500">{e.date}</p>
+                  <p className="text-[10px] text-slate-500">
+                    {e.note ? `${CATEGORY_LABELS[e.category]} · ${e.date}` : e.date}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3 shrink-0">

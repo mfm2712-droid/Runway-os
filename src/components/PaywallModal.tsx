@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Button } from "./ui/Button";
-import { isValidLicenseFormat } from "../lib/trial";
+import { SUPPORT_ACCESS_LICENSE } from "../lib/trial";
 import { track } from "../lib/analytics";
 import { startCheckout, type Plan } from "../lib/checkout";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 
-type KeyState = "idle" | "invalid" | "valid";
+type TokenState = "idle" | "checking" | "invalid" | "valid" | "error";
 type RestoreState = "idle" | "checking" | "not-found" | "found" | "error";
 
 export function PaywallModal({
@@ -18,20 +18,34 @@ export function PaywallModal({
   onClose: () => void;
   onActivate: (key: string) => void;
 }) {
-  const [key, setKey] = useState("");
-  const [keyState, setKeyState] = useState<KeyState>("idle");
+  const [token, setToken] = useState("");
+  const [tokenState, setTokenState] = useState<TokenState>("idle");
   const [email, setEmail] = useState("");
   const [restoreState, setRestoreState] = useState<RestoreState>("idle");
   const [checkoutLoading, setCheckoutLoading] = useState<Plan | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
 
-  const submitKey = () => {
-    if (isValidLicenseFormat(key)) {
-      setKeyState("valid");
-      onActivate(key.trim().toUpperCase());
-    } else {
-      setKeyState("invalid");
+  const submitToken = async () => {
+    const trimmed = token.trim();
+    if (!trimmed) return;
+    setTokenState("checking");
+    try {
+      const res = await fetch("/api/verify-support-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: trimmed }),
+      });
+      if (!res.ok) throw new Error("request failed");
+      const data = (await res.json()) as { valid: boolean };
+      if (data.valid) {
+        setTokenState("valid");
+        onActivate(SUPPORT_ACCESS_LICENSE);
+      } else {
+        setTokenState("invalid");
+      }
+    } catch {
+      setTokenState("error");
     }
   };
 
@@ -209,40 +223,46 @@ export function PaywallModal({
         </div>
 
         <div className="relative space-y-2.5">
-          <label className="text-xs text-slate-500 block">Or enter a license key</label>
+          <label className="text-xs text-slate-500 block">Have a support access code?</label>
           <div className="flex gap-2">
             <input
-              value={key}
+              value={token}
               onChange={(e) => {
-                setKey(e.target.value);
-                setKeyState("idle");
+                setToken(e.target.value);
+                setTokenState("idle");
               }}
-              placeholder="XXXX-XXXX-XXXX-XXXX"
-              className={`flex-1 bg-white/[0.04] border rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none tracking-wider uppercase ${
-                keyState === "invalid"
+              placeholder="Access code"
+              className={`flex-1 bg-white/[0.04] border rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none ${
+                tokenState === "invalid" || tokenState === "error"
                   ? "border-rose-500/60 focus:border-rose-500"
-                  : keyState === "valid"
+                  : tokenState === "valid"
                   ? "border-emerald-500/60 focus:border-emerald-500"
                   : "border-white/[0.08] focus:border-sky-500"
               }`}
             />
-            <Button variant="glass" onClick={submitKey} className="px-4 py-2.5 text-xs shrink-0">
-              Apply
+            <Button
+              variant="glass"
+              onClick={submitToken}
+              disabled={tokenState === "checking"}
+              className="px-4 py-2.5 text-xs shrink-0"
+            >
+              {tokenState === "checking" ? "Checking…" : "Verify"}
             </Button>
           </div>
-          {keyState === "invalid" && (
-            <p className="text-[10px] text-rose-400">
-              That doesn't look like a valid key — check the format and try again.
-            </p>
+          {tokenState === "invalid" && (
+            <p className="text-[10px] text-rose-400">That code isn't valid — check with support.</p>
           )}
-          {keyState === "valid" && (
-            <p className="text-[10px] text-emerald-400">✓ License activated — welcome back.</p>
+          {tokenState === "error" && (
+            <p className="text-[10px] text-rose-400">Couldn't verify that right now — try again in a moment.</p>
+          )}
+          {tokenState === "valid" && (
+            <p className="text-[10px] text-emerald-400">✓ Access activated — welcome back.</p>
           )}
           <p className="text-[9px] text-slate-400 leading-relaxed">
             Runway OS keeps your financial data local to your browser. Checkout,
             subscription status, and restore-by-email are verified against
-            Stripe server-side — the manual key field above stays as a
-            fallback for hand-issued access.
+            Stripe server-side. Support access codes are verified the same
+            way — hand-issued only, never a client-side bypass.
           </p>
         </div>
           </motion.div>

@@ -10,7 +10,12 @@
 
 /// <reference types="node" />
 
+import { checkRateLimit, getClientIp } from "./_lib/rateLimit";
+
 export const config = { runtime: "edge" };
+
+const RATE_LIMIT = 15; // requests
+const RATE_WINDOW_MS = 60_000; // per minute
 
 const ADVISOR_SYSTEM_PROMPT = `You are Money Copilot, the built-in financial advisor for Runway OS, a minimalist personal finance tool.
 Rules:
@@ -28,6 +33,13 @@ interface ChatBody {
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
+  }
+
+  if (!checkRateLimit(getClientIp(req), RATE_LIMIT, RATE_WINDOW_MS)) {
+    return new Response("Too many requests — please slow down.", {
+      status: 429,
+      headers: { "Retry-After": "60" },
+    });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;

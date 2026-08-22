@@ -114,10 +114,21 @@ these call Stripe directly rather than a datastore of ours.
   by Stripe, not built here.
 - `stripe-webhook.ts` verifies and logs events but doesn't persist
   anything — there's nowhere to persist it. It's wired up so Stripe has a
-  valid endpoint and so the signature-verification path is real, but
-  reacting to renewals/cancellations server-side (rather than only at
-  restore-by-email time) would need an actual datastore. That's a real gap
-  for a production launch, not a "todo you can ignore."
+  valid endpoint and so the signature-verification path is real.
+- **Cancelled subscribers are downgraded automatically.** Since the license
+  key never expires on its own, the client periodically calls
+  `verify-subscription.ts` (Stripe `subscriptions.list`) for any
+  Stripe-sourced license and clears it locally if the subscription is no
+  longer active — see `useStripeVerification.ts`. This is polling, not a
+  webhook-driven push, so there's a delay (a few hours, worst case) between
+  a cancellation and the local downgrade; a real backend reacting to the
+  webhook in real time would close that gap, at the cost of needing a
+  datastore this project deliberately doesn't have.
+- **Support access codes** are an optional manual-override path: set
+  `SUPPORT_ACCESS_TOKEN` in your environment to let the paywall accept a
+  hand-issued code, verified server-side against that secret
+  (`verify-support-token.ts`). Leave it unset to disable this path
+  entirely — there is no client-side bypass.
 
 ## Local development
 

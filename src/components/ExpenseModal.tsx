@@ -40,6 +40,7 @@ export function ExpenseModal({
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("food");
   const [date, setDate] = useState(todayISO());
+  const [note, setNote] = useState("");
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export function ExpenseModal({
     setAmount("");
     setCategory("food");
     setDate(todayISO());
+    setNote("");
     setMode("manual");
     onClose();
   };
@@ -61,7 +63,8 @@ export function ExpenseModal({
     if (!valid) return;
     triggerHaptic("success");
     playPop();
-    onAdd({ amount: amt, category, date });
+    const trimmedNote = note.trim();
+    onAdd({ amount: amt, category, date, ...(trimmedNote ? { note: trimmedNote } : {}) });
     close();
   };
 
@@ -162,6 +165,17 @@ export function ExpenseModal({
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="relative">
+              <label className="text-xs text-slate-500 block mb-2">Merchant / Note (optional)</label>
+              <input
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="e.g. Tesco"
+                maxLength={80}
+                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500 transition-colors"
+              />
             </div>
 
             <div className="relative">

@@ -24,6 +24,10 @@ export function computeTrialStatus(
   if (devOverride === "expired") return { kind: "expired" };
   if (licenseKey) return { kind: "pro" };
 
+  // Trial hasn't actually started yet (onboarding not completed and no demo
+  // data loaded) — a fresh, full trial, not ticking down.
+  if (!trialStartedAt) return { kind: "trial", hoursLeft: TRIAL_HOURS };
+
   const elapsedHours = (Date.now() - new Date(trialStartedAt).getTime()) / 3600000;
   const hoursLeft = TRIAL_HOURS - elapsedHours;
   if (hoursLeft > 0) return { kind: "trial", hoursLeft };
@@ -31,10 +35,9 @@ export function computeTrialStatus(
 }
 
 /**
- * Soft format check only (XXXX-XXXX-XXXX-XXXX) — there's no license server
- * to call, so any correctly-shaped key is accepted. Disclosed to the user
- * in the paywall UI, not presented as real verification.
+ * Sentinel licenseKey value for hand-issued support access, verified
+ * server-side against SUPPORT_ACCESS_TOKEN (see api/verify-support-token.ts)
+ * rather than accepted as any correctly-shaped string. Distinct from a
+ * Stripe customer id (`cus_...`) so billing-portal UI doesn't show for it.
  */
-export function isValidLicenseFormat(key: string): boolean {
-  return /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(key.trim());
-}
+export const SUPPORT_ACCESS_LICENSE = "support:verified";

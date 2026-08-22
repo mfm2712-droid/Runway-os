@@ -17,6 +17,8 @@ import { PaywallModal } from "../components/PaywallModal";
 import { SettingsModal } from "../components/SettingsModal";
 import { Button } from "../components/ui/Button";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useShortcutHandler } from "../hooks/useShortcutHandler";
+import { useStripeVerification } from "../hooks/useStripeVerification";
 import { uid } from "../lib/id";
 import { computeTrialStatus, type DevOverride } from "../lib/trial";
 import { track } from "../lib/analytics";
@@ -98,30 +100,20 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
     ONBOARDED_KEY,
     typeof window !== "undefined" && window.localStorage.getItem(STORAGE_KEY) !== null,
   );
-  const [trialStartedAt, setTrialStartedAt] = useLocalStorage<string>(
-    TRIAL_STARTED_KEY,
-    new Date().toISOString(),
-  );
+  // Empty until onboarding actually completes (or demo data loads) — merely
+  // loading /app (e.g. an unfinished onboarding, a bookmark, a PWA
+  // shortcut) must not start the clock on a trial the user hasn't begun.
+  const [trialStartedAt, setTrialStartedAt] = useLocalStorage<string>(TRIAL_STARTED_KEY, "");
   const [licenseKey, setLicenseKey] = useLocalStorage<string | null>(LICENSE_KEY, null);
   const [devOverride, setDevOverride] = useLocalStorage<DevOverride>(DEV_OVERRIDE_KEY, null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"manual" | "scan">("manual");
-  const [sharedInput, setSharedInput] = useState<{ file?: File; text?: string } | null>(null);
+  const { modalOpen, modalMode, sharedInput, openManual, close: closeExpenseModal } =
+    useShortcutHandler();
   const [advisorOpen, setAdvisorOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tab, setTab] = useState<DashboardTab>("overview");
   const [stealthMode, setStealthMode] = useLocalStorage<boolean>("runway-os:stealthMode", false);
   const [savedTotal, setSavedTotal] = useLocalStorage<number>("runway-os:saved-total", 0);
-
-  // Captured once, before the useLocalStorage default below ever gets
-  // persisted, so it reflects whether this is truly the first launch.
-  const [isFirstLaunch] = useState(
-    () => typeof window !== "undefined" && window.localStorage.getItem(TRIAL_STARTED_KEY) === null,
-  );
-  useEffect(() => {
-    if (isFirstLaunch) track({ name: "trial_started" });
-  }, [isFirstLaunch]);
 
   // Re-render periodically so the trial countdown stays accurate without
   // requiring user interaction.
@@ -131,75 +123,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
     return () => window.clearInterval(id);
   }, []);
 
-  // Landing on /app?checkout=success&session_id=... after Stripe Checkout —
-  // verify server-side (a bare query param alone would be trivial to fake)
-  // before activating Pro locally.
-  const [checkoutBanner, setCheckoutBanner] = useState<"verifying" | "success" | "error" | null>(
-    null,
-  );
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get("session_id");
-    if (params.get("checkout") !== "success" || !sessionId) return;
-
-    window.history.replaceState({}, "", window.location.pathname);
-    setCheckoutBanner("verifying");
-
-    fetch(`/api/verify-checkout-session?session_id=${encodeURIComponent(sessionId)}`)
-      .then((res) => res.json())
-      .then((data: { valid: boolean; customerId: string | null }) => {
-        if (data.valid && data.customerId) {
-          setLicenseKey(data.customerId);
-          setCheckoutBanner("success");
-          window.setTimeout(() => setCheckoutBanner(null), 6000);
-        } else {
-          setCheckoutBanner("error");
-        }
-      })
-      .catch(() => setCheckoutBanner("error"));
-  }, []);
-
-  // PWA app-shortcut deep links (Add Expense / Scan Receipt from the home
-  // screen icon's long-press menu, or an OS share-sheet share) — open the
-  // modal in the right mode, then strip the param without a full reload.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const action = params.get("action");
-    if (action !== "add" && action !== "scan" && action !== "share") return;
-
-    setModalMode(action === "add" ? "manual" : "scan");
-    setModalOpen(true);
-
-    if (action === "share") {
-      // The service worker's share-target handler stashed the shared
-      // file/text in Cache Storage (the only store both it and this tab can
-      // reach) before redirecting here — pick it up once, then clear it.
-      caches
-        .open("runway-os-share-v1")
-        .then(async (cache) => {
-          const [fileRes, textRes] = await Promise.all([
-            cache.match("/__shared-file"),
-            cache.match("/__shared-text"),
-          ]);
-          const file = fileRes
-            ? new File([await fileRes.blob()], "shared-image", {
-                type: fileRes.headers.get("Content-Type") || "image/jpeg",
-              })
-            : undefined;
-          const text = textRes ? await textRes.text() : undefined;
-          if (file || text) setSharedInput({ file, text });
-          await Promise.all([cache.delete("/__shared-file"), cache.delete("/__shared-text")]);
-        })
-        .catch(() => {
-          // Cache Storage unavailable (e.g. no service worker in dev) — the
-          // share still opens the scan mode, just without prefilled input.
-        });
-    }
-
-    params.delete("action");
-    const search = params.toString();
-    window.history.replaceState({}, "", window.location.pathname + (search ? `?${search}` : ""));
-  }, []);
+  const { checkoutBanner } = useStripeVerification(licenseKey, setLicenseKey);
 
   const trialStatus = computeTrialStatus(trialStartedAt, licenseKey, devOverride);
 
@@ -231,14 +155,23 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
     setLicenseKey(meta.licenseKey);
   };
 
+  const startTrialIfNeeded = () => {
+    if (!trialStartedAt) {
+      setTrialStartedAt(new Date().toISOString());
+      track({ name: "trial_started" });
+    }
+  };
+
   const completeOnboarding = (result: { cashBalance: number; fixedMonthlyOutflows: number; paydayDay: number }) => {
     patch(result);
     setOnboarded(true);
+    startTrialIfNeeded();
   };
 
   const loadDemoData = () => {
     setState(DEMO_STATE);
     setOnboarded(true);
+    startTrialIfNeeded();
   };
 
   const addSubscription = (sub: Omit<Subscription, "id">) =>
@@ -410,24 +343,14 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         </div>
       </main>
 
-      <BottomNav
-        active={tab}
-        onChange={setTab}
-        onQuickAdd={() => {
-          setModalMode("manual");
-          setModalOpen(true);
-        }}
-      />
+      <BottomNav active={tab} onChange={setTab} onQuickAdd={openManual} />
       <ExpenseModal
         open={modalOpen}
         currency={state.currency}
         initialMode={modalMode}
         initialFile={sharedInput?.file}
         initialText={sharedInput?.text}
-        onClose={() => {
-          setModalOpen(false);
-          setSharedInput(null);
-        }}
+        onClose={closeExpenseModal}
         onAdd={addExpense}
         onAddSubscription={addSubscription}
       />
