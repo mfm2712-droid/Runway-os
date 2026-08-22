@@ -104,17 +104,21 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
             Since we don't hold a database of your financial data, there's nothing for us
             to export or delete on that front — it's already entirely in your control, on
             your device. For anything Stripe or Anthropic hold about you directly (billing
-            records, API request logs), contact them directly using the links above, or
-            email us and we'll help point you the right way.
+            records, API request logs), contact them directly using the links above, or{" "}
+            <a href="mailto:support@runwayos.app" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
+              email us
+            </a>{" "}
+            and we'll help point you the right way.
           </p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-white">Contact</h2>
           <p className="text-sm text-slate-400 leading-relaxed">
-            [TODO: add a real contact email and, if you have one, your registered
-            business name and country — required for a complete, compliant privacy
-            policy in most jurisdictions.]
+            Questions about this policy?{" "}
+            <a href="mailto:support@runwayos.app" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
+              support@runwayos.app
+            </a>
           </p>
         </section>
       </div>

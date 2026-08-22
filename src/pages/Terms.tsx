@@ -99,9 +99,10 @@ export function Terms({ onNavigate }: { onNavigate: (path: string) => void }) {
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-white">Contact</h2>
           <p className="text-sm text-slate-400 leading-relaxed">
-            [TODO: add a real contact email and, if you have one, your registered
-            business name, country, and governing law — required for complete, compliant
-            terms in most jurisdictions.]
+            Questions about these terms?{" "}
+            <a href="mailto:support@runwayos.app" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
+              support@runwayos.app
+            </a>
           </p>
         </section>
       </div>
