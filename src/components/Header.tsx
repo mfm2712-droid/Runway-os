@@ -26,13 +26,13 @@ export function Header({
         aria-label="Runway OS home"
       >
         <span
-          className="relative w-8 h-8 shrink-0 rounded-xl border border-white/10 shadow-lg shadow-cyan-500/20 overflow-hidden transition-transform duration-200 group-active:scale-90"
+          className="w-8 h-8 shrink-0 flex items-center justify-center overflow-hidden rounded-xl border border-white/10 shadow-lg shadow-cyan-500/20 transition-transform duration-200 group-active:scale-90"
           style={{ transitionTimingFunction: "var(--ease-spring)" }}
         >
           <img
             src="/app-icon.png"
             alt="Runway OS Logo"
-            className="absolute inset-0 w-full h-full scale-150 object-cover animate-[spin_6s_linear_infinite] motion-reduce:animate-none"
+            className="w-[160%] h-[160%] max-w-none object-cover animate-[spin_6s_linear_infinite] motion-reduce:animate-none"
           />
         </span>
         <span className="flex items-center gap-1.5">
