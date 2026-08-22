@@ -4,6 +4,7 @@ import type { FinanceState } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
 import { Button } from "./ui/Button";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
+import { playClick } from "../lib/audio";
 
 export function QuickTuneModal({
   open,
@@ -23,6 +24,11 @@ export function QuickTuneModal({
   const [weekendBooster, setWeekendBooster] = useState(!!state.weekendBooster);
   const reduceMotion = useReducedMotion();
 
+  const dismiss = () => {
+    playClick();
+    onClose();
+  };
+
   const save = () => {
     onChange({
       cashBalance: Number(cash) || 0,
@@ -38,7 +44,7 @@ export function QuickTuneModal({
       {open && (
         <motion.div
           className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
-          onClick={onClose}
+          onClick={dismiss}
           variants={backdropVariants(!!reduceMotion)}
           initial="hidden"
           animate="visible"
@@ -63,7 +69,7 @@ export function QuickTuneModal({
         <div className="relative flex justify-between items-center">
           <h3 className="text-base font-semibold text-white">Quick Tune</h3>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="h-8 w-8 flex items-center justify-center rounded-full glass text-slate-400 hover:text-white transition-colors"
             aria-label="Close"
           >
@@ -108,13 +114,14 @@ export function QuickTuneModal({
             <label className="text-xs text-slate-500">Payday Cycle</label>
             <button
               onClick={() => setPaydayEnabled((v) => !v)}
-              className={`relative h-6 w-11 rounded-full transition-colors duration-200 ${
+              aria-pressed={paydayEnabled}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
                 paydayEnabled ? "bg-sky-500" : "bg-white/[0.1]"
               }`}
             >
               <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ${
-                  paydayEnabled ? "translate-x-[22px]" : "translate-x-0.5"
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  paydayEnabled ? "translate-x-5" : "translate-x-0"
                 }`}
                 style={{ transitionTimingFunction: "var(--ease-spring)" }}
               />
@@ -148,13 +155,13 @@ export function QuickTuneModal({
             <button
               onClick={() => setWeekendBooster((v) => !v)}
               aria-pressed={weekendBooster}
-              className={`relative h-6 w-11 rounded-full transition-colors duration-200 ${
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
                 weekendBooster ? "bg-sky-500" : "bg-white/[0.1]"
               }`}
             >
               <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ${
-                  weekendBooster ? "translate-x-[22px]" : "translate-x-0.5"
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  weekendBooster ? "translate-x-5" : "translate-x-0"
                 }`}
                 style={{ transitionTimingFunction: "var(--ease-spring)" }}
               />

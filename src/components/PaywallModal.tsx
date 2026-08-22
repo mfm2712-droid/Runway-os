@@ -5,6 +5,7 @@ import { SUPPORT_ACCESS_LICENSE } from "../lib/trial";
 import { track } from "../lib/analytics";
 import { startCheckout, type Plan } from "../lib/checkout";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
+import { playClick } from "../lib/audio";
 
 type TokenState = "idle" | "checking" | "invalid" | "valid" | "error";
 type RestoreState = "idle" | "checking" | "not-found" | "found" | "error";
@@ -25,6 +26,11 @@ export function PaywallModal({
   const [checkoutLoading, setCheckoutLoading] = useState<Plan | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
+
+  const dismiss = () => {
+    playClick();
+    onClose();
+  };
 
   const submitToken = async () => {
     const trimmed = token.trim();
@@ -92,7 +98,7 @@ export function PaywallModal({
       {open && (
         <motion.div
           className="fixed inset-0 z-[70] flex items-end md:items-center justify-center bg-black/85 backdrop-blur-md"
-          onClick={onClose}
+          onClick={dismiss}
           variants={backdropVariants(!!reduceMotion)}
           initial="hidden"
           animate="visible"
@@ -117,7 +123,7 @@ export function PaywallModal({
             <h3 className="text-base font-semibold text-white">Unlock Full Access</h3>
           </div>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="h-8 w-8 flex items-center justify-center rounded-full glass text-slate-400 hover:text-white transition-colors"
             aria-label="Close"
           >

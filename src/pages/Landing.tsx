@@ -350,14 +350,6 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               <button onClick={() => onNavigate("/terms")} className="hover:text-white transition-colors">
                 Terms
               </button>
-              <a
-                href="https://github.com/mfm2712-droid/Runway-os"
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-white transition-colors"
-              >
-                Built in the open ↗
-              </a>
             </nav>
           </div>
           <p className="text-[11px] text-slate-400 text-center sm:text-left">

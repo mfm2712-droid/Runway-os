@@ -11,7 +11,7 @@ import {
   type BackupMeta,
 } from "../lib/backupUtils";
 import { downloadExpensesCsv } from "../lib/csvExport";
-import { isAudioMuted, setAudioMuted } from "../lib/audio";
+import { isAudioMuted, playClick, setAudioMuted } from "../lib/audio";
 import { Button } from "./ui/Button";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 
@@ -59,6 +59,12 @@ export function SettingsModal({
     const next = !audioMuted;
     setAudioMuted(next);
     setAudioMutedState(next);
+    if (!next) playClick();
+  };
+
+  const dismiss = () => {
+    playClick();
+    onClose();
   };
 
   const openBillingPortal = async () => {
@@ -98,7 +104,7 @@ export function SettingsModal({
       {open && (
         <motion.div
           className="fixed inset-0 z-[65] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-md"
-          onClick={onClose}
+          onClick={dismiss}
           variants={backdropVariants(!!reduceMotion)}
           initial="hidden"
           animate="visible"
@@ -120,7 +126,7 @@ export function SettingsModal({
         <div className="relative flex justify-between items-center">
           <h3 className="text-base font-semibold text-white">Settings</h3>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="h-8 w-8 flex items-center justify-center rounded-full glass text-slate-400 hover:text-white transition-colors"
             aria-label="Close"
           >
@@ -185,21 +191,31 @@ export function SettingsModal({
             <button
               onClick={toggleAudio}
               aria-pressed={!audioMuted}
-              className={`relative h-6 w-11 rounded-full transition-colors duration-200 ${
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
                 audioMuted ? "bg-white/[0.1]" : "bg-sky-500"
               }`}
             >
               <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200 ${
-                  audioMuted ? "translate-x-0.5" : "translate-x-[22px]"
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  audioMuted ? "translate-x-0" : "translate-x-5"
                 }`}
                 style={{ transitionTimingFunction: "var(--ease-spring)" }}
               />
             </button>
           </div>
-          <p className="text-[10px] text-slate-400">
-            {audioMuted ? "Off — muted." : "On — light clicks and pops for taps and confirmations."}
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] text-slate-400">
+              {audioMuted ? "Off — muted." : "On — light clicks and pops for taps and confirmations."}
+            </p>
+            {!audioMuted && (
+              <button
+                onClick={playClick}
+                className="shrink-0 text-[10px] font-medium text-sky-400 hover:text-sky-300 transition-colors"
+              >
+                Test Sound
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="relative space-y-2">
@@ -236,29 +252,30 @@ export function SettingsModal({
           {restoreStatus === "error" && <p className="text-[10px] text-rose-400">{restoreMessage}</p>}
         </div>
 
-        <div className="relative space-y-2 pt-3 border-t border-white/[0.08]">
-          <label className="text-xs text-slate-500 block">Dev Mode — Trial State (testing only)</label>
-          <div className="grid grid-cols-2 gap-2">
-            {DEV_OVERRIDES.map((o) => (
-              <button
-                key={String(o.value)}
-                onClick={() => onChangeDevOverride(o.value)}
-                className={`rounded-xl py-2.5 text-[11px] font-medium border transition-colors ${
-                  devOverride === o.value
-                    ? "bg-amber-500/15 border-amber-500/50 text-amber-300"
-                    : "bg-white/[0.03] border-white/[0.06] text-slate-400"
-                }`}
-              >
-                {o.label}
-              </button>
-            ))}
+        {import.meta.env.DEV && (
+          <div className="relative space-y-2 pt-3 border-t border-white/[0.08]">
+            <label className="text-xs text-slate-500 block">Dev Mode — Trial State (local only)</label>
+            <div className="grid grid-cols-2 gap-2">
+              {DEV_OVERRIDES.map((o) => (
+                <button
+                  key={String(o.value)}
+                  onClick={() => onChangeDevOverride(o.value)}
+                  className={`rounded-xl py-2.5 text-[11px] font-medium border transition-colors ${
+                    devOverride === o.value
+                      ? "bg-amber-500/15 border-amber-500/50 text-amber-300"
+                      : "bg-white/[0.03] border-white/[0.06] text-slate-400"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[9px] text-slate-400 leading-relaxed">
+              Overrides the real trial calculation for testing this build. Only ever rendered in
+              local dev (`import.meta.env.DEV`) — stripped from production builds entirely.
+            </p>
           </div>
-          <p className="text-[9px] text-slate-400 leading-relaxed">
-            Overrides the real trial calculation for testing this build. It's a client-side
-            switch, not hidden from end users — remove this panel (or gate it behind a build
-            flag) before shipping to production.
-          </p>
-        </div>
+        )}
           </motion.div>
         </motion.div>
       )}

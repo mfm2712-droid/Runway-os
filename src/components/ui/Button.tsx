@@ -1,6 +1,8 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
+import { playClick, playPop } from "../../lib/audio";
 
 type Variant = "primary" | "glass" | "ghost";
+type Sound = "click" | "pop" | "none";
 
 const base =
   "inline-flex items-center justify-center gap-2 font-semibold rounded-2xl transition-all duration-150 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none";
@@ -15,15 +17,31 @@ const variants: Record<Variant, string> = {
 
 export function Button({
   variant = "primary",
+  sound,
   className = "",
   children,
+  onClick,
   ...props
 }: {
   variant?: Variant;
+  /** Overrides the default tap sound. Primary buttons click by default; pass "pop" for a success/confirm action, or "none" if the handler already plays its own. */
+  sound?: Sound;
   children: ReactNode;
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
+    const effective = sound ?? (variant === "primary" ? "click" : "none");
+    if (effective === "click") playClick();
+    else if (effective === "pop") playPop();
+    onClick?.(e);
+  };
+
   return (
-    <button className={`${base} ${variants[variant]} ${className}`} style={timing} {...props}>
+    <button
+      className={`${base} ${variants[variant]} ${className}`}
+      style={timing}
+      onClick={handleClick}
+      {...props}
+    >
       {children}
     </button>
   );

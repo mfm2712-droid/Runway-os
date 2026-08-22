@@ -3,6 +3,7 @@ import { Landing } from "./pages/Landing";
 import { Dashboard } from "./pages/Dashboard";
 import { Privacy } from "./pages/Privacy";
 import { Terms } from "./pages/Terms";
+import { BackgroundRing } from "./components/BackgroundRing";
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname);
@@ -19,8 +20,20 @@ export default function App() {
     window.scrollTo(0, 0);
   };
 
-  if (path === "/app") return <Dashboard onNavigate={navigate} />;
-  if (path === "/privacy") return <Privacy onNavigate={navigate} />;
-  if (path === "/terms") return <Terms onNavigate={navigate} />;
-  return <Landing onNavigate={navigate} />;
+  const page = path === "/app" ? (
+    <Dashboard onNavigate={navigate} />
+  ) : path === "/privacy" ? (
+    <Privacy onNavigate={navigate} />
+  ) : path === "/terms" ? (
+    <Terms onNavigate={navigate} />
+  ) : (
+    <Landing onNavigate={navigate} />
+  );
+
+  return (
+    <>
+      <BackgroundRing />
+      {page}
+    </>
+  );
 }

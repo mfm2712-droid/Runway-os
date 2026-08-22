@@ -6,6 +6,7 @@ import { uid } from "../../lib/id";
 import { ChatBubble, type DisplayMessage } from "./ChatBubble";
 import { PromptChips } from "./PromptChips";
 import { backdropVariants, panelVariants } from "../../lib/motionPresets";
+import { playClick } from "../../lib/audio";
 
 export function AdvisorDrawer({
   open,
@@ -21,6 +22,11 @@ export function AdvisorDrawer({
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
+
+  const dismiss = () => {
+    playClick();
+    onClose();
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -65,7 +71,7 @@ export function AdvisorDrawer({
       {open && (
         <motion.div
           className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
-          onClick={onClose}
+          onClick={dismiss}
           variants={backdropVariants(!!reduceMotion)}
           initial="hidden"
           animate="visible"
@@ -96,7 +102,7 @@ export function AdvisorDrawer({
             <p className="text-[11px] text-slate-500 mt-0.5">Your live financial snapshot, on tap</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="h-8 w-8 flex items-center justify-center rounded-full glass text-slate-400 hover:text-white transition-colors"
             aria-label="Close"
           >

@@ -7,7 +7,7 @@ import { SegmentedControl } from "./ui/SegmentedControl";
 import { ReceiptDropzone } from "./ai/ReceiptDropzone";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 import { triggerHaptic } from "../lib/haptics";
-import { playPop } from "../lib/audio";
+import { playClick } from "../lib/audio";
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ExpenseCategory[];
 
@@ -50,7 +50,7 @@ export function ExpenseModal({
   const amt = Number(amount);
   const valid = amt > 0;
 
-  const close = () => {
+  const resetAndClose = () => {
     setAmount("");
     setCategory("food");
     setDate(todayISO());
@@ -59,13 +59,24 @@ export function ExpenseModal({
     onClose();
   };
 
+  // Distinct from resetAndClose so a successful submit's own "pop" (played
+  // by the Button below) doesn't get layered with a second click sound.
+  const close = () => {
+    playClick();
+    resetAndClose();
+  };
+
+  const selectCategory = (c: ExpenseCategory) => {
+    playClick();
+    setCategory(c);
+  };
+
   const submit = () => {
     if (!valid) return;
     triggerHaptic("success");
-    playPop();
     const trimmedNote = note.trim();
     onAdd({ amount: amt, category, date, ...(trimmedNote ? { note: trimmedNote } : {}) });
-    close();
+    resetAndClose();
   };
 
   return (
@@ -152,7 +163,7 @@ export function ExpenseModal({
                 {CATEGORIES.map((c) => (
                   <button
                     key={c}
-                    onClick={() => setCategory(c)}
+                    onClick={() => selectCategory(c)}
                     className={`flex flex-col items-center justify-center gap-1 rounded-2xl py-3 border text-[10px] font-medium transition-all duration-150 active:scale-95 ${
                       category === c
                         ? "bg-sky-500/15 border-sky-500/60 text-sky-300 shadow-[0_0_20px_-6px_rgba(56,189,248,0.6)]"
@@ -190,6 +201,7 @@ export function ExpenseModal({
 
             <Button
               variant="primary"
+              sound="pop"
               onClick={submit}
               disabled={!valid}
               className="relative w-full py-4 text-sm"
