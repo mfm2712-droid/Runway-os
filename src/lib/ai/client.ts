@@ -89,28 +89,54 @@ export interface ReceiptParseResult extends ParsedReceipt {
   isLive: boolean;
 }
 
+export type ReceiptParseErrorReason = "not_a_receipt" | "unavailable";
+
+/**
+ * Thrown by parseReceipt() for an image that couldn't be read — never
+ * silently replaced with a fabricated result. `reason` distinguishes "the
+ * photo isn't a receipt at all" (a real, confident model answer) from
+ * "the vision pipeline itself failed" (network, missing key, bad response),
+ * so the UI can word the two differently.
+ */
+export class ReceiptParseError extends Error {
+  reason: ReceiptParseErrorReason;
+  constructor(reason: ReceiptParseErrorReason, message: string) {
+    super(message);
+    this.name = "ReceiptParseError";
+    this.reason = reason;
+  }
+}
+
 /**
  * Parses a receipt. Image files go to /api/parse-receipt (a real vision
- * model call — needs a live backend + key). Dropped/pasted text is parsed
- * with a lightweight local heuristic (no vision model needed for plain
- * text), which also serves as the fallback if the live image endpoint is
- * unavailable.
+ * model call — needs a live backend + key) and NEVER fall back to a
+ * fabricated result: any failure throws ReceiptParseError. Dropped/pasted
+ * text has no image to read in the first place, so it always uses a
+ * lightweight local heuristic, honestly labeled as simulated.
  */
 export async function parseReceipt(input: { file?: File; text?: string }): Promise<ReceiptParseResult> {
   if (input.file) {
+    let res: Response;
     try {
       const base64 = await fileToBase64(input.file);
-      const res = await fetch("/api/parse-receipt", {
+      res = await fetch("/api/parse-receipt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: base64, mimeType: input.file.type }),
       });
-      if (!res.ok) throw new Error(`Receipt endpoint returned ${res.status}`);
-      const data = (await res.json()) as ParsedReceipt;
-      return { ...data, isLive: true };
     } catch {
-      return { ...simulateReceiptParse(input.file.name), isLive: false };
+      throw new ReceiptParseError("unavailable", "Couldn't reach the receipt scanner — check your connection and try again.");
     }
+
+    if (!res.ok) {
+      throw new ReceiptParseError("unavailable", "Couldn't read that receipt right now — try again in a moment.");
+    }
+
+    const data = (await res.json()) as ParsedReceipt;
+    if (!data.isReceipt) {
+      throw new ReceiptParseError("not_a_receipt", "That doesn't look like a receipt — try a clearer photo, or enter it manually.");
+    }
+    return { ...data, isLive: true };
   }
 
   return { ...simulateReceiptParse(input.text ?? ""), isLive: false };

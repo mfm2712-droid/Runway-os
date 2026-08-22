@@ -89,19 +89,33 @@ const MERCHANT_CATEGORY: { pattern: RegExp; category: ExpenseCategory; merchant:
   { pattern: /amazon|zara|asos|shop/i, category: "shopping", merchant: "Amazon" },
 ];
 
+/**
+ * Canonical parsed-receipt shape, shared by the live vision endpoint
+ * (api/parse-receipt.ts) and the text-paste heuristic below. `recurring` is
+ * an app-internal addition beyond the wire schema — the UI needs it to
+ * offer "track as subscription instead" — kept alongside, not in place of,
+ * the canonical fields.
+ */
 export interface ParsedReceipt {
   merchant: string;
   amount: number;
-  category: ExpenseCategory;
-  recurring: boolean;
+  currency: Currency | null;
   date: string;
+  taxAmount: number | null;
+  category: ExpenseCategory;
+  confidenceScore: number;
+  lineItemsSummary: string | null;
+  isReceipt: boolean;
+  recurring: boolean;
 }
 
 /**
- * Simulated vision/OCR parse. Uses the dropped file name or pasted text as a
- * weak signal (real merchant/category keywords still get picked up), and
- * otherwise produces a plausible one-off receipt so the flow is fully
- * demoable without a live vision model.
+ * Deterministic keyword/regex heuristic for pasted receipt TEXT — this was
+ * never real OCR (there's no image to read), so it's always labeled
+ * "Simulated" in the UI and always reports a modest confidence score. This
+ * is a separate, honestly-disclosed convenience path, distinct from the
+ * live vision pipeline in api/parse-receipt.ts, which must never fall back
+ * to fabricated data like this for an actual IMAGE (see client.ts).
  */
 export function simulateReceiptParse(input: string): ParsedReceipt {
   const match = MERCHANT_CATEGORY.find((m) => m.pattern.test(input));
@@ -113,9 +127,14 @@ export function simulateReceiptParse(input: string): ParsedReceipt {
   return {
     merchant: match?.merchant ?? guessMerchantFromFilename(input),
     amount: amountMatch ? Number(amountMatch[1]) : Number((Math.random() * 60 + 5).toFixed(2)),
-    category: match?.category ?? "other",
-    recurring: /subscription|monthly|renew/i.test(input),
+    currency: null,
     date,
+    taxAmount: null,
+    category: match?.category ?? "other",
+    confidenceScore: 0.4,
+    lineItemsSummary: null,
+    isReceipt: true,
+    recurring: /subscription|monthly|renew/i.test(input),
   };
 }
 

@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import type { Currency, Expense, Subscription } from "../../types";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "../../types";
 import { formatCurrency } from "../../lib/calculations";
-import { parseReceipt, type ReceiptParseResult } from "../../lib/ai/client";
+import { parseReceipt, ReceiptParseError, type ReceiptParseResult } from "../../lib/ai/client";
+import { triggerHaptic } from "../../lib/haptics";
+import { playPop } from "../../lib/audio";
 import { SkeletonBlock, SkeletonLines } from "./Skeleton";
 
-type Stage = "idle" | "analyzing" | "result";
+type Stage = "idle" | "analyzing" | "result" | "error";
+
+const LOW_CONFIDENCE = 0.5;
 
 export function ReceiptDropzone({
   currency,
@@ -25,15 +29,23 @@ export function ReceiptDropzone({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pastedText, setPastedText] = useState("");
   const [result, setResult] = useState<ReceiptParseResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const runParse = async (input: { file?: File; text?: string }) => {
     setStage("analyzing");
     if (input.file) setPreviewUrl(URL.createObjectURL(input.file));
-    const parsed = await parseReceipt(input);
-    setResult(parsed);
-    setStage("result");
+    try {
+      const parsed = await parseReceipt(input);
+      setResult(parsed);
+      setStage("result");
+    } catch (e) {
+      setErrorMessage(
+        e instanceof ReceiptParseError ? e.message : "Something went wrong reading that receipt.",
+      );
+      setStage("error");
+    }
   };
 
   // A shared image/text (from the OS share sheet, via the PWA share target)
@@ -59,9 +71,27 @@ export function ReceiptDropzone({
   const reset = () => {
     setStage("idle");
     setResult(null);
+    setErrorMessage("");
     setPreviewUrl(null);
     setPastedText("");
     setConfirmed(false);
+  };
+
+  const confirmAdd = (asSubscription: boolean) => {
+    if (!result) return;
+    triggerHaptic("success");
+    playPop();
+    if (asSubscription) {
+      onAddSubscription({
+        name: result.merchant,
+        amount: result.amount,
+        renewsOn: new Date(result.date).getDate(),
+        flaggedUnused: false,
+      });
+    } else {
+      onAddExpense({ amount: result.amount, category: result.category, date: result.date, note: result.merchant });
+    }
+    setConfirmed(true);
   };
 
   if (confirmed && result) {
@@ -78,7 +108,27 @@ export function ReceiptDropzone({
     );
   }
 
+  if (stage === "error") {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 gap-3 text-center animate-[floatIn_0.25s_var(--ease-spring)]">
+        <div className="h-12 w-12 rounded-full bg-rose-500/15 flex items-center justify-center text-2xl">
+          ⚠️
+        </div>
+        <p className="text-sm text-white font-medium max-w-[220px]">{errorMessage}</p>
+        <button
+          onClick={reset}
+          className="text-xs px-4 py-2 rounded-full glass text-slate-300 hover:text-white transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   if (stage === "result" && result) {
+    const lowConfidence = result.isLive && result.confidenceScore < LOW_CONFIDENCE;
+    const currencyMismatch = result.currency && result.currency !== currency;
+
     return (
       <div className="space-y-4 animate-[floatIn_0.25s_var(--ease-spring)]">
         <div className="flex items-center gap-3">
@@ -95,14 +145,33 @@ export function ReceiptDropzone({
           </div>
         </div>
 
+        {lowConfidence && (
+          <p className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded-xl px-3 py-2">
+            Low confidence read — double-check the amount before adding.
+          </p>
+        )}
+        {currencyMismatch && (
+          <p className="text-[10px] text-slate-400 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2">
+            Receipt shows {result.currency} — will be logged in your app currency ({currency}).
+          </p>
+        )}
+
         <div className="rounded-2xl bg-white/[0.03] border border-violet-400/15 p-4 space-y-3">
           <Field label="Merchant" value={result.merchant} />
           <Field label="Amount" value={formatCurrency(result.amount, currency)} />
+          {result.taxAmount != null && (
+            <Field label="Tax" value={formatCurrency(result.taxAmount, currency)} />
+          )}
           <Field
             label="Category"
             value={`${CATEGORY_ICONS[result.category]} ${CATEGORY_LABELS[result.category]}`}
           />
           <Field label="Type" value={result.recurring ? "Recurring" : "One-off"} />
+          {result.lineItemsSummary && (
+            <p className="text-[10px] text-slate-500 pt-1 border-t border-white/[0.06]">
+              {result.lineItemsSummary}
+            </p>
+          )}
         </div>
 
         {result.recurring ? (
@@ -111,25 +180,14 @@ export function ReceiptDropzone({
               This looks recurring — track it as a subscription instead?
             </p>
             <button
-              onClick={() => {
-                onAddSubscription({
-                  name: result.merchant,
-                  amount: result.amount,
-                  renewsOn: new Date(result.date).getDate(),
-                  flaggedUnused: false,
-                });
-                setConfirmed(true);
-              }}
+              onClick={() => confirmAdd(true)}
               className="w-full bg-gradient-to-r from-violet-400 to-sky-400 text-obsidian-950 text-sm font-semibold py-3.5 rounded-2xl active:scale-[0.98] transition-transform"
               style={{ transitionTimingFunction: "var(--ease-spring)" }}
             >
               Add as Subscription
             </button>
             <button
-              onClick={() => {
-                onAddExpense({ amount: result.amount, category: result.category, date: result.date, note: result.merchant });
-                setConfirmed(true);
-              }}
+              onClick={() => confirmAdd(false)}
               className="w-full text-xs text-slate-500 hover:text-slate-300 py-1"
             >
               Log as one-off expense instead
@@ -137,10 +195,7 @@ export function ReceiptDropzone({
           </div>
         ) : (
           <button
-            onClick={() => {
-              onAddExpense({ amount: result.amount, category: result.category, date: result.date, note: result.merchant });
-              setConfirmed(true);
-            }}
+            onClick={() => confirmAdd(false)}
             className="w-full bg-gradient-to-r from-violet-400 to-sky-400 text-obsidian-950 text-sm font-semibold py-3.5 rounded-2xl active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
