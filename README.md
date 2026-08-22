@@ -5,6 +5,12 @@ leak detection, an emergency runway calculator, and an AI copilot (chat advisor,
 receipt scanning, daily briefing). Core numbers live entirely in `localStorage`;
 the AI features call a small serverless backend only when you use them.
 
+**Working on this codebase?** Read [`PROJECT_KNOWLEDGE.md`](PROJECT_KNOWLEDGE.md)
+first — the full architecture summary, changelog/evolution history, and
+developer how-to guides (math engine, expense categories, Stripe testing,
+Vercel deploys) live there. It also carries a maintenance rule: any
+architectural change made in this repo must be logged there.
+
 ## Stack
 
 - Vite + React + TypeScript
@@ -23,7 +29,7 @@ the AI features call a small serverless backend only when you use them.
   "unused" to surface them as recurring leaks.
 - **Expenses** logged via the mobile-optimized "+" quick-add sheet reduce the
   Daily Safe Spend for the rest of the current month in real time.
-- Everything persists to `localStorage` under the key `runway-os:v1` via
+- Everything persists to `localStorage` under the key `runway-os:v3` via
   [`src/hooks/useLocalStorage.ts`](src/hooks/useLocalStorage.ts) — closing the tab
   or restarting the browser does not lose data. Clearing site data/cookies does.
 
