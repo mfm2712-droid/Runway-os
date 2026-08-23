@@ -1,4 +1,5 @@
 import { SkeletonLines } from "./Skeleton";
+import { stripMarkdownEmphasis } from "../../lib/textFormat";
 
 export interface DisplayMessage {
   id: string;
@@ -39,7 +40,7 @@ export function ChatBubble({ message }: { message: DisplayMessage }) {
             <SkeletonLines lines={2} />
           ) : (
             <>
-              {message.content}
+              {stripMarkdownEmphasis(message.content)}
               {message.streaming && <span className="typewriter-caret h-4 align-middle" />}
             </>
           )}
