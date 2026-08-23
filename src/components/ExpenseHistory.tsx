@@ -2,6 +2,7 @@ import type { Currency, Expense } from "../types";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "../types";
 import { formatCurrency } from "../lib/calculations";
 import { GlassCard } from "./ui/GlassCard";
+import { Button } from "./ui/Button";
 import { TrashIcon } from "./ui/Icons";
 
 function isThisMonth(dateStr: string): boolean {
@@ -44,14 +45,35 @@ export function ExpenseHistory({
   expenses,
   currency,
   onRemove,
+  onAddExpense,
   stealth = false,
 }: {
   expenses: Expense[];
   currency: Currency;
   onRemove: (id: string) => void;
+  onAddExpense: () => void;
   stealth?: boolean;
 }) {
   const sorted = [...expenses].sort((a, b) => b.date.localeCompare(a.date));
+
+  if (sorted.length === 0) {
+    return (
+      <GlassCard className="p-6 space-y-3 text-center">
+        <p className="text-2xl" aria-hidden>
+          🧾
+        </p>
+        <div className="space-y-1">
+          <h4 className="text-sm font-semibold text-white">No expenses yet</h4>
+          <p className="text-xs text-slate-400 leading-relaxed max-w-[240px] mx-auto">
+            Every logged expense sharpens your Daily Safe Spend for the rest of the month.
+          </p>
+        </div>
+        <Button variant="glass" onClick={onAddExpense} className="mx-auto px-5 py-2.5 text-xs">
+          Add an expense
+        </Button>
+      </GlassCard>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -59,12 +81,6 @@ export function ExpenseHistory({
 
       <GlassCard className="p-6 space-y-4">
         <h4 className="text-sm font-semibold text-white">Recent Expenses</h4>
-
-        {sorted.length === 0 && (
-          <p className="text-xs text-slate-400 py-2">
-            No expenses logged yet. Tap the + button to start tracking.
-          </p>
-        )}
 
         <ul className="space-y-2 max-h-96 overflow-y-auto pr-1">
           {sorted.slice(0, 25).map((e) => (

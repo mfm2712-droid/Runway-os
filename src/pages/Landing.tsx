@@ -333,6 +333,55 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
           </Button>
         </section>
 
+        {/* FAQ — plain <details>/<summary>, no JS state needed for the accordion */}
+        <section className="max-w-xl mx-auto w-full space-y-4">
+          <h2 className="text-xl font-bold text-white text-center tracking-tight">
+            Questions, answered
+          </h2>
+          <GlassCard className="divide-y divide-white/[0.06]">
+            {[
+              {
+                q: "Do I need to connect my bank?",
+                a: "No. Runway OS never asks for bank logins or open banking access — you enter your cash balance and outflows yourself, and it does the maths from there.",
+              },
+              {
+                q: "Where is my data stored?",
+                a: "In your browser's local storage, by default and for everything financial. AI features (Money Copilot, receipt scanning) only send data off your device when you actively use them, for that one request.",
+              },
+              {
+                q: "What is Daily Safe Spend / Runway?",
+                a: "Daily Safe Spend is what's left to spend today once this month's fixed costs and spending are set aside. Runway is how many months your cash lasts at zero income. The app has a built-in explainer with your real numbers under the Runway stat.",
+              },
+              {
+                q: "Is there a free trial?",
+                a: "Yes — 72 hours of full access, no card required to start.",
+              },
+              {
+                q: "How much does Pro cost?",
+                a: "£2.99/month, or £25/year if you'd rather pay annually (about 30% cheaper).",
+              },
+              {
+                q: "Can I cancel?",
+                a: "Anytime, through Stripe's own Billing Portal (Settings → Manage Billing) — no calls, no retention scripts.",
+              },
+              {
+                q: "What if I switch phones?",
+                a: "Export a backup from Settings before you switch, then import it on the new device — your data doesn't sync automatically since it never leaves your browser otherwise.",
+              },
+            ].map(({ q, a }) => (
+              <details key={q} className="group p-4">
+                <summary className="flex items-center justify-between gap-3 text-sm font-medium text-white cursor-pointer list-none">
+                  {q}
+                  <span className="shrink-0 text-slate-500 transition-transform duration-200 group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <p className="text-xs text-slate-400 leading-relaxed mt-2.5 pr-6">{a}</p>
+              </details>
+            ))}
+          </GlassCard>
+        </section>
+
         <footer className="pt-8 border-t border-white/[0.06] space-y-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
@@ -350,6 +399,9 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               <button onClick={() => onNavigate("/terms")} className="hover:text-white transition-colors">
                 Terms
               </button>
+              <a href="mailto:support@runwayos.app" className="hover:text-white transition-colors">
+                support@runwayos.app
+              </a>
             </nav>
           </div>
           <p className="text-[11px] text-slate-400 text-center sm:text-left">

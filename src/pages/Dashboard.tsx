@@ -17,6 +17,7 @@ import { AmbientLogoAura } from "../components/AmbientLogoAura";
 import { OnboardingModal } from "../components/OnboardingModal";
 import { PaywallModal } from "../components/PaywallModal";
 import { SettingsModal } from "../components/SettingsModal";
+import { BackupNudge } from "../components/BackupNudge";
 import { Button } from "../components/ui/Button";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useShortcutHandler } from "../hooks/useShortcutHandler";
@@ -24,7 +25,7 @@ import { useStripeVerification } from "../hooks/useStripeVerification";
 import { uid } from "../lib/id";
 import { computeTrialStatus, type DevOverride } from "../lib/trial";
 import { track } from "../lib/analytics";
-import type { BackupMeta } from "../lib/backupUtils";
+import { buildBackup, downloadBackup, type BackupMeta } from "../lib/backupUtils";
 import { BLANK_STREAK, updateStreak, type StreakData } from "../lib/streak";
 import { upsertToday, type DailySeries } from "../lib/dailySeries";
 import {
@@ -35,6 +36,7 @@ import {
   DEV_OVERRIDE_KEY,
   STREAK_KEY,
   DAILY_SERIES_KEY,
+  BACKUP_NUDGE_DISMISSED_KEY,
 } from "../lib/storageKeys";
 import type { Currency, Expense, FinanceState, Subscription, WishlistItem } from "../types";
 
@@ -123,6 +125,10 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
   const [savedTotal, setSavedTotal] = useLocalStorage<number>("runway-os:saved-total", 0);
   const [streak, setStreak] = useLocalStorage<StreakData>(STREAK_KEY, BLANK_STREAK);
   const [dailySeries, setDailySeries] = useLocalStorage<DailySeries>(DAILY_SERIES_KEY, []);
+  const [backupNudgeDismissed, setBackupNudgeDismissed] = useLocalStorage<boolean>(
+    BACKUP_NUDGE_DISMISSED_KEY,
+    false,
+  );
 
   // Refresh the streak and today's sparkline entry once per app open — safe
   // to call repeatedly since both are idempotent for a day already recorded.
@@ -165,6 +171,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
   const changeCurrency = (currency: Currency) => patch({ currency });
 
   const backupMeta: BackupMeta = { onboarded, trialStartedAt, licenseKey };
+
+  const exportBackup = () => downloadBackup(buildBackup(state, backupMeta));
 
   const restoreBackup = (restoredState: FinanceState, meta: BackupMeta) => {
     setState(restoredState);
@@ -295,6 +303,16 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
           </button>
         )}
 
+        {onboarded && !backupNudgeDismissed && (
+          <BackupNudge
+            onExport={() => {
+              exportBackup();
+              setBackupNudgeDismissed(true);
+            }}
+            onDismiss={() => setBackupNudgeDismissed(true)}
+          />
+        )}
+
         <div key={tab} className="space-y-5" style={{ animation: "floatIn 0.35s var(--ease-spring)" }}>
           {tab === "overview" && (
             <>
@@ -307,7 +325,12 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
                 series={dailySeries}
               />
               <StatPills state={state} stealth={stealthMode} />
-              <SpendDonutChart state={state} stealth={stealthMode} onOpenDetail={setDetailBucket} />
+              <SpendDonutChart
+                state={state}
+                stealth={stealthMode}
+                onOpenDetail={setDetailBucket}
+                onAddExpense={openManual}
+              />
               <CooldownModule
                 wishlist={state.wishlist}
                 state={state}
@@ -364,6 +387,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
               expenses={state.expenses}
               currency={state.currency}
               onRemove={removeExpense}
+              onAddExpense={openManual}
               stealth={stealthMode}
             />
           )}
@@ -400,6 +424,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         meta={backupMeta}
         onRestore={restoreBackup}
         onLicenseInvalid={() => setLicenseKey(null)}
+        onNavigate={onNavigate}
       />
       <CategoryDetailModal
         bucketKey={detailBucket}

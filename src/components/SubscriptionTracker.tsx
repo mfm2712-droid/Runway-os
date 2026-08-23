@@ -271,7 +271,21 @@ export function SubscriptionTracker({
         )}
 
         {subscriptions.length === 0 && !adding && (
-          <p className="text-xs text-slate-400 py-2">No subscriptions tracked yet.</p>
+          <div className="text-center space-y-2.5 py-2">
+            <p className="text-xl" aria-hidden>
+              🔄
+            </p>
+            <div className="space-y-1">
+              <h5 className="text-sm font-semibold text-white">No subscriptions yet</h5>
+              <p className="text-xs text-slate-400 leading-relaxed max-w-[220px] mx-auto">
+                Track recurring charges here so forgotten renewals stop quietly eating your
+                runway.
+              </p>
+            </div>
+            <Button variant="glass" onClick={() => setAdding(true)} className="mx-auto px-5 py-2 text-xs">
+              Add a subscription
+            </Button>
+          </div>
         )}
 
         <ul className="space-y-2">

@@ -14,9 +14,16 @@
     <meta name="description" content="Runway OS — a friction-free personal finance utility. Daily safe spend, subscription leaks, and emergency runway, all local to your browser." />
     <title>Runway OS</title>
 
-    <!-- Open Graph / Twitter Card — shown when this link is shared. -->
-    <!-- TODO: update the domain below if you move off
-         runway-os-six.vercel.app to a custom domain. -->
+    <!-- Open Graph / Twitter Card — shown when this link is shared. The Open
+         Graph spec requires og:image/og:url/twitter:image to be absolute
+         URLs (relative paths aren't valid here), so these 3 lines are the
+         ONLY hardcoded-host spots in the whole app — everything else
+         (manifest.json start_url/scope/shortcuts, all in-app navigation)
+         is relative and needs no changes when the domain moves.
+         TODO when moving off runway-os-six.vercel.app to a custom domain:
+         replace the 3 "https://runway-os-six.vercel.app" occurrences below
+         with the new domain. See VITE_PUBLIC_URL in .env.example if you'd
+         rather wire this through Vite's %ENV% HTML replacement instead. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Runway OS" />
     <meta property="og:title" content="Runway OS — The friction-free financial operating system" />

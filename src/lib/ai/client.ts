@@ -17,7 +17,12 @@ export interface ChatMessage {
 
 export interface StreamResult {
   isLive: boolean;
+  /** True when the server's rate limit was hit — a distinct, honest state
+   * from the generic simulated fallback (nothing was generated at all). */
+  rateLimited?: boolean;
 }
+
+const RATE_LIMIT_MESSAGE = "High demand — try again in a minute.";
 
 /**
  * Streams an advisor reply, calling onChunk with the accumulated text so
@@ -40,6 +45,11 @@ export async function streamAdvisorReply(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages, context: buildFinancialContext(state) }),
     });
+
+    if (res.status === 429) {
+      await simulateStream(RATE_LIMIT_MESSAGE, onChunk);
+      return { isLive: false, rateLimited: true };
+    }
 
     if (!res.ok || !res.body) throw new Error(`AI endpoint returned ${res.status}`);
 
@@ -127,6 +137,10 @@ export async function parseReceipt(input: { file?: File; text?: string }): Promi
       });
     } catch {
       throw new ReceiptParseError("unavailable", "Couldn't reach the receipt scanner — check your connection and try again.");
+    }
+
+    if (res.status === 429) {
+      throw new ReceiptParseError("unavailable", RATE_LIMIT_MESSAGE);
     }
 
     if (!res.ok) {

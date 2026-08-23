@@ -3,6 +3,7 @@ import type { FinanceState } from "../types";
 import { computeSpendBreakdown, spendBreakdownTotal, type SpendSlice } from "../lib/spendBreakdown";
 import { formatCurrency, monthOverMonthDelta } from "../lib/calculations";
 import { GlassCard } from "./ui/GlassCard";
+import { Button } from "./ui/Button";
 import { playClick } from "../lib/audio";
 
 const SIZE = 200;
@@ -15,10 +16,12 @@ export function SpendDonutChart({
   state,
   stealth = false,
   onOpenDetail,
+  onAddExpense,
 }: {
   state: FinanceState;
   stealth?: boolean;
   onOpenDetail: (key: SpendSlice["key"]) => void;
+  onAddExpense: () => void;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const slices = computeSpendBreakdown(state);
@@ -27,6 +30,26 @@ export function SpendDonutChart({
   const momDelta = monthOverMonthDelta(state);
 
   let cumulativePct = 0;
+
+  if (total <= 0) {
+    return (
+      <GlassCard className="p-6 space-y-3 text-center">
+        <p className="text-2xl" aria-hidden>
+          🍩
+        </p>
+        <div className="space-y-1">
+          <h4 className="text-sm font-semibold text-white">No spending tracked yet</h4>
+          <p className="text-xs text-slate-400 leading-relaxed max-w-[240px] mx-auto">
+            Log an expense or set your fixed monthly outflows to see where your money
+            actually goes.
+          </p>
+        </div>
+        <Button variant="glass" onClick={onAddExpense} className="mx-auto px-5 py-2.5 text-xs">
+          Add an expense
+        </Button>
+      </GlassCard>
+    );
+  }
 
   return (
     <GlassCard className="p-6 space-y-5">

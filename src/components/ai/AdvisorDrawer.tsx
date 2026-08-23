@@ -8,6 +8,12 @@ import { PromptChips } from "./PromptChips";
 import { backdropVariants, panelVariants } from "../../lib/motionPresets";
 import { playClick } from "../../lib/audio";
 
+// After this many consecutive failed/rate-limited replies in a row, pause
+// sending for a bit rather than let the user keep hammering a struggling
+// endpoint — a light client-side courtesy, not a real quota system.
+const COOLDOWN_AFTER_FAILURES = 2;
+const COOLDOWN_SECONDS = 30;
+
 export function AdvisorDrawer({
   open,
   onClose,
@@ -20,6 +26,8 @@ export function AdvisorDrawer({
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
+  const [cooldownSecondsLeft, setCooldownSecondsLeft] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
 
@@ -32,9 +40,15 @@ export function AdvisorDrawer({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    if (cooldownSecondsLeft <= 0) return;
+    const id = window.setTimeout(() => setCooldownSecondsLeft((s) => s - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [cooldownSecondsLeft]);
+
   const send = async (prompt: string) => {
     const text = prompt.trim();
-    if (!text || sending) return;
+    if (!text || sending || cooldownSecondsLeft > 0) return;
 
     const userMsg: DisplayMessage = { id: uid(), role: "user", content: text };
     const assistantId = uid();
@@ -64,6 +78,14 @@ export function AdvisorDrawer({
       prev.map((m) => (m.id === assistantId ? { ...m, streaming: false, isLive: result.isLive } : m)),
     );
     setSending(false);
+
+    const failed = !result.isLive && !!result.rateLimited;
+    const nextFailures = failed ? consecutiveFailures + 1 : 0;
+    setConsecutiveFailures(nextFailures);
+    if (nextFailures >= COOLDOWN_AFTER_FAILURES) {
+      setCooldownSecondsLeft(COOLDOWN_SECONDS);
+      setConsecutiveFailures(0);
+    }
   };
 
   return (
@@ -113,7 +135,10 @@ export function AdvisorDrawer({
         <div ref={scrollRef} className="relative flex-1 overflow-y-auto px-5 py-5 space-y-4">
           {messages.length === 0 && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-500 px-1">Try asking:</p>
+              <div className="space-y-1 px-1">
+                <p className="text-sm font-semibold text-white">Ask me anything about your money</p>
+                <p className="text-xs text-slate-500">Grounded in your real numbers — try one of these:</p>
+              </div>
               <PromptChips currency={state.currency} onPick={send} />
             </div>
           )}
@@ -122,7 +147,7 @@ export function AdvisorDrawer({
           ))}
         </div>
 
-        <div className="relative px-4 py-4 border-t border-white/[0.06] pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="relative px-4 pt-4 pb-2 border-t border-white/[0.06]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -133,12 +158,17 @@ export function AdvisorDrawer({
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about your money…"
-              className="flex-1 bg-white/[0.04] border border-white/[0.1] rounded-full px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-400/50"
+              disabled={cooldownSecondsLeft > 0}
+              placeholder={
+                cooldownSecondsLeft > 0
+                  ? `Try again in ${cooldownSecondsLeft}s…`
+                  : "Ask about your money…"
+              }
+              className="flex-1 bg-white/[0.04] border border-white/[0.1] rounded-full px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-400/50 disabled:opacity-50"
             />
             <button
               type="submit"
-              disabled={!input.trim() || sending}
+              disabled={!input.trim() || sending || cooldownSecondsLeft > 0}
               className="h-11 w-11 shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-sky-400 text-obsidian-950 disabled:opacity-30 active:scale-90 transition-transform duration-150"
               style={{ transitionTimingFunction: "var(--ease-spring)" }}
               aria-label="Send"
@@ -146,6 +176,9 @@ export function AdvisorDrawer({
               ↑
             </button>
           </form>
+          <p className="text-center text-[10px] text-slate-500 pt-2.5 pb-[calc(0.25rem+env(safe-area-inset-bottom))]">
+            AI runs only when you use it and may be rate-limited.
+          </p>
         </div>
           </motion.div>
         </motion.div>

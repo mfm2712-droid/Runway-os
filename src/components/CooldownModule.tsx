@@ -94,9 +94,21 @@ export function CooldownModule({
       )}
 
       {wishlist.length === 0 && !adding && (
-        <p className="text-xs text-slate-400 py-2">
-          Nothing cooling off. Log an impulse buy here before you make it.
-        </p>
+        <div className="text-center space-y-2.5 py-2">
+          <p className="text-xl" aria-hidden>
+            ❄️
+          </p>
+          <div className="space-y-1">
+            <h5 className="text-sm font-semibold text-white">Nothing cooling off</h5>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-[220px] mx-auto">
+              Log an impulse buy here before you make it — a 72-hour pause is often all it
+              takes.
+            </p>
+          </div>
+          <Button variant="glass" onClick={() => setAdding(true)} className="mx-auto px-5 py-2 text-xs">
+            Log an impulse buy
+          </Button>
+        </div>
       )}
 
       <ul className="space-y-3">

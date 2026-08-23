@@ -36,6 +36,7 @@ export function SettingsModal({
   meta,
   onRestore,
   onLicenseInvalid,
+  onNavigate,
 }: {
   open: boolean;
   onClose: () => void;
@@ -47,6 +48,7 @@ export function SettingsModal({
   meta: BackupMeta;
   onRestore: (state: FinanceState, meta: BackupMeta) => void;
   onLicenseInvalid: () => void;
+  onNavigate: (path: string) => void;
 }) {
   useSyncSubscriptionCheck(open, meta.licenseKey, onLicenseInvalid);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -254,6 +256,30 @@ export function SettingsModal({
             <p className="text-[10px] text-emerald-400">✓ {restoreMessage}</p>
           )}
           {restoreStatus === "error" && <p className="text-[10px] text-rose-400">{restoreMessage}</p>}
+        </div>
+
+        <div className="relative space-y-2">
+          <label className="text-xs text-slate-500 block">Legal & Support</label>
+          <div className="flex items-center gap-4 text-xs text-slate-400 px-1">
+            <button
+              onClick={() => onNavigate("/privacy")}
+              className="hover:text-white transition-colors underline underline-offset-2 decoration-white/20"
+            >
+              Privacy
+            </button>
+            <button
+              onClick={() => onNavigate("/terms")}
+              className="hover:text-white transition-colors underline underline-offset-2 decoration-white/20"
+            >
+              Terms
+            </button>
+            <a
+              href="mailto:support@runwayos.app"
+              className="hover:text-white transition-colors underline underline-offset-2 decoration-white/20"
+            >
+              support@runwayos.app
+            </a>
+          </div>
         </div>
 
         {import.meta.env.DEV && (
