@@ -18,6 +18,11 @@ export function SafeSpendSparkline({ series }: { series: DailySeries }) {
           const x = i * (barW + GAP);
           const y = H - barH;
           const over = entry.spent > entry.safeSpend && entry.safeSpend > 0;
+          const baseOpacity = i === series.length - 1 ? 1 : 0.55;
+          // With only a day or two of history, a single over-spend bar reads
+          // as a bug rather than a trend — mute the whole series until
+          // there's enough data for the pattern to mean something.
+          const lowData = series.length < 5;
           return (
             <rect
               key={entry.date}
@@ -26,8 +31,8 @@ export function SafeSpendSparkline({ series }: { series: DailySeries }) {
               width={Math.max(1, barW)}
               height={barH}
               rx={1}
-              fill={over ? "#fb7185" : "#34d399"}
-              opacity={i === series.length - 1 ? 1 : 0.55}
+              fill={over ? "#fbbf24" : "#34d399"}
+              opacity={lowData ? baseOpacity * 0.7 : baseOpacity}
             />
           );
         })}

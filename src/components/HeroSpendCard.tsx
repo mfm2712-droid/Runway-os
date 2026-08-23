@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { FinanceState } from "../types";
 import {
   dailySafeSpend,
@@ -29,14 +28,19 @@ export function HeroSpendCard({
   stealth = false,
   streak,
   series,
+  tuneOpen,
+  onOpenTune,
+  onCloseTune,
 }: {
   state: FinanceState;
   onChange: (patch: Partial<FinanceState>) => void;
   stealth?: boolean;
   streak?: StreakData;
   series?: DailySeries;
+  tuneOpen: boolean;
+  onOpenTune: () => void;
+  onCloseTune: () => void;
 }) {
-  const [tuneOpen, setTuneOpen] = useState(false);
   const safeSpend = dailySafeSpend(state);
   const days = spendingHorizonDays(state);
   const runway = runwayMonths(state);
@@ -55,7 +59,7 @@ export function HeroSpendCard({
         onClick={() => {
           triggerHaptic("light");
           playClick();
-          setTuneOpen(true);
+          onOpenTune();
         }}
         aria-label="Tune your numbers"
         className={`relative rounded-full active:scale-[0.97] transition-transform duration-200 ${
@@ -96,12 +100,7 @@ export function HeroSpendCard({
         </div>
       )}
 
-      <QuickTuneModal
-        open={tuneOpen}
-        onClose={() => setTuneOpen(false)}
-        state={state}
-        onChange={onChange}
-      />
+      <QuickTuneModal open={tuneOpen} onClose={onCloseTune} state={state} onChange={onChange} />
     </GlassCard>
   );
 }

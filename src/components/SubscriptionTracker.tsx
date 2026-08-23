@@ -7,7 +7,7 @@ import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
 import { SegmentedControl } from "./ui/SegmentedControl";
 import { SkeletonLines } from "./ai/Skeleton";
-import { FlagIcon, PlusIcon, TrashIcon } from "./ui/Icons";
+import { FlagIcon, PencilIcon, PlusIcon, TrashIcon } from "./ui/Icons";
 
 function ordinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
@@ -43,6 +43,83 @@ function SummaryBar({
           <span className="text-rose-400/80">flaggable as unused</span>
         </>
       )}
+    </div>
+  );
+}
+
+function EditSubscriptionForm({
+  sub,
+  currency,
+  onSave,
+  onCancel,
+}: {
+  sub: Subscription;
+  currency: Currency;
+  onSave: (patch: { name: string; amount: number; renewsOn: number }) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState(sub.name);
+  const [amount, setAmount] = useState(String(sub.amount));
+  const [renewsOn, setRenewsOn] = useState(String(sub.renewsOn));
+
+  const save = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const amt = parseFloat(amount);
+    if (!name.trim() || !Number.isFinite(amt) || amt <= 0) return;
+    const day = parseFloat(renewsOn);
+    onSave({
+      name: name.trim(),
+      amount: amt,
+      renewsOn: Math.min(31, Math.max(1, Number.isFinite(day) ? day : 1)),
+    });
+  };
+
+  return (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="mt-3 pt-3 border-t border-white/[0.08] space-y-2.5 animate-[floatIn_0.2s_var(--ease-spring)]"
+    >
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Name"
+        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+      />
+      <div className="flex gap-2">
+        <input
+          type="number"
+          inputMode="decimal"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          placeholder={`${CURRENCY_SYMBOLS[currency]}/mo`}
+          className="w-1/2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+        />
+        <input
+          type="number"
+          min={1}
+          max={31}
+          value={renewsOn}
+          onChange={(e) => setRenewsOn(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          placeholder="Renews on (day)"
+          className="w-1/2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button variant="primary" onClick={save} className="flex-1 py-2.5 text-xs">
+          Save
+        </Button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onCancel();
+          }}
+          className="px-4 text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }
@@ -172,6 +249,7 @@ export function SubscriptionTracker({
   onAdd,
   onRemove,
   onToggleFlag,
+  onUpdate,
 }: {
   subscriptions: Subscription[];
   state: FinanceState;
@@ -179,9 +257,11 @@ export function SubscriptionTracker({
   onAdd: (sub: Omit<Subscription, "id">) => void;
   onRemove: (id: string) => void;
   onToggleFlag: (id: string) => void;
+  onUpdate: (id: string, patch: { name: string; amount: number; renewsOn: number }) => void;
 }) {
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [renewsOn, setRenewsOn] = useState("1");
@@ -292,6 +372,7 @@ export function SubscriptionTracker({
           {subscriptions.map((s) => {
             const days = daysSince(s.flaggedSince);
             const expanded = expandedId === s.id;
+            const editing = editingId === s.id;
             return (
               <li
                 key={s.id}
@@ -324,6 +405,18 @@ export function SubscriptionTracker({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        setExpandedId(null);
+                        setEditingId(editing ? null : s.id);
+                      }}
+                      title="Edit"
+                      aria-label="Edit subscription"
+                      className="text-slate-400 hover:text-white transition-colors"
+                    >
+                      <PencilIcon width={15} height={15} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         onToggleFlag(s.id);
                       }}
                       title="Toggle unused"
@@ -349,7 +442,19 @@ export function SubscriptionTracker({
                   </div>
                 </div>
 
-                {expanded && <CancelDrawer sub={s} state={state} onMarkCancelled={onRemove} />}
+                {editing && (
+                  <EditSubscriptionForm
+                    sub={s}
+                    currency={state.currency}
+                    onSave={(patch) => {
+                      onUpdate(s.id, patch);
+                      setEditingId(null);
+                    }}
+                    onCancel={() => setEditingId(null)}
+                  />
+                )}
+
+                {expanded && !editing && <CancelDrawer sub={s} state={state} onMarkCancelled={onRemove} />}
               </li>
             );
           })}

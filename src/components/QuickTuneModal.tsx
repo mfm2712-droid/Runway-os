@@ -18,6 +18,7 @@ export function QuickTuneModal({
   onChange: (patch: Partial<FinanceState>) => void;
 }) {
   const [cash, setCash] = useState(String(state.cashBalance));
+  const [fixedOutflows, setFixedOutflows] = useState(String(state.fixedMonthlyOutflows || 0));
   const [buffer, setBuffer] = useState(String(state.safetyBuffer || 0));
   const [paydayEnabled, setPaydayEnabled] = useState(state.paydayDay != null);
   const [paydayDay, setPaydayDay] = useState(String(state.paydayDay ?? 28));
@@ -36,6 +37,7 @@ export function QuickTuneModal({
     };
     onChange({
       cashBalance: num(cash),
+      fixedMonthlyOutflows: Math.max(0, num(fixedOutflows)),
       safetyBuffer: Math.max(0, num(buffer)),
       paydayDay: paydayEnabled ? Math.min(31, Math.max(1, num(paydayDay) || 1)) : undefined,
       weekendBooster,
@@ -91,6 +93,22 @@ export function QuickTuneModal({
               inputMode="decimal"
               value={cash}
               onChange={(e) => setCash(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              className="w-full bg-transparent text-xl font-bold tracking-tight text-white tabular-nums focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="relative space-y-2">
+          <label className="text-xs text-slate-500 block">Fixed Monthly Outflows</label>
+          <p className="text-[10px] text-slate-400">Rent, bills — recurring costs outside subscriptions.</p>
+          <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-sky-500 transition-colors">
+            <span className="text-lg text-slate-500 mr-1">{CURRENCY_SYMBOLS[state.currency]}</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={fixedOutflows}
+              onChange={(e) => setFixedOutflows(e.target.value)}
               onFocus={(e) => e.target.select()}
               className="w-full bg-transparent text-xl font-bold tracking-tight text-white tabular-nums focus:outline-none"
             />

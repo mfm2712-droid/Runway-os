@@ -13,11 +13,13 @@ export function CategoryDetailModal({
   state,
   onClose,
   onRemoveExpense,
+  onEditFixedCosts,
 }: {
   bucketKey: SpendSlice["key"] | null;
   state: FinanceState;
   onClose: () => void;
   onRemoveExpense: (id: string) => void;
+  onEditFixedCosts: () => void;
 }) {
   const reduceMotion = useReducedMotion();
   const slice = bucketKey ? computeSpendBreakdown(state).find((s) => s.key === bucketKey) ?? null : null;
@@ -102,11 +104,19 @@ export function CategoryDetailModal({
               <div className="relative flex justify-between items-center text-xs rounded-2xl bg-white/[0.03] border border-white/[0.06] px-4 py-3">
                 <div>
                   <p className="text-slate-300">Fixed Monthly Outflows</p>
-                  <p className="text-[10px] text-slate-500">Rent, bills — edit in Quick Tune</p>
+                  <p className="text-[10px] text-slate-500">Rent, bills</p>
                 </div>
-                <span className="font-semibold tabular-nums text-slate-300">
-                  {formatCurrency(state.fixedMonthlyOutflows, state.currency)}
-                </span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="font-semibold tabular-nums text-slate-300">
+                    {formatCurrency(state.fixedMonthlyOutflows, state.currency)}
+                  </span>
+                  <button
+                    onClick={onEditFixedCosts}
+                    className="text-[11px] font-medium text-sky-400 hover:text-sky-300 transition-colors"
+                  >
+                    Edit
+                  </button>
+                </div>
               </div>
             )}
 

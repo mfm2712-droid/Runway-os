@@ -121,6 +121,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [detailBucket, setDetailBucket] = useState<SpendSlice["key"] | null>(null);
+  const [tuneOpen, setTuneOpen] = useState(false);
   const [tab, setTab] = useState<DashboardTab>("overview");
   const [stealthMode, setStealthMode] = useLocalStorage<boolean>("runway-os:stealthMode", false);
   const [savedTotal, setSavedTotal] = useLocalStorage<number>("runway-os:saved-total", 0);
@@ -225,6 +226,15 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
     removeSubscription(id);
   };
 
+  const updateSubscription = (
+    id: string,
+    patch: { name: string; amount: number; renewsOn: number },
+  ) =>
+    setState((s) => ({
+      ...s,
+      subscriptions: s.subscriptions.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+    }));
+
   const toggleSubscriptionFlag = (id: string) =>
     setState((s) => ({
       ...s,
@@ -325,6 +335,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
                 stealth={stealthMode}
                 streak={streak}
                 series={dailySeries}
+                tuneOpen={tuneOpen}
+                onOpenTune={() => setTuneOpen(true)}
+                onCloseTune={() => setTuneOpen(false)}
               />
               <StatPills state={state} stealth={stealthMode} />
               <SpendDonutChart
@@ -381,6 +394,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
               onAdd={addSubscription}
               onRemove={cancelSubscription}
               onToggleFlag={toggleSubscriptionFlag}
+              onUpdate={updateSubscription}
             />
           )}
 
@@ -435,6 +449,10 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         state={state}
         onClose={() => setDetailBucket(null)}
         onRemoveExpense={removeExpense}
+        onEditFixedCosts={() => {
+          setDetailBucket(null);
+          setTuneOpen(true);
+        }}
       />
 
       <OnboardingModal
