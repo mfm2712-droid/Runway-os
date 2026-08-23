@@ -197,8 +197,13 @@ export function PaywallModal({
 
         <div className="relative pt-3 border-t border-white/[0.08] space-y-2.5">
           <label className="text-xs text-slate-500 block">
-            Already subscribed? Restore access with your email
+            Already subscribed? Restore Pro access with your email
           </label>
+          <p className="text-[10px] text-slate-400 leading-relaxed">
+            This only restores your subscription via Stripe — it doesn't transfer your
+            balances or expenses. To move your numbers to a new device, use Settings →
+            Export/Import backup instead.
+          </p>
           <div className="flex gap-2">
             <input
               type="email"
@@ -225,7 +230,10 @@ export function PaywallModal({
             </p>
           )}
           {restoreState === "found" && (
-            <p className="text-[10px] text-emerald-400">✓ Subscription restored — welcome back.</p>
+            <p className="text-[10px] text-emerald-400">
+              ✓ Pro access restored — welcome back. This doesn't include your balances or
+              expenses; use Settings → Export/Import backup to bring your numbers across too.
+            </p>
           )}
           {restoreState === "error" && (
             <p className="text-[10px] text-rose-400">

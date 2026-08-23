@@ -365,8 +365,12 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 a: "Anytime, through Stripe's own Billing Portal (Settings → Manage Billing) — no calls, no retention scripts.",
               },
               {
+                q: "Does email sync my data?",
+                a: "No. Restoring access by email only re-activates your Pro subscription via Stripe — it doesn't bring across your balances, expenses or subscriptions. For that, use Settings → Export/Import backup.",
+              },
+              {
                 q: "What if I switch phones?",
-                a: "Export a backup from Settings before you switch, then import it on the new device — your data doesn't sync automatically since it never leaves your browser otherwise.",
+                a: "Export a backup from Settings and import it on the new device — that's what moves your numbers across. Restoring Pro access by email is a separate thing and only unlocks your subscription, not your data.",
               },
             ].map(({ q, a }) => (
               <details key={q} className="group p-4">

@@ -226,6 +226,9 @@ export function SettingsModal({
 
         <div className="relative space-y-2">
           <label className="text-xs text-slate-500 block">Data</label>
+          <p className="text-[10px] text-slate-400 -mt-1">
+            Email unlocks Pro. Backup moves your numbers.
+          </p>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="glass" onClick={handleExport} className="py-3 text-xs">
               Export Backup (.json)

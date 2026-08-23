@@ -72,7 +72,9 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
             storage so the app can recognise your subscription and let you manage
             billing; we don't keep a database of customers ourselves. If you restore
             access on a new device by email, that email is sent to our server for a
-            single real-time check against Stripe and isn't stored afterward.
+            single real-time check against Stripe and isn't stored afterward. Restoring
+            access this way only reactivates your subscription — it doesn't transfer your
+            expense history, since that never left your original browser.
           </p>
         </section>
 
