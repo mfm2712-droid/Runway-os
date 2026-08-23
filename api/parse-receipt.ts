@@ -19,7 +19,16 @@ const RATE_WINDOW_MS = 60_000; // per minute
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_IMAGE_BYTES = 4.5 * 1024 * 1024; // 4.5MB
 
-const CATEGORIES = ["food", "transport", "housing", "shopping", "health", "entertainment", "other"] as const;
+const CATEGORIES = [
+  "food",
+  "transport",
+  "housing",
+  "shopping",
+  "health",
+  "entertainment",
+  "other",
+  "bills",
+] as const;
 type Category = (typeof CATEGORIES)[number];
 
 const EXTRACT_PROMPT = `Look at this image and extract receipt data. Respond with ONLY a JSON object, no prose, no markdown fences, matching exactly this shape:
@@ -30,7 +39,7 @@ const EXTRACT_PROMPT = `Look at this image and extract receipt data. Respond wit
   "currency": string or null (ISO 4217 3-letter code, e.g. "GBP", "USD", "EUR" — null if not visible or unclear),
   "date": string (YYYY-MM-DD, use today's date if not visible on the receipt),
   "taxAmount": number or null (VAT/sales tax line, null if not itemized separately),
-  "category": one of "food" | "transport" | "housing" | "shopping" | "health" | "entertainment" | "other",
+  "category": one of "food" | "transport" | "housing" | "shopping" | "health" | "entertainment" | "other" | "bills" (bills = utilities, phone, broadband and similar recurring household bills),
   "confidenceScore": number from 0 to 1 (your confidence that merchant + amount are correctly read),
   "lineItemsSummary": string or null (a short one-line summary of what was purchased, e.g. "2x Coffee, 1x Sandwich" — null if not legible or not itemized),
   "recurring": boolean (true only if this clearly looks like a subscription/recurring charge, not a one-off purchase)

@@ -86,6 +86,11 @@ const MERCHANT_CATEGORY: { pattern: RegExp; category: ExpenseCategory; merchant:
   { pattern: /netflix|spotify|disney|prime video/i, category: "entertainment", merchant: "Netflix" },
   { pattern: /gym|fitness|peloton/i, category: "health", merchant: "PureGym" },
   { pattern: /rent|landlord|mortgage/i, category: "housing", merchant: "Landlord" },
+  {
+    pattern: /electric|gas bill|water|utility|utilities|broadband|internet bill|phone bill|british gas|thames water/i,
+    category: "bills",
+    merchant: "Utility Co",
+  },
   { pattern: /amazon|zara|asos|shop/i, category: "shopping", merchant: "Amazon" },
 ];
 

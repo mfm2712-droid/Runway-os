@@ -16,6 +16,7 @@ export const LEISURE_CATEGORIES: Expense["category"][] = [
   "health",
   "entertainment",
   "other",
+  "bnpl",
 ];
 
 /**
@@ -32,7 +33,7 @@ export function computeSpendBreakdown(state: FinanceState): SpendSlice[] {
       .filter((e) => cats.includes(e.category) && isThisMonth(e.date))
       .reduce((sum, e) => sum + e.amount, 0);
 
-  const housing = state.fixedMonthlyOutflows + byCategory(["housing"]);
+  const housing = state.fixedMonthlyOutflows + byCategory(["housing", "bills"]);
   const food = byCategory(["food"]);
   const leisure = byCategory(LEISURE_CATEGORIES);
   const subs = subscriptionsTotal(state);

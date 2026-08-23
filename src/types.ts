@@ -5,7 +5,19 @@ export type ExpenseCategory =
   | "shopping"
   | "health"
   | "entertainment"
-  | "other";
+  | "other"
+  | "bills"
+  | "bnpl";
+
+export type BnplPlan = "2w" | "4w" | "1m" | "3m" | "6m";
+
+export const BNPL_PLAN_LABELS: Record<BnplPlan, string> = {
+  "2w": "2 weeks",
+  "4w": "4 weeks",
+  "1m": "1 month",
+  "3m": "3 months",
+  "6m": "6 months",
+};
 
 export interface Expense {
   id: string;
@@ -13,6 +25,7 @@ export interface Expense {
   category: ExpenseCategory;
   date: string; // YYYY-MM-DD
   note?: string;
+  bnplPlan?: BnplPlan; // set when category is "bnpl" — the repayment plan chosen at purchase
 }
 
 export interface Subscription {
@@ -66,6 +79,8 @@ export const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   health: "Health",
   entertainment: "Entertainment",
   other: "Other",
+  bills: "Bills",
+  bnpl: "Buy Now Pay Later",
 };
 
 export const CATEGORY_ICONS: Record<ExpenseCategory, string> = {
@@ -76,4 +91,6 @@ export const CATEGORY_ICONS: Record<ExpenseCategory, string> = {
   health: "💊",
   entertainment: "🎬",
   other: "•••",
+  bills: "🧾",
+  bnpl: "💳",
 };

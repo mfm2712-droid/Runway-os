@@ -47,6 +47,56 @@ function SummaryBar({
   );
 }
 
+function AmountDayFields({
+  currency,
+  amount,
+  onAmountChange,
+  renewsOn,
+  onRenewsOnChange,
+}: {
+  currency: Currency;
+  amount: string;
+  onAmountChange: (v: string) => void;
+  renewsOn: string;
+  onRenewsOnChange: (v: string) => void;
+}) {
+  return (
+    <>
+      <div className="flex gap-2">
+        <div className="w-1/2 space-y-1">
+          <label className="text-[10px] text-slate-500 block">Amount / month</label>
+          <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 focus-within:border-sky-500 transition-colors">
+            <span className="text-xs text-slate-500 mr-1">{CURRENCY_SYMBOLS[currency]}</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => onAmountChange(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              className="w-full bg-transparent text-xs text-white placeholder:text-slate-600 focus:outline-none"
+            />
+          </div>
+        </div>
+        <div className="w-1/2 space-y-1">
+          <label className="text-[10px] text-slate-500 block">Renews on (day of month)</label>
+          <input
+            type="number"
+            min={1}
+            max={31}
+            placeholder="1–31"
+            value={renewsOn}
+            onChange={(e) => onRenewsOnChange(e.target.value)}
+            onFocus={(e) => e.target.select()}
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+          />
+        </div>
+      </div>
+      <p className="text-[9px] text-slate-500">1–31. Example: 5 = 5th of each month.</p>
+    </>
+  );
+}
+
 function EditSubscriptionForm({
   sub,
   currency,
@@ -85,27 +135,13 @@ function EditSubscriptionForm({
         placeholder="Name"
         className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
       />
-      <div className="flex gap-2">
-        <input
-          type="number"
-          inputMode="decimal"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          onFocus={(e) => e.target.select()}
-          placeholder={`${CURRENCY_SYMBOLS[currency]}/mo`}
-          className="w-1/2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
-        />
-        <input
-          type="number"
-          min={1}
-          max={31}
-          value={renewsOn}
-          onChange={(e) => setRenewsOn(e.target.value)}
-          onFocus={(e) => e.target.select()}
-          placeholder="Renews on (day)"
-          className="w-1/2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
-        />
-      </div>
+      <AmountDayFields
+        currency={currency}
+        amount={amount}
+        onAmountChange={setAmount}
+        renewsOn={renewsOn}
+        onRenewsOnChange={setRenewsOn}
+      />
       <div className="flex gap-2">
         <Button variant="primary" onClick={save} className="flex-1 py-2.5 text-xs">
           Save
@@ -323,27 +359,13 @@ export function SubscriptionTracker({
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
             />
-            <div className="flex gap-2">
-              <input
-                type="number"
-                inputMode="decimal"
-                placeholder={`${CURRENCY_SYMBOLS[state.currency]}/mo`}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                onFocus={(e) => e.target.select()}
-                className="w-1/2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
-              />
-              <input
-                type="number"
-                min={1}
-                max={31}
-                placeholder="Renews on (day)"
-                value={renewsOn}
-                onChange={(e) => setRenewsOn(e.target.value)}
-                onFocus={(e) => e.target.select()}
-                className="w-1/2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
-              />
-            </div>
+            <AmountDayFields
+              currency={state.currency}
+              amount={amount}
+              onAmountChange={setAmount}
+              renewsOn={renewsOn}
+              onRenewsOnChange={setRenewsOn}
+            />
             <Button variant="primary" onClick={submit} className="w-full py-2.5 text-xs">
               Add subscription
             </Button>

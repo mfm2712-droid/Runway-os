@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import type { Currency, Expense, ExpenseCategory, Subscription } from "../types";
-import { CATEGORY_ICONS, CATEGORY_LABELS, CURRENCY_SYMBOLS } from "../types";
+import type { BnplPlan, Currency, Expense, ExpenseCategory, Subscription } from "../types";
+import { BNPL_PLAN_LABELS, CATEGORY_ICONS, CATEGORY_LABELS, CURRENCY_SYMBOLS } from "../types";
 import { Button } from "./ui/Button";
 import { SegmentedControl } from "./ui/SegmentedControl";
 import { ReceiptDropzone } from "./ai/ReceiptDropzone";
@@ -10,6 +10,7 @@ import { triggerHaptic } from "../lib/haptics";
 import { playClick } from "../lib/audio";
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ExpenseCategory[];
+const BNPL_PLANS = Object.keys(BNPL_PLAN_LABELS) as BnplPlan[];
 
 function todayISO(): string {
   const d = new Date();
@@ -39,6 +40,7 @@ export function ExpenseModal({
   const [mode, setMode] = useState<"manual" | "scan">("manual");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("food");
+  const [bnplPlan, setBnplPlan] = useState<BnplPlan>("1m");
   const [date, setDate] = useState(todayISO());
   const [note, setNote] = useState("");
   const reduceMotion = useReducedMotion();
@@ -53,6 +55,7 @@ export function ExpenseModal({
   const resetAndClose = () => {
     setAmount("");
     setCategory("food");
+    setBnplPlan("1m");
     setDate(todayISO());
     setNote("");
     setMode("manual");
@@ -75,7 +78,15 @@ export function ExpenseModal({
     if (!valid) return;
     triggerHaptic("success");
     const trimmedNote = note.trim();
-    onAdd({ amount: amt, category, date, ...(trimmedNote ? { note: trimmedNote } : {}) });
+    const isBnpl = category === "bnpl";
+    const finalNote = trimmedNote || (isBnpl ? `BNPL · ${BNPL_PLAN_LABELS[bnplPlan]}` : "");
+    onAdd({
+      amount: amt,
+      category,
+      date,
+      ...(finalNote ? { note: finalNote } : {}),
+      ...(isBnpl ? { bnplPlan } : {}),
+    });
     resetAndClose();
   };
 
@@ -173,11 +184,36 @@ export function ExpenseModal({
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
                     <span className="text-lg leading-none">{CATEGORY_ICONS[c]}</span>
-                    {CATEGORY_LABELS[c].split(" ")[0]}
+                    {c === "bnpl" ? "BNPL" : CATEGORY_LABELS[c].split(" ")[0]}
                   </button>
                 ))}
               </div>
             </div>
+
+            {category === "bnpl" && (
+              <div className="relative">
+                <label className="text-xs text-slate-500 block mb-2">Repayment plan</label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {BNPL_PLANS.map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => {
+                        playClick();
+                        setBnplPlan(p);
+                      }}
+                      className={`rounded-xl py-2.5 text-[10px] font-medium border transition-all duration-150 active:scale-95 ${
+                        bnplPlan === p
+                          ? "bg-sky-500/15 border-sky-500/60 text-sky-300"
+                          : "bg-white/[0.03] border-white/[0.06] text-slate-400"
+                      }`}
+                      style={{ transitionTimingFunction: "var(--ease-spring)" }}
+                    >
+                      {BNPL_PLAN_LABELS[p]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="relative">
               <label className="text-xs text-slate-500 block mb-2">Merchant / Note (optional)</label>

@@ -42,7 +42,9 @@ export function CategoryDetailModal({
     bucketKey === "food"
       ? state.expenses.filter((e) => e.category === "food" && isThisMonth(e.date))
       : bucketKey === "housing"
-      ? state.expenses.filter((e) => e.category === "housing" && isThisMonth(e.date))
+      ? state.expenses.filter(
+          (e) => (e.category === "housing" || e.category === "bills") && isThisMonth(e.date),
+        )
       : bucketKey === "leisure"
       ? state.expenses.filter((e) => LEISURE_CATEGORIES.includes(e.category) && isThisMonth(e.date))
       : [];
