@@ -9,6 +9,7 @@ import {
   simulateReceiptParse,
 } from "./simulate";
 import { optimizeReceiptImage } from "../receiptOptimizer";
+import type { Lang } from "../i18n/translations";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -22,7 +23,10 @@ export interface StreamResult {
   rateLimited?: boolean;
 }
 
-const RATE_LIMIT_MESSAGE = "High demand — try again in a minute.";
+const RATE_LIMIT_MESSAGES: Record<Lang, string> = {
+  en: "High demand — try again in a minute.",
+  es: "Mucha demanda — inténtalo de nuevo en un minuto.",
+};
 
 /**
  * Streams an advisor reply, calling onChunk with the accumulated text so
@@ -38,16 +42,17 @@ export async function streamAdvisorReply(
   messages: ChatMessage[],
   state: FinanceState,
   onChunk: (textSoFar: string) => void,
+  lang: Lang = "en",
 ): Promise<StreamResult> {
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, context: buildFinancialContext(state) }),
+      body: JSON.stringify({ messages, context: buildFinancialContext(state), lang }),
     });
 
     if (res.status === 429) {
-      await simulateStream(RATE_LIMIT_MESSAGE, onChunk);
+      await simulateStream(RATE_LIMIT_MESSAGES[lang], onChunk);
       return { isLive: false, rateLimited: true };
     }
 
@@ -73,7 +78,7 @@ export async function streamAdvisorReply(
     return { isLive: true };
   } catch {
     await simulateStream(
-      simulateAdvisorReply(messages[messages.length - 1]?.content ?? "", state),
+      simulateAdvisorReply(messages[messages.length - 1]?.content ?? "", state, lang),
       onChunk,
     );
     return { isLive: false };
@@ -125,7 +130,24 @@ export class ReceiptParseError extends Error {
  * text has no image to read in the first place, so it always uses a
  * lightweight local heuristic, honestly labeled as simulated.
  */
-export async function parseReceipt(input: { file?: File; text?: string }): Promise<ReceiptParseResult> {
+const RECEIPT_ERROR_MESSAGES: Record<Lang, { unreachable: string; failed: string; notAReceipt: string }> = {
+  en: {
+    unreachable: "Couldn't reach the receipt scanner — check your connection and try again.",
+    failed: "Couldn't read that receipt right now — try again in a moment.",
+    notAReceipt: "That doesn't look like a receipt — try a clearer photo, or enter it manually.",
+  },
+  es: {
+    unreachable: "No se pudo contactar con el escáner de recibos — comprueba tu conexión e inténtalo de nuevo.",
+    failed: "No se pudo leer ese recibo ahora mismo — inténtalo de nuevo en un momento.",
+    notAReceipt: "Eso no parece un recibo — prueba con una foto más clara, o introdúcelo manualmente.",
+  },
+};
+
+export async function parseReceipt(
+  input: { file?: File; text?: string },
+  lang: Lang = "en",
+): Promise<ReceiptParseResult> {
+  const messages = RECEIPT_ERROR_MESSAGES[lang];
   if (input.file) {
     let res: Response;
     try {
@@ -136,20 +158,20 @@ export async function parseReceipt(input: { file?: File; text?: string }): Promi
         body: JSON.stringify({ imageBase64: optimized.base64, mimeType: optimized.mimeType }),
       });
     } catch {
-      throw new ReceiptParseError("unavailable", "Couldn't reach the receipt scanner — check your connection and try again.");
+      throw new ReceiptParseError("unavailable", messages.unreachable);
     }
 
     if (res.status === 429) {
-      throw new ReceiptParseError("unavailable", RATE_LIMIT_MESSAGE);
+      throw new ReceiptParseError("unavailable", RATE_LIMIT_MESSAGES[lang]);
     }
 
     if (!res.ok) {
-      throw new ReceiptParseError("unavailable", "Couldn't read that receipt right now — try again in a moment.");
+      throw new ReceiptParseError("unavailable", messages.failed);
     }
 
     const data = (await res.json()) as ParsedReceipt;
     if (!data.isReceipt) {
-      throw new ReceiptParseError("not_a_receipt", "That doesn't look like a receipt — try a clearer photo, or enter it manually.");
+      throw new ReceiptParseError("not_a_receipt", messages.notAReceipt);
     }
     return { ...data, isLive: true };
   }
@@ -172,8 +194,10 @@ export interface GeneratedEmailResult {
 export async function generateCancellationEmail(
   sub: Subscription,
   state: FinanceState,
+  lang: Lang = "en",
 ): Promise<GeneratedEmailResult> {
   try {
+    const langInstruction = lang === "es" ? " Write it in Spanish." : "";
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -181,10 +205,11 @@ export async function generateCancellationEmail(
         messages: [
           {
             role: "user",
-            content: `Write a short, polite, formal cancellation email for the "${sub.name}" subscription (${CURRENCY_SYMBOLS[state.currency]}${sub.amount.toFixed(2)}/month). Ask for written confirmation and that billing stop immediately. Output only the email, starting with a Subject line — no commentary.`,
+            content: `Write a short, polite, formal cancellation email for the "${sub.name}" subscription (${CURRENCY_SYMBOLS[state.currency]}${sub.amount.toFixed(2)}/month). Ask for written confirmation and that billing stop immediately. Output only the email, starting with a Subject line — no commentary.${langInstruction}`,
           },
         ],
         context: buildFinancialContext(state),
+        lang,
       }),
     });
 
@@ -201,7 +226,7 @@ export async function generateCancellationEmail(
     if (!draft.trim()) throw new Error("Empty AI response");
     return { draft, isLive: true };
   } catch {
-    return { draft: simulateCancellationEmail(sub, state.currency), isLive: false };
+    return { draft: simulateCancellationEmail(sub, state.currency, lang), isLive: false };
   }
 }
 
@@ -213,8 +238,10 @@ export async function generateCancellationEmail(
 export async function generateNegotiationScript(
   sub: Subscription,
   state: FinanceState,
+  lang: Lang = "en",
 ): Promise<GeneratedEmailResult> {
   try {
+    const langInstruction = lang === "es" ? " Write it in Spanish." : "";
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -222,10 +249,11 @@ export async function generateNegotiationScript(
         messages: [
           {
             role: "user",
-            content: `Write a short call/chat retention negotiation script for cancelling the "${sub.name}" subscription (currently ${CURRENCY_SYMBOLS[state.currency]}${sub.amount.toFixed(2)}/month). The goal is to ask the provider's retention team for a 30-40% discount before agreeing to cancel. Structure it as: an opening line, a response if they ask why, a response if they offer a discount, a response if they offer nothing, and 2-3 short tips. Output only the script, no commentary.`,
+            content: `Write a short call/chat retention negotiation script for cancelling the "${sub.name}" subscription (currently ${CURRENCY_SYMBOLS[state.currency]}${sub.amount.toFixed(2)}/month). The goal is to ask the provider's retention team for a 30-40% discount before agreeing to cancel. Structure it as: an opening line, a response if they ask why, a response if they offer a discount, a response if they offer nothing, and 2-3 short tips. Output only the script, no commentary.${langInstruction}`,
           },
         ],
         context: buildFinancialContext(state),
+        lang,
       }),
     });
 
@@ -242,6 +270,6 @@ export async function generateNegotiationScript(
     if (!draft.trim()) throw new Error("Empty AI response");
     return { draft, isLive: true };
   } catch {
-    return { draft: simulateNegotiationScript(sub, state.currency), isLive: false };
+    return { draft: simulateNegotiationScript(sub, state.currency, lang), isLive: false };
   }
 }

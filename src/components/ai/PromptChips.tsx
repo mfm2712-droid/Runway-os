@@ -1,5 +1,6 @@
 import type { Currency } from "../../types";
 import { promptChips } from "../../lib/ai/simulate";
+import { useLanguage } from "../../lib/i18n/LanguageContext";
 
 export function PromptChips({
   currency,
@@ -8,9 +9,10 @@ export function PromptChips({
   currency: Currency;
   onPick: (prompt: string) => void;
 }) {
+  const { lang } = useLanguage();
   return (
     <div className="space-y-2">
-      {promptChips(currency).map((prompt) => (
+      {promptChips(currency, lang).map((prompt) => (
         <button
           key={prompt}
           onClick={() => onPick(prompt)}

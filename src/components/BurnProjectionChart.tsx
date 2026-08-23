@@ -4,6 +4,7 @@ import type { ProjectionPoint } from "../lib/projection";
 import type { Currency } from "../types";
 import { formatCurrency } from "../lib/calculations";
 import { track } from "../lib/analytics";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 const W = 340;
 const H = 180;
@@ -11,11 +12,11 @@ const PAD_X = 6;
 const PAD_TOP = 18;
 const PAD_BOTTOM = 26;
 
-function monthLabel(offset: number): string {
+function monthLabel(offset: number, locale: string): string {
   const d = new Date();
   d.setDate(1);
   d.setMonth(d.getMonth() + offset);
-  return d.toLocaleDateString("en-GB", { month: "short" });
+  return d.toLocaleDateString(locale, { month: "short" });
 }
 
 export function BurnProjectionChart({
@@ -27,6 +28,8 @@ export function BurnProjectionChart({
   zeroMonth: number | null;
   currency: Currency;
 }) {
+  const { t, lang } = useLanguage();
+  const locale = lang === "es" ? "es-ES" : "en-GB";
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoverMonth, setHoverMonth] = useState<number | null>(null);
   const horizon = points[points.length - 1]?.month ?? 12;
@@ -110,7 +113,7 @@ export function BurnProjectionChart({
               fontSize="9"
               fill="rgba(148,163,184,0.7)"
             >
-              {monthLabel(p.month)}
+              {monthLabel(p.month, locale)}
             </text>
           ))}
 
@@ -156,13 +159,13 @@ export function BurnProjectionChart({
       <div className="h-8 flex items-center justify-center">
         {hovered ? (
           <p className="text-xs text-slate-300">
-            <span className="text-slate-500">{monthLabel(hovered.month)} · </span>
+            <span className="text-slate-500">{monthLabel(hovered.month, locale)} · </span>
             <span className="font-semibold tracking-tight tabular-nums text-white">
               {formatCurrency(hovered.balance, currency)}
             </span>
           </p>
         ) : (
-          <p className="text-[10px] text-slate-400">Drag the scrub bar to inspect any month</p>
+          <p className="text-[10px] text-slate-400">{t("projection.dragScrubBar")}</p>
         )}
       </div>
 

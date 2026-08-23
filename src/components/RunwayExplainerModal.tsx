@@ -9,6 +9,7 @@ import {
 } from "../lib/calculations";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 import { playClick } from "../lib/audio";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 export function RunwayExplainerModal({
   open,
@@ -19,12 +20,13 @@ export function RunwayExplainerModal({
   onClose: () => void;
   state: FinanceState;
 }) {
+  const { t } = useLanguage();
   const reduceMotion = useReducedMotion();
   const fixed = state.fixedMonthlyOutflows;
   const subs = subscriptionsTotal(state);
   const burn = totalMonthlyOutflow(state);
   const runway = runwayMonths(state);
-  const { value, unit } = formatRunwayDisplay(runway);
+  const { value, unit } = formatRunwayDisplay(runway, t("stats.sustainable"));
   const zeroBurn = burn <= 0;
 
   const dismiss = () => {
@@ -52,7 +54,7 @@ export function RunwayExplainerModal({
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-label="How runway is calculated"
+            aria-label={t("runwayExplainer.title")}
           >
             <div className="mesh-glow opacity-60" />
             <div className="relative flex justify-center md:hidden -mt-1">
@@ -60,7 +62,7 @@ export function RunwayExplainerModal({
             </div>
 
             <div className="relative flex justify-between items-start">
-              <h3 className="text-base font-semibold text-white">How Runway Works</h3>
+              <h3 className="text-base font-semibold text-white">{t("runwayExplainer.title")}</h3>
               <button
                 onClick={dismiss}
                 className="h-8 w-8 shrink-0 flex items-center justify-center rounded-full glass text-slate-400 hover:text-white transition-colors"
@@ -71,33 +73,27 @@ export function RunwayExplainerModal({
             </div>
 
             <div className="relative rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 text-center">
-              <p className="text-sm font-semibold text-white">
-                Liquid Cash <span className="text-slate-500">÷</span> Total Monthly Outflow
-              </p>
-              <p className="text-[10px] text-slate-500 mt-1">
-                = months until cash hits zero at zero income
-              </p>
+              <p className="text-sm font-semibold text-white">{t("runwayExplainer.formula")}</p>
+              <p className="text-[10px] text-slate-500 mt-1">{t("runwayExplainer.formulaMeaning")}</p>
             </div>
 
             <div className="relative space-y-2">
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                Your numbers this month
+                {t("runwayExplainer.yourNumbers")}
               </p>
               <div className="rounded-2xl bg-white/[0.025] border border-white/[0.06] divide-y divide-white/[0.06] overflow-hidden">
-                <Row label="Liquid Cash" value={formatCurrency(state.cashBalance, state.currency)} />
-                <Row label="Fixed Monthly Outflows" value={formatCurrency(fixed, state.currency)} />
-                <Row label="Subscriptions" value={formatCurrency(subs, state.currency)} />
-                <Row label="Total Monthly Outflow" value={formatCurrency(burn, state.currency)} emphasis />
+                <Row label={t("runwayExplainer.liquidCash")} value={formatCurrency(state.cashBalance, state.currency)} />
+                <Row label={t("runwayExplainer.fixedOutflows")} value={formatCurrency(fixed, state.currency)} />
+                <Row label={t("runwayExplainer.subscriptions")} value={formatCurrency(subs, state.currency)} />
+                <Row label={t("runwayExplainer.totalOutflow")} value={formatCurrency(burn, state.currency)} emphasis />
               </div>
             </div>
 
             <div className="relative rounded-2xl bg-gradient-to-r from-sky-400/10 to-emerald-400/10 border border-sky-400/20 p-4 text-center space-y-1">
               {zeroBurn ? (
                 <>
-                  <p className="text-lg font-bold tracking-tight text-white">∞ Sustainable</p>
-                  <p className="text-[10px] text-slate-400">
-                    No monthly outflow tracked, so cash never runs out at this rate.
-                  </p>
+                  <p className="text-lg font-bold tracking-tight text-white">{t("runwayExplainer.sustainable")}</p>
+                  <p className="text-[10px] text-slate-400">{t("runwayExplainer.sustainableDetail")}</p>
                 </>
               ) : (
                 <>
@@ -108,10 +104,7 @@ export function RunwayExplainerModal({
                     <span className="text-slate-500 font-normal text-sm">=</span>{" "}
                     {value} {unit}
                   </p>
-                  <p className="text-[10px] text-slate-400">
-                    This is a worst-case estimate — no income, no spending changes, and not reduced
-                    by your safety buffer (that's what Daily Safe Spend is for).
-                  </p>
+                  <p className="text-[10px] text-slate-400">{t("runwayExplainer.disclaimer")}</p>
                 </>
               )}
             </div>

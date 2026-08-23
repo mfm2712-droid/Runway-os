@@ -7,6 +7,7 @@ import { ChatBubble, type DisplayMessage } from "./ChatBubble";
 import { PromptChips } from "./PromptChips";
 import { backdropVariants, panelVariants } from "../../lib/motionPresets";
 import { playClick } from "../../lib/audio";
+import { useLanguage } from "../../lib/i18n/LanguageContext";
 
 // After this many consecutive failed/rate-limited replies in a row, pause
 // sending for a bit rather than let the user keep hammering a struggling
@@ -23,6 +24,7 @@ export function AdvisorDrawer({
   onClose: () => void;
   state: FinanceState;
 }) {
+  const { t, lang } = useLanguage();
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -72,6 +74,7 @@ export function AdvisorDrawer({
           prev.map((m) => (m.id === assistantId ? { ...m, content: textSoFar } : m)),
         );
       },
+      lang,
     );
 
     setMessages((prev) =>
@@ -108,7 +111,7 @@ export function AdvisorDrawer({
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-label="Money Copilot"
+            aria-label={t("advisor.title")}
           >
         <div className="mesh-glow opacity-50" />
 
@@ -119,9 +122,9 @@ export function AdvisorDrawer({
         <div className="relative flex justify-between items-center px-6 pt-4 pb-4 border-b border-white/[0.06]">
           <div>
             <h3 className="text-base font-semibold text-white flex items-center gap-1.5">
-              <span aria-hidden>✨</span> <span className="ai-gradient-text">Money Copilot</span>
+              <span aria-hidden>✨</span> <span className="ai-gradient-text">{t("advisor.title")}</span>
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">Your live financial snapshot, on tap</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{t("advisor.subtitle")}</p>
           </div>
           <button
             onClick={dismiss}
@@ -136,8 +139,8 @@ export function AdvisorDrawer({
           {messages.length === 0 && (
             <div className="space-y-4">
               <div className="space-y-1 px-1">
-                <p className="text-sm font-semibold text-white">Ask me anything about your money</p>
-                <p className="text-xs text-slate-500">Grounded in your real numbers — try one of these:</p>
+                <p className="text-sm font-semibold text-white">{t("advisor.askAnything")}</p>
+                <p className="text-xs text-slate-500">{t("advisor.groundedInNumbers")}</p>
               </div>
               <PromptChips currency={state.currency} onPick={send} />
             </div>
@@ -161,8 +164,8 @@ export function AdvisorDrawer({
               disabled={cooldownSecondsLeft > 0}
               placeholder={
                 cooldownSecondsLeft > 0
-                  ? `Try again in ${cooldownSecondsLeft}s…`
-                  : "Ask about your money…"
+                  ? t("advisor.tryAgainIn", { seconds: cooldownSecondsLeft })
+                  : t("advisor.askPlaceholder")
               }
               className="flex-1 bg-white/[0.04] border border-white/[0.1] rounded-full px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-400/50 disabled:opacity-50"
             />
@@ -177,7 +180,7 @@ export function AdvisorDrawer({
             </button>
           </form>
           <p className="text-center text-[10px] text-slate-500 pt-2.5 pb-[calc(0.25rem+env(safe-area-inset-bottom))]">
-            AI runs only when you use it and may be rate-limited.
+            {t("advisor.footerNote")}
           </p>
         </div>
           </motion.div>

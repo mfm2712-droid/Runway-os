@@ -29,6 +29,7 @@ Rules:
 interface ChatBody {
   messages: { role: "user" | "assistant"; content: string }[];
   context: string;
+  lang?: "en" | "es";
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -50,6 +51,8 @@ export default async function handler(req: Request): Promise<Response> {
 
   const body = (await req.json()) as ChatBody;
   const messages = (body.messages ?? []).slice(-12); // cap history sent per request
+  const languageDirective =
+    body.lang === "es" ? "\n\nRespond in Spanish (español), regardless of what language the question is asked in." : "";
 
   const upstream = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -61,7 +64,7 @@ export default async function handler(req: Request): Promise<Response> {
     body: JSON.stringify({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5",
       max_tokens: 400,
-      system: `${ADVISOR_SYSTEM_PROMPT}\n\n${body.context}`,
+      system: `${ADVISOR_SYSTEM_PROMPT}${languageDirective}\n\n${body.context}`,
       messages: messages.map((m) => ({ role: m.role, content: m.content })),
       stream: true,
     }),

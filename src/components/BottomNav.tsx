@@ -3,14 +3,15 @@ import { ClockIcon, DialIcon, HomeIcon, PlusIcon, TagIcon } from "./ui/Icons";
 import { springTransition } from "../lib/motionPresets";
 import { triggerHaptic } from "../lib/haptics";
 import { playClick } from "../lib/audio";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 export type DashboardTab = "overview" | "simulate" | "subscriptions" | "history";
 
-const TABS: { id: DashboardTab; label: string; icon: typeof HomeIcon }[] = [
-  { id: "overview", label: "Overview", icon: HomeIcon },
-  { id: "simulate", label: "Simulate", icon: DialIcon },
-  { id: "subscriptions", label: "Subs", icon: TagIcon },
-  { id: "history", label: "History", icon: ClockIcon },
+const TAB_META: { id: DashboardTab; labelKey: string; icon: typeof HomeIcon }[] = [
+  { id: "overview", labelKey: "nav.overview", icon: HomeIcon },
+  { id: "simulate", labelKey: "nav.simulate", icon: DialIcon },
+  { id: "subscriptions", labelKey: "nav.subs", icon: TagIcon },
+  { id: "history", labelKey: "nav.history", icon: ClockIcon },
 ];
 
 export function BottomNav({
@@ -22,6 +23,8 @@ export function BottomNav({
   onChange: (t: DashboardTab) => void;
   onQuickAdd: () => void;
 }) {
+  const { t } = useLanguage();
+  const TABS = TAB_META.map((tab) => ({ ...tab, label: t(tab.labelKey) }));
   const leftTabs = TABS.slice(0, 2);
   const rightTabs = TABS.slice(2);
 
@@ -42,7 +45,7 @@ export function BottomNav({
             playClick();
             onQuickAdd();
           }}
-          aria-label="Add expense"
+          aria-label={t("nav.addExpense")}
           className="absolute z-20 left-1/2 -translate-x-1/2 -top-7 h-14 w-14 rounded-full bg-gradient-to-b from-sky-400 to-sky-500 flex items-center justify-center text-obsidian-950 shadow-[0_0_0_6px_rgba(5,5,10,1),0_8px_28px_-6px_rgba(56,189,248,0.7)] active:scale-90 transition-transform duration-150 [transition-timing-function:var(--ease-spring)]"
         >
           <PlusIcon width={26} height={26} strokeWidth={2.2} />

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { Currency, Expense, Subscription } from "../../types";
-import { CATEGORY_ICONS, CATEGORY_LABELS } from "../../types";
+import { CATEGORY_ICONS } from "../../types";
 import { formatCurrency } from "../../lib/calculations";
 import { parseReceipt, ReceiptParseError, type ReceiptParseResult } from "../../lib/ai/client";
 import { triggerHaptic } from "../../lib/haptics";
 import { playPop } from "../../lib/audio";
 import { SkeletonBlock, SkeletonLines } from "./Skeleton";
+import { useLanguage } from "../../lib/i18n/LanguageContext";
+import { getCategoryLabel } from "../../lib/i18n/labels";
 
 type Stage = "idle" | "analyzing" | "result" | "error";
 
@@ -24,6 +26,7 @@ export function ReceiptDropzone({
   initialFile?: File;
   initialText?: string;
 }) {
+  const { t, lang } = useLanguage();
   const [stage, setStage] = useState<Stage>("idle");
   const [dragOver, setDragOver] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -37,12 +40,12 @@ export function ReceiptDropzone({
     setStage("analyzing");
     if (input.file) setPreviewUrl(URL.createObjectURL(input.file));
     try {
-      const parsed = await parseReceipt(input);
+      const parsed = await parseReceipt(input, lang);
       setResult(parsed);
       setStage("result");
     } catch (e) {
       setErrorMessage(
-        e instanceof ReceiptParseError ? e.message : "Something went wrong reading that receipt.",
+        e instanceof ReceiptParseError ? e.message : t("receipt.genericError"),
       );
       setStage("error");
     }
@@ -100,9 +103,9 @@ export function ReceiptDropzone({
         <div className="h-12 w-12 rounded-full bg-emerald-500/15 flex items-center justify-center text-2xl">
           ✓
         </div>
-        <p className="text-sm text-white font-medium">Logged {result.merchant}</p>
+        <p className="text-sm text-white font-medium">{t("receipt.logged", { merchant: result.merchant })}</p>
         <button onClick={reset} className="text-xs text-slate-500 hover:text-slate-300">
-          Scan another
+          {t("receipt.scanAnother")}
         </button>
       </div>
     );
@@ -119,7 +122,7 @@ export function ReceiptDropzone({
           onClick={reset}
           className="text-xs px-4 py-2 rounded-full glass text-slate-300 hover:text-white transition-colors"
         >
-          Try Again
+          {t("receipt.tryAgain")}
         </button>
       </div>
     );
@@ -136,10 +139,10 @@ export function ReceiptDropzone({
             <img src={previewUrl} alt="" className="h-14 w-14 rounded-xl object-cover border border-white/[0.1]" />
           )}
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] ai-gradient-text font-semibold">✨ Parsed</span>
+            <span className="text-[11px] ai-gradient-text font-semibold">{t("receipt.parsed")}</span>
             {!result.isLive && (
               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/[0.06] text-slate-500">
-                Simulated
+                {t("subs.simulated")}
               </span>
             )}
           </div>
@@ -147,26 +150,26 @@ export function ReceiptDropzone({
 
         {lowConfidence && (
           <p className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded-xl px-3 py-2">
-            Low confidence read — double-check the amount before adding.
+            {t("receipt.lowConfidence")}
           </p>
         )}
         {currencyMismatch && (
           <p className="text-[10px] text-slate-400 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2">
-            Receipt shows {result.currency} — will be logged in your app currency ({currency}).
+            {t("receipt.currencyMismatch", { receiptCurrency: result.currency ?? "", appCurrency: currency })}
           </p>
         )}
 
         <div className="rounded-2xl bg-white/[0.03] border border-violet-400/15 p-4 space-y-3">
-          <Field label="Merchant" value={result.merchant} />
-          <Field label="Amount" value={formatCurrency(result.amount, currency)} />
+          <Field label={t("receipt.merchant")} value={result.merchant} />
+          <Field label={t("receipt.amount")} value={formatCurrency(result.amount, currency)} />
           {result.taxAmount != null && (
-            <Field label="Tax" value={formatCurrency(result.taxAmount, currency)} />
+            <Field label={t("receipt.tax")} value={formatCurrency(result.taxAmount, currency)} />
           )}
           <Field
-            label="Category"
-            value={`${CATEGORY_ICONS[result.category]} ${CATEGORY_LABELS[result.category]}`}
+            label={t("receipt.category")}
+            value={`${CATEGORY_ICONS[result.category]} ${getCategoryLabel(result.category, lang)}`}
           />
-          <Field label="Type" value={result.recurring ? "Recurring" : "One-off"} />
+          <Field label={t("receipt.type")} value={result.recurring ? t("receipt.recurring") : t("receipt.oneOff")} />
           {result.lineItemsSummary && (
             <p className="text-[10px] text-slate-500 pt-1 border-t border-white/[0.06]">
               {result.lineItemsSummary}
@@ -177,20 +180,20 @@ export function ReceiptDropzone({
         {result.recurring ? (
           <div className="space-y-2">
             <p className="text-[11px] text-slate-500 px-1">
-              This looks recurring — track it as a subscription instead?
+              {t("receipt.looksRecurring")}
             </p>
             <button
               onClick={() => confirmAdd(true)}
               className="w-full bg-gradient-to-r from-violet-400 to-sky-400 text-obsidian-950 text-sm font-semibold py-3.5 rounded-2xl active:scale-[0.98] transition-transform"
               style={{ transitionTimingFunction: "var(--ease-spring)" }}
             >
-              Add as Subscription
+              {t("receipt.addAsSubscription")}
             </button>
             <button
               onClick={() => confirmAdd(false)}
               className="w-full text-xs text-slate-500 hover:text-slate-300 py-1"
             >
-              Log as one-off expense instead
+              {t("receipt.logAsOneOff")}
             </button>
           </div>
         ) : (
@@ -199,11 +202,11 @@ export function ReceiptDropzone({
             className="w-full bg-gradient-to-r from-violet-400 to-sky-400 text-obsidian-950 text-sm font-semibold py-3.5 rounded-2xl active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
-            Add Expense
+            {t("receipt.addExpense")}
           </button>
         )}
         <button onClick={reset} className="w-full text-xs text-slate-400 hover:text-slate-300">
-          Discard
+          {t("receipt.discard")}
         </button>
       </div>
     );
@@ -219,7 +222,7 @@ export function ReceiptDropzone({
             <SkeletonBlock className="h-14 w-14" />
           )}
           <span className="text-[11px] ai-gradient-text font-semibold animate-pulse">
-            ✨ Analyzing receipt…
+            {t("receipt.analyzing")}
           </span>
         </div>
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4">
@@ -255,13 +258,13 @@ export function ReceiptDropzone({
         <span className="text-2xl" aria-hidden>
           📸
         </span>
-        <span className="text-xs text-slate-300 font-medium">Tap to choose a receipt photo</span>
-        <span className="text-[10px] text-slate-400">or drag & drop an image</span>
+        <span className="text-xs text-slate-300 font-medium">{t("receipt.tapToChoose")}</span>
+        <span className="text-[10px] text-slate-400">{t("receipt.dragDrop")}</span>
       </label>
 
       <div className="flex items-center gap-2 text-[10px] text-slate-400">
         <span className="flex-1 h-px bg-white/[0.08]" />
-        or paste receipt text
+        {t("receipt.orPasteText")}
         <span className="flex-1 h-px bg-white/[0.08]" />
       </div>
 
@@ -269,7 +272,7 @@ export function ReceiptDropzone({
         <input
           value={pastedText}
           onChange={(e) => setPastedText(e.target.value)}
-          placeholder="e.g. Uber 14.50 transport"
+          placeholder={t("receipt.pastePlaceholder")}
           className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-400/50"
         />
         <button
@@ -277,7 +280,7 @@ export function ReceiptDropzone({
           onClick={() => runParse({ text: pastedText })}
           className="px-4 rounded-xl bg-white/[0.06] border border-white/[0.1] text-xs text-slate-300 disabled:opacity-30"
         >
-          Parse
+          {t("receipt.parse")}
         </button>
       </div>
     </div>

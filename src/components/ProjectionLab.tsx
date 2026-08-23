@@ -3,9 +3,9 @@ import type { Currency, FinanceState } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
 import { formatCurrency, subscriptionsTotal, totalMonthlyOutflow } from "../lib/calculations";
 import {
-  SCENARIO_PRESETS,
   defaultScenario,
   freedomDateLabel,
+  getScenarioPresets,
   monthsToZero,
   projectBalances,
   type ScenarioInput,
@@ -14,6 +14,7 @@ import { GlassCard } from "./ui/GlassCard";
 import { PremiumSlider } from "./ui/PremiumSlider";
 import { PencilIcon } from "./ui/Icons";
 import { BurnProjectionChart } from "./BurnProjectionChart";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 function ScenarioField({
   label,
@@ -34,6 +35,7 @@ function ScenarioField({
   currency: Currency;
   onChange: (v: number) => void;
 }) {
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value));
 
@@ -53,7 +55,7 @@ function ScenarioField({
       <div className="space-y-2.5">
         <div className="flex justify-between items-baseline">
           <span className="text-xs text-slate-500">{label}</span>
-          <span className="text-[10px] text-sky-400">editing exact value</span>
+          <span className="text-[10px] text-sky-400">{t("projection.editingExact")}</span>
         </div>
         <input
           autoFocus
@@ -86,7 +88,7 @@ function ScenarioField({
         onClick={startEditing}
         className="text-[10px] text-slate-400 hover:text-slate-300 mt-1.5 transition-colors"
       >
-        enter exact amount →
+        {t("projection.enterExact")}
       </button>
     </div>
   );
@@ -99,6 +101,8 @@ export function ProjectionLab({
   state: FinanceState;
   onApply: (patch: Partial<FinanceState>) => void;
 }) {
+  const { t, lang } = useLanguage();
+  const scenarioPresets = getScenarioPresets(lang);
   const initialBurn = totalMonthlyOutflow(state);
   const [sandbox, setSandbox] = useState<ScenarioInput>(() => defaultScenario(state, initialBurn));
   const [applied, setApplied] = useState(false);
@@ -127,15 +131,15 @@ export function ProjectionLab({
     <div className="space-y-5">
       <GlassCard className="p-5 space-y-3">
         <div className="flex justify-between items-center">
-          <h4 className="text-sm font-semibold text-white">Quick Scenarios</h4>
+          <h4 className="text-sm font-semibold text-white">{t("projection.quickScenarios")}</h4>
           {dirty && (
             <button onClick={reset} className="text-[10px] text-slate-500 hover:text-slate-300">
-              Reset
+              {t("projection.reset")}
             </button>
           )}
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-          {SCENARIO_PRESETS.map((preset) =>
+          {scenarioPresets.map((preset) =>
             preset.editableAmount ? (
               <div
                 key={preset.id}
@@ -154,7 +158,7 @@ export function ProjectionLab({
                     setSideHustleDraft(String(sideHustleAmount));
                     setEditingAmount((v) => !v);
                   }}
-                  aria-label="Edit side hustle amount"
+                  aria-label={t("projection.editSideHustle")}
                   className={`px-2.5 flex items-center border-l border-white/[0.08] transition-colors ${
                     editingAmount ? "text-sky-400 bg-white/[0.04]" : "text-slate-500 hover:text-slate-300"
                   }`}
@@ -222,13 +226,13 @@ export function ProjectionLab({
       >
         <div className="mesh-glow opacity-40" />
         <p className="relative text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-          Freedom Milestone
+          {t("projection.freedomMilestone")}
         </p>
         <p className="relative text-lg font-bold tracking-tight tabular-nums text-white">
-          Runway: {Number.isFinite(runwayMonthsValue) ? runwayMonthsValue.toFixed(1) : "∞"} mo
+          {t("projection.runway", { value: Number.isFinite(runwayMonthsValue) ? runwayMonthsValue.toFixed(1) : "∞" })}
           <span className="text-slate-500 font-normal"> • </span>
           <span className={sustainable ? "text-emerald-400" : "text-rose-400"}>
-            {sustainable ? "Sustainable" : `Zero cash: ${freedomDateLabel(zeroMonth)}`}
+            {sustainable ? t("projection.sustainable") : t("projection.zeroCash", { date: freedomDateLabel(zeroMonth, lang) })}
           </span>
         </p>
       </GlassCard>
@@ -239,12 +243,12 @@ export function ProjectionLab({
 
       <GlassCard className="p-6 space-y-7">
         <div className="flex justify-between items-center">
-          <h4 className="text-sm font-semibold text-white">Projection Lab</h4>
-          <span className="text-[10px] text-slate-500">drag to simulate</span>
+          <h4 className="text-sm font-semibold text-white">{t("projection.title")}</h4>
+          <span className="text-[10px] text-slate-500">{t("projection.dragToSimulate")}</span>
         </div>
 
         <ScenarioField
-          label="Liquid Cash"
+          label={t("projection.liquidCash")}
           value={sandbox.cash}
           min={0}
           max={50000}
@@ -255,7 +259,7 @@ export function ProjectionLab({
         />
 
         <ScenarioField
-          label="Fixed Burn (incl. subscriptions)"
+          label={t("projection.fixedBurn")}
           value={sandbox.burn}
           min={0}
           max={10000}
@@ -266,7 +270,7 @@ export function ProjectionLab({
         />
 
         <ScenarioField
-          label="Expected Monthly Income"
+          label={t("projection.expectedIncome")}
           value={sandbox.income}
           min={0}
           max={8000}
@@ -283,10 +287,10 @@ export function ProjectionLab({
             className="w-full py-3.5 rounded-2xl text-sm font-semibold bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 disabled:opacity-30 active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
-            {applied ? "✓ Applied to your real numbers" : "Apply Cash & Burn to my real numbers"}
+            {applied ? t("projection.applied") : t("projection.apply")}
           </button>
           <p className="text-[10px] text-slate-400 text-center">
-            Income is exploratory only — Runway OS doesn't track income elsewhere, so it's never saved.
+            {t("projection.incomeDisclaimer")}
           </p>
         </div>
       </GlassCard>

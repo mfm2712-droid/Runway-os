@@ -164,8 +164,11 @@ export function formatMonths(months: number): string {
 }
 
 /** Runway display for the headline stat: months normally, years past a year, ∞/Sustainable at zero burn. */
-export function formatRunwayDisplay(months: number): { value: string; unit: string } {
-  if (!Number.isFinite(months)) return { value: "∞", unit: "Sustainable" };
+export function formatRunwayDisplay(
+  months: number,
+  sustainableLabel = "Sustainable",
+): { value: string; unit: string } {
+  if (!Number.isFinite(months)) return { value: "∞", unit: sustainableLabel };
   if (months > 12) return { value: (months / 12).toFixed(1), unit: "yr" };
   return { value: months.toFixed(1), unit: "mo" };
 }

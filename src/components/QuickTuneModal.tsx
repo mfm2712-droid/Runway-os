@@ -5,6 +5,7 @@ import { CURRENCY_SYMBOLS } from "../types";
 import { Button } from "./ui/Button";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 import { playClick } from "../lib/audio";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 export function QuickTuneModal({
   open,
@@ -24,6 +25,7 @@ export function QuickTuneModal({
   const [paydayDay, setPaydayDay] = useState(String(state.paydayDay ?? 28));
   const [weekendBooster, setWeekendBooster] = useState(!!state.weekendBooster);
   const reduceMotion = useReducedMotion();
+  const { t } = useLanguage();
 
   const dismiss = () => {
     playClick();
@@ -65,7 +67,7 @@ export function QuickTuneModal({
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-label="Quick Tune"
+            aria-label={t("quickTune.title")}
           >
         <div className="mesh-glow opacity-60" />
         <div className="relative flex justify-center md:hidden -mt-1">
@@ -73,7 +75,7 @@ export function QuickTuneModal({
         </div>
 
         <div className="relative flex justify-between items-center">
-          <h3 className="text-base font-semibold text-white">Quick Tune</h3>
+          <h3 className="text-base font-semibold text-white">{t("quickTune.title")}</h3>
           <button
             onClick={dismiss}
             className="h-8 w-8 flex items-center justify-center rounded-full glass text-slate-400 hover:text-white transition-colors"
@@ -84,7 +86,7 @@ export function QuickTuneModal({
         </div>
 
         <div className="relative space-y-2">
-          <label className="text-xs text-slate-500 block">Liquid Cash</label>
+          <label className="text-xs text-slate-500 block">{t("quickTune.liquidCash")}</label>
           <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-sky-500 transition-colors">
             <span className="text-lg text-slate-500 mr-1">{CURRENCY_SYMBOLS[state.currency]}</span>
             <input
@@ -100,8 +102,8 @@ export function QuickTuneModal({
         </div>
 
         <div className="relative space-y-2">
-          <label className="text-xs text-slate-500 block">Fixed Monthly Outflows</label>
-          <p className="text-[10px] text-slate-400">Rent, bills — recurring costs outside subscriptions.</p>
+          <label className="text-xs text-slate-500 block">{t("quickTune.fixedOutflows")}</label>
+          <p className="text-[10px] text-slate-400">{t("quickTune.fixedOutflowsHelp")}</p>
           <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-sky-500 transition-colors">
             <span className="text-lg text-slate-500 mr-1">{CURRENCY_SYMBOLS[state.currency]}</span>
             <input
@@ -116,10 +118,8 @@ export function QuickTuneModal({
         </div>
 
         <div className="relative space-y-2">
-          <label className="text-xs text-slate-500 block">Monthly Safety Buffer</label>
-          <p className="text-[10px] text-slate-400">
-            Kept aside, excluded from what's shown as safe to spend.
-          </p>
+          <label className="text-xs text-slate-500 block">{t("quickTune.safetyBuffer")}</label>
+          <p className="text-[10px] text-slate-400">{t("quickTune.safetyBufferHelp")}</p>
           <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-sky-500 transition-colors">
             <span className="text-lg text-slate-500 mr-1">{CURRENCY_SYMBOLS[state.currency]}</span>
             <input
@@ -135,7 +135,7 @@ export function QuickTuneModal({
 
         <div className="relative space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-xs text-slate-500">Payday Cycle</label>
+            <label className="text-xs text-slate-500">{t("quickTune.paydayCycle")}</label>
             <button
               onClick={() => setPaydayEnabled((v) => !v)}
               aria-pressed={paydayEnabled}
@@ -153,7 +153,7 @@ export function QuickTuneModal({
           </div>
           {paydayEnabled ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Day</span>
+              <span className="text-xs text-slate-500">{t("quickTune.day")}</span>
               <input
                 type="number"
                 min={1}
@@ -163,20 +163,16 @@ export function QuickTuneModal({
                 onFocus={(e) => e.target.select()}
                 className="w-20 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white tabular-nums focus:outline-none focus:border-sky-500"
               />
-              <span className="text-[10px] text-slate-400">
-                Daily Safe Spend spreads to payday instead of month-end.
-              </span>
+              <span className="text-[10px] text-slate-400">{t("quickTune.paydayOnHelp")}</span>
             </div>
           ) : (
-            <p className="text-[10px] text-slate-400">
-              Off — Daily Safe Spend spreads to the end of the calendar month.
-            </p>
+            <p className="text-[10px] text-slate-400">{t("quickTune.paydayOffHelp")}</p>
           )}
         </div>
 
         <div className="relative space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-xs text-slate-500">Weekend Booster</label>
+            <label className="text-xs text-slate-500">{t("quickTune.weekendBooster")}</label>
             <button
               onClick={() => setWeekendBooster((v) => !v)}
               aria-pressed={weekendBooster}
@@ -193,14 +189,12 @@ export function QuickTuneModal({
             </button>
           </div>
           <p className="text-[10px] text-slate-400">
-            {weekendBooster
-              ? "On — Fri-Sun get 1.4x the daily allowance of Mon-Thu, same total budget."
-              : "Off — every remaining day gets an equal share of the budget."}
+            {weekendBooster ? t("quickTune.weekendOnHelp") : t("quickTune.weekendOffHelp")}
           </p>
         </div>
 
         <Button variant="primary" onClick={save} className="relative w-full py-3.5 text-sm">
-          Save
+          {t("quickTune.save")}
         </Button>
           </motion.div>
         </motion.div>

@@ -1,10 +1,12 @@
 import type { DailySeries } from "../lib/dailySeries";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 const W = 280;
 const H = 36;
 const GAP = 2;
 
 export function SafeSpendSparkline({ series }: { series: DailySeries }) {
+  const { t } = useLanguage();
   if (series.length < 2) return null;
 
   const barW = W / series.length - GAP;
@@ -38,7 +40,7 @@ export function SafeSpendSparkline({ series }: { series: DailySeries }) {
         })}
       </svg>
       <p className="text-[9px] text-slate-500 text-center">
-        Daily spend, last {series.length} day{series.length === 1 ? "" : "s"}
+        {t("sparkline.dailySpend", { count: series.length, plural: series.length === 1 ? "" : "s" })}
       </p>
     </div>
   );

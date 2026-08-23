@@ -5,6 +5,8 @@ import { formatCurrency, monthOverMonthDelta } from "../lib/calculations";
 import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
 import { playClick } from "../lib/audio";
+import { useLanguage } from "../lib/i18n/LanguageContext";
+import { getBucketLabel } from "../lib/i18n/labels";
 
 const SIZE = 200;
 const STROKE = 26;
@@ -23,6 +25,7 @@ export function SpendDonutChart({
   onOpenDetail: (key: SpendSlice["key"]) => void;
   onAddExpense: () => void;
 }) {
+  const { t, lang } = useLanguage();
   const [selected, setSelected] = useState<string | null>(null);
   const slices = computeSpendBreakdown(state);
   const total = spendBreakdownTotal(state);
@@ -38,14 +41,13 @@ export function SpendDonutChart({
           🍩
         </p>
         <div className="space-y-1">
-          <h4 className="text-sm font-semibold text-white">No spending tracked yet</h4>
+          <h4 className="text-sm font-semibold text-white">{t("donut.noSpending")}</h4>
           <p className="text-xs text-slate-400 leading-relaxed max-w-[240px] mx-auto">
-            Log an expense or set your fixed monthly outflows to see where your money
-            actually goes.
+            {t("donut.noSpendingDetail")}
           </p>
         </div>
         <Button variant="glass" onClick={onAddExpense} className="mx-auto px-5 py-2.5 text-xs">
-          Add an expense
+          {t("donut.addExpense")}
         </Button>
       </GlassCard>
     );
@@ -55,7 +57,7 @@ export function SpendDonutChart({
     <GlassCard className="p-6 space-y-5">
       <div className="flex justify-between items-center gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <h4 className="text-sm font-semibold text-white shrink-0">Spend Breakdown</h4>
+          <h4 className="text-sm font-semibold text-white shrink-0">{t("donut.breakdown")}</h4>
           {momDelta !== null && (
             <span
               className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full tabular-nums shrink-0 ${
@@ -66,11 +68,11 @@ export function SpendDonutChart({
                   : "bg-white/[0.06] text-slate-400"
               }`}
             >
-              {momDelta > 0.5 ? "↑" : momDelta < -0.5 ? "↓" : "•"} {Math.abs(momDelta).toFixed(0)}% vs last mo
+              {momDelta > 0.5 ? "↑" : momDelta < -0.5 ? "↓" : "•"} {Math.abs(momDelta).toFixed(0)}% {t("donut.vsLastMonth")}
             </span>
           )}
         </div>
-        <span className="text-[10px] text-slate-500 shrink-0">tap a row for details</span>
+        <span className="text-[10px] text-slate-500 shrink-0">{t("donut.tapForDetails")}</span>
       </div>
 
       <div className="flex justify-center">
@@ -131,13 +133,13 @@ export function SpendDonutChart({
                   </span>
                   <span className="text-lg font-bold tracking-tight tabular-nums text-white mt-1">{formatCurrency(active.amount, state.currency)}</span>
                   <span className="text-[10px] text-slate-400 mt-0.5">
-                    {active.label} · {active.pct.toFixed(0)}%
+                    {getBucketLabel(active.key, lang)} · {active.pct.toFixed(0)}%
                   </span>
                 </>
               ) : (
                 <>
                   <span className="text-lg font-bold tracking-tight tabular-nums text-white">{formatCurrency(total, state.currency)}</span>
-                  <span className="text-[10px] text-slate-500 mt-0.5">this month</span>
+                  <span className="text-[10px] text-slate-500 mt-0.5">{t("donut.thisMonth")}</span>
                 </>
               )}
             </div>
@@ -161,7 +163,7 @@ export function SpendDonutChart({
               style={{ background: s.color, boxShadow: `0 0 6px ${s.color}aa` }}
             />
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] text-slate-300 truncate">{s.label}</p>
+              <p className="text-[11px] text-slate-300 truncate">{getBucketLabel(s.key, lang)}</p>
               <p
                 className={`text-[10px] text-slate-500 tracking-tight tabular-nums transition-all duration-300 ${
                   stealth ? "blur-sm select-none" : ""

@@ -8,6 +8,7 @@ import { Button } from "./ui/Button";
 import { PlusIcon } from "./ui/Icons";
 import { triggerHaptic } from "../lib/haptics";
 import { playPop } from "../lib/audio";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 export function CooldownModule({
   wishlist,
@@ -22,6 +23,7 @@ export function CooldownModule({
   onBuySafely: (item: WishlistItem) => void;
   onDiscard: (item: WishlistItem) => void;
 }) {
+  const { t } = useLanguage();
   const [now, setNow] = useState(Date.now());
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
@@ -47,18 +49,18 @@ export function CooldownModule({
     <GlassCard className="p-6 space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h4 className="text-sm font-semibold text-white">Cooling Off</h4>
-          <p className="text-[10px] text-slate-500 mt-0.5">72-hour impulse purchase buffer</p>
+          <h4 className="text-sm font-semibold text-white">{t("cooldown.title")}</h4>
+          <p className="text-[10px] text-slate-500 mt-0.5">{t("cooldown.subtitle")}</p>
         </div>
         <button
           onClick={() => setAdding((v) => !v)}
           className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-medium transition-colors"
         >
           {adding ? (
-            "Cancel"
+            t("subs.cancel")
           ) : (
             <>
-              <PlusIcon width={12} height={12} strokeWidth={2.4} /> Add
+              <PlusIcon width={12} height={12} strokeWidth={2.4} /> {t("subs.add")}
             </>
           )}
         </button>
@@ -67,7 +69,7 @@ export function CooldownModule({
       {adding && (
         <div className="space-y-2.5 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] animate-[floatIn_0.2s_var(--ease-spring)]">
           <input
-            placeholder="Item (e.g. Noise-cancelling headphones)"
+            placeholder={t("cooldown.itemPlaceholder")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
@@ -75,20 +77,20 @@ export function CooldownModule({
           <input
             type="number"
             inputMode="decimal"
-            placeholder={`Price (${CURRENCY_SYMBOLS[state.currency]})`}
+            placeholder={t("cooldown.pricePlaceholder", { symbol: CURRENCY_SYMBOLS[state.currency] })}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             onFocus={(e) => e.target.select()}
             className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
           />
           <input
-            placeholder="Why do you want it? (optional)"
+            placeholder={t("cooldown.whyPlaceholder")}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
           />
           <Button variant="primary" onClick={submit} className="w-full py-2.5 text-xs">
-            Start 72-hour cooldown
+            {t("cooldown.start")}
           </Button>
         </div>
       )}
@@ -99,14 +101,13 @@ export function CooldownModule({
             ❄️
           </p>
           <div className="space-y-1">
-            <h5 className="text-sm font-semibold text-white">Nothing cooling off</h5>
+            <h5 className="text-sm font-semibold text-white">{t("cooldown.nothingCooling")}</h5>
             <p className="text-xs text-slate-400 leading-relaxed max-w-[220px] mx-auto">
-              Log an impulse buy here before you make it — a 72-hour pause is often all it
-              takes.
+              {t("cooldown.nothingCoolingDetail")}
             </p>
           </div>
           <Button variant="glass" onClick={() => setAdding(true)} className="mx-auto px-5 py-2 text-xs">
-            Log an impulse buy
+            {t("cooldown.logImpulseBuy")}
           </Button>
         </div>
       )}
@@ -149,18 +150,18 @@ export function CooldownModule({
               </div>
 
               <p className="text-[11px] text-rose-300/90">
-                Costs{" "}
-                <span className="font-semibold tracking-tight tabular-nums">{days.toFixed(1)} days</span>{" "}
-                of financial freedom
+                {t("cooldown.costsPrefix")}{" "}
+                <span className="font-semibold tracking-tight tabular-nums">{days.toFixed(1)} {t("cooldown.days")}</span>{" "}
+                {t("cooldown.costsSuffix")}
               </p>
               <div className="grid grid-cols-2 gap-2 text-[10px]">
                 <div className="rounded-lg bg-white/[0.03] px-2.5 py-2">
-                  <p className="text-slate-500">Runway cost</p>
-                  <p className="text-rose-300 font-semibold tracking-tight tabular-nums">−{days.toFixed(1)} days</p>
+                  <p className="text-slate-500">{t("cooldown.runwayCost")}</p>
+                  <p className="text-rose-300 font-semibold tracking-tight tabular-nums">−{days.toFixed(1)} {t("cooldown.days")}</p>
                 </div>
                 <div className="rounded-lg bg-white/[0.03] px-2.5 py-2">
-                  <p className="text-slate-500">Lowers daily limit</p>
-                  <p className="text-rose-300 font-semibold tracking-tight tabular-nums">−{formatCurrency(dailyHit, state.currency)}/day</p>
+                  <p className="text-slate-500">{t("cooldown.lowersLimit")}</p>
+                  <p className="text-rose-300 font-semibold tracking-tight tabular-nums">−{formatCurrency(dailyHit, state.currency)}{t("cooldown.perDay")}</p>
                 </div>
               </div>
 
@@ -175,7 +176,7 @@ export function CooldownModule({
                     className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold bg-sky-500/15 border border-sky-500/30 text-sky-300 active:scale-[0.97] transition-transform"
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
-                    Buy Safely
+                    {t("cooldown.buySafely")}
                   </button>
                   <button
                     onClick={() => {
@@ -186,12 +187,12 @@ export function CooldownModule({
                     className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 active:scale-[0.97] transition-transform"
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
-                    Discard & Bank <span className="tabular-nums">{formatCurrency(item.price, state.currency)}</span>
+                    {t("cooldown.discardAndBank")} <span className="tabular-nums">{formatCurrency(item.price, state.currency)}</span>
                   </button>
                 </div>
               ) : (
                 <p className="text-center text-[10px] text-amber-400/80 py-1">
-                  Unlocks in {formatCountdown(remaining)}
+                  {t("cooldown.unlocksIn", { time: formatCountdown(remaining) })}
                 </p>
               )}
             </li>

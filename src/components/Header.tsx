@@ -2,6 +2,7 @@ import { DynamicIsland } from "./ui/DynamicIsland";
 import { AdvisorFab } from "./ai/AdvisorFab";
 import { EyeIcon, EyeOffIcon, GearIcon } from "./ui/Icons";
 import type { FinanceState } from "../types";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 export function Header({
   state,
@@ -18,6 +19,7 @@ export function Header({
   stealthMode: boolean;
   onToggleStealth: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="relative flex items-center justify-between gap-2">
       <button
@@ -44,10 +46,10 @@ export function Header({
       </button>
 
       <div className="flex items-center gap-2 min-w-0">
-        <DynamicIsland label="Saved locally" />
+        <DynamicIsland label={t("header.savedLocally")} />
         <button
           onClick={onToggleStealth}
-          aria-label={stealthMode ? "Turn off Stealth Mode" : "Turn on Stealth Mode"}
+          aria-label={stealthMode ? t("header.stealthOn") : t("header.stealthOff")}
           aria-pressed={stealthMode}
           title="Stealth Mode"
           className={`h-9 w-9 shrink-0 flex items-center justify-center rounded-full glass active:scale-90 transition-transform duration-150 ${

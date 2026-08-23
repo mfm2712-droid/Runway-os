@@ -1,5 +1,6 @@
 import { SkeletonLines } from "./Skeleton";
 import { stripMarkdownEmphasis } from "../../lib/textFormat";
+import { useLanguage } from "../../lib/i18n/LanguageContext";
 
 export interface DisplayMessage {
   id: string;
@@ -10,6 +11,7 @@ export interface DisplayMessage {
 }
 
 export function ChatBubble({ message }: { message: DisplayMessage }) {
+  const { t } = useLanguage();
   const isUser = message.role === "user";
 
   if (isUser) {
@@ -31,7 +33,7 @@ export function ChatBubble({ message }: { message: DisplayMessage }) {
           <span className="text-[11px] ai-gradient-text font-semibold">✨ Money Copilot</span>
           {message.isLive === false && !message.streaming && (
             <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/[0.06] text-slate-500">
-              Simulated
+              {t("subs.simulated")}
             </span>
           )}
         </div>

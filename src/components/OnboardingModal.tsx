@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Currency } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 export interface OnboardingResult {
   cashBalance: number;
@@ -26,6 +27,7 @@ export function OnboardingModal({
   const [outflows, setOutflows] = useState("");
   const [paydayDay, setPaydayDay] = useState("28");
   const reduceMotion = useReducedMotion();
+  const { t } = useLanguage();
 
   const sym = CURRENCY_SYMBOLS[currency];
 
@@ -89,12 +91,12 @@ export function OnboardingModal({
 
         <div className="relative text-center space-y-1.5">
           <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.2em]">
-            Step {step} of 3
+            {t("onboarding.stepOf", { step })}
           </p>
           <h2 className="text-lg font-bold text-white leading-snug px-2">
-            {step === 1 && "What's your total liquid cash today?"}
-            {step === 2 && "Core monthly fixed outflows?"}
-            {step === 3 && "What day of the month do you get paid?"}
+            {step === 1 && t("onboarding.step1")}
+            {step === 2 && t("onboarding.step2")}
+            {step === 3 && t("onboarding.step3")}
           </h2>
         </div>
 
@@ -158,7 +160,7 @@ export function OnboardingModal({
               className="px-5 py-3.5 rounded-2xl text-sm font-semibold glass text-slate-300 active:scale-[0.98] transition-transform"
               style={{ transitionTimingFunction: "var(--ease-spring)" }}
             >
-              Back
+              {t("onboarding.back")}
             </button>
           )}
           <button
@@ -167,7 +169,7 @@ export function OnboardingModal({
             className="flex-1 py-3.5 rounded-2xl text-sm font-semibold bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 disabled:opacity-30 active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
-            {step < 3 ? "Continue" : "Get Started"}
+            {step < 3 ? t("onboarding.continue") : t("onboarding.getStarted")}
           </button>
         </div>
 
@@ -175,7 +177,7 @@ export function OnboardingModal({
           onClick={onLoadDemo}
           className="relative w-full text-center text-[11px] text-slate-400 hover:text-slate-300 transition-colors"
         >
-          Load Demo Data instead
+          {t("onboarding.loadDemo")}
         </button>
           </motion.div>
         </motion.div>

@@ -15,6 +15,7 @@ import { AnimatedNumber } from "./ui/AnimatedNumber";
 import { SafeSpendSparkline } from "./SafeSpendSparkline";
 import { triggerHaptic } from "../lib/haptics";
 import { playClick } from "../lib/audio";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 function healthColor(months: number): string {
   if (!Number.isFinite(months) || months >= 4) return "#34d399";
@@ -41,6 +42,7 @@ export function HeroSpendCard({
   onOpenTune: () => void;
   onCloseTune: () => void;
 }) {
+  const { t } = useLanguage();
   const safeSpend = dailySafeSpend(state);
   const days = spendingHorizonDays(state);
   const runway = runwayMonths(state);
@@ -52,7 +54,7 @@ export function HeroSpendCard({
     <GlassCard strong className="relative overflow-hidden px-6 py-10 flex flex-col items-center text-center">
       <div className="mesh-glow" />
       <p className="relative text-[11px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-6">
-        Daily Safe Spend
+        {t("hero.dailySafeSpend")}
       </p>
 
       <button
@@ -61,7 +63,7 @@ export function HeroSpendCard({
           playClick();
           onOpenTune();
         }}
-        aria-label="Tune your numbers"
+        aria-label={t("hero.tuneNumbers")}
         className={`relative rounded-full active:scale-[0.97] transition-transform duration-200 ${
           pulsing ? "ring-pulse" : ""
         }`}
@@ -76,21 +78,21 @@ export function HeroSpendCard({
               style={{ color }}
             />
             <span className="text-xs text-slate-400 mt-2">
-              safe for the next {days} day{days === 1 ? "" : "s"}
-              {state.paydayDay ? " · to payday" : ""}
+              {t("hero.safeForNextDays", { days, plural: days === 1 ? "" : "s" })}
+              {state.paydayDay ? t("hero.toPayday") : ""}
             </span>
           </div>
         </RingProgress>
       </button>
 
       <p className={`relative text-[11px] text-slate-500 mt-6 transition-all duration-300 ${stealth ? "blur-sm select-none" : ""}`}>
-        Runway health · {Number.isFinite(runway) ? `${runway.toFixed(1)} mo` : "∞"}
+        {t("hero.runwayHealth", { value: Number.isFinite(runway) ? `${runway.toFixed(1)} mo` : "∞" })}
       </p>
-      <p className="relative text-[10px] text-slate-400 mt-1">Tap the ring to tune your numbers</p>
+      <p className="relative text-[10px] text-slate-400 mt-1">{t("hero.tapToTune")}</p>
 
       {!!streak && streak.count > 0 && (
         <p className="relative text-[11px] font-medium text-amber-300 mt-3">
-          🔥 {streak.count}-day safe spend streak
+          {t("hero.streak", { count: streak.count })}
         </p>
       )}
 

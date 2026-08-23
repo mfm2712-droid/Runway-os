@@ -14,14 +14,16 @@ import { isAudioMuted, playClick, setAudioMuted } from "../lib/audio";
 import { Button } from "./ui/Button";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 import { useSyncSubscriptionCheck } from "../hooks/useSyncSubscriptionCheck";
+import { useLanguage } from "../lib/i18n/LanguageContext";
+import { LANGUAGES, type Lang } from "../lib/i18n/translations";
 
 const CURRENCIES: Currency[] = ["GBP", "EUR", "USD"];
 
-const DEV_OVERRIDES: { value: DevOverride; label: string }[] = [
-  { value: null, label: "Real" },
-  { value: "trial", label: "Active Trial" },
-  { value: "expired", label: "Expired" },
-  { value: "pro", label: "Pro Active" },
+const DEV_OVERRIDE_KEYS: { value: DevOverride; labelKey: string }[] = [
+  { value: null, labelKey: "settings.devReal" },
+  { value: "trial", labelKey: "settings.devTrial" },
+  { value: "expired", labelKey: "settings.devExpired" },
+  { value: "pro", labelKey: "settings.devPro" },
 ];
 
 export function SettingsModal({
@@ -54,6 +56,7 @@ export function SettingsModal({
   onExport: () => void;
 }) {
   useSyncSubscriptionCheck(open, meta.licenseKey, onLicenseInvalid);
+  const { t, lang, setLang } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [restoreStatus, setRestoreStatus] = useState<"idle" | "error" | "success">("idle");
   const [restoreMessage, setRestoreMessage] = useState("");
@@ -89,7 +92,7 @@ export function SettingsModal({
       const data = (await res.json()) as { url: string };
       window.location.href = data.url;
     } catch {
-      setPortalError("Couldn't open billing portal — try again in a moment.");
+      setPortalError(t("settings.billingError"));
       setPortalLoading(false);
     }
   };
@@ -100,7 +103,7 @@ export function SettingsModal({
       const payload = parseBackupFile(text);
       onRestore(payload.state, payload.meta);
       setRestoreStatus("success");
-      setRestoreMessage(`Restored backup from ${payload.exportedAt.slice(0, 10)}.`);
+      setRestoreMessage(t("settings.restoreSuccess", { date: payload.exportedAt.slice(0, 10) }));
     } catch (e) {
       setRestoreStatus("error");
       setRestoreMessage(e instanceof Error ? e.message : "Couldn't read that file.");
@@ -127,12 +130,12 @@ export function SettingsModal({
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-label="Settings"
+            aria-label={t("settings.title")}
           >
         <div className="mesh-glow opacity-60" />
 
         <div className="relative flex justify-between items-center">
-          <h3 className="text-base font-semibold text-white">Settings</h3>
+          <h3 className="text-base font-semibold text-white">{t("settings.title")}</h3>
           <button
             onClick={dismiss}
             className="h-8 w-8 flex items-center justify-center rounded-full glass text-slate-400 hover:text-white transition-colors"
@@ -144,18 +147,18 @@ export function SettingsModal({
 
         <div className="relative rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 space-y-1">
           <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-            Plan Status
+            {t("settings.planStatus")}
           </p>
           {trialStatus.kind === "pro" && (
-            <p className="text-sm text-emerald-300 font-semibold">✓ Pro Active</p>
+            <p className="text-sm text-emerald-300 font-semibold">{t("settings.proActive")}</p>
           )}
           {trialStatus.kind === "trial" && (
             <p className="text-sm text-violet-300 font-semibold">
-              ✨ Pro Trial · {Math.max(1, Math.ceil(trialStatus.hoursLeft))}h left
+              {t("settings.proTrial", { hours: Math.max(1, Math.ceil(trialStatus.hoursLeft)) })}
             </p>
           )}
           {trialStatus.kind === "expired" && (
-            <p className="text-sm text-rose-300 font-semibold">🔒 Trial Expired</p>
+            <p className="text-sm text-rose-300 font-semibold">{t("settings.trialExpired")}</p>
           )}
           {trialStatus.kind === "pro" && meta.licenseKey?.startsWith("cus_") && (
             <div className="pt-1">
@@ -165,7 +168,7 @@ export function SettingsModal({
                 disabled={portalLoading}
                 className="w-full py-2.5 text-xs"
               >
-                {portalLoading ? "Opening…" : "Manage Billing"}
+                {portalLoading ? t("settings.openingBilling") : t("settings.manageBilling")}
               </Button>
               {portalError && <p className="text-[10px] text-rose-400 mt-1.5">{portalError}</p>}
             </div>
@@ -173,7 +176,7 @@ export function SettingsModal({
         </div>
 
         <div className="relative space-y-2">
-          <label className="text-xs text-slate-500 block">Currency</label>
+          <label className="text-xs text-slate-500 block">{t("settings.currency")}</label>
           <div className="grid grid-cols-3 gap-2">
             {CURRENCIES.map((c) => (
               <button
@@ -194,8 +197,28 @@ export function SettingsModal({
         </div>
 
         <div className="relative space-y-2">
+          <label className="text-xs text-slate-500 block">{t("settings.language")}</label>
+          <div className="grid grid-cols-2 gap-2">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.value}
+                onClick={() => setLang(l.value as Lang)}
+                className={`flex items-center justify-center gap-1.5 rounded-2xl py-3 border text-xs font-medium transition-all duration-150 active:scale-95 ${
+                  lang === l.value
+                    ? "bg-sky-500/15 border-sky-500/60 text-sky-300 shadow-[0_0_20px_-6px_rgba(56,189,248,0.6)]"
+                    : "bg-white/[0.03] border-white/[0.06] text-slate-400"
+                }`}
+                style={{ transitionTimingFunction: "var(--ease-spring)" }}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-xs text-slate-500">Tap Sounds</label>
+            <label className="text-xs text-slate-500">{t("settings.tapSounds")}</label>
             <button
               onClick={toggleAudio}
               aria-pressed={!audioMuted}
@@ -213,41 +236,41 @@ export function SettingsModal({
           </div>
           <div className="flex items-center justify-between gap-2">
             <p className="text-[10px] text-slate-400">
-              {audioMuted ? "Off — muted." : "On — light clicks and pops for taps and confirmations."}
+              {audioMuted ? t("settings.soundOff") : t("settings.soundOn")}
             </p>
             {!audioMuted && (
               <button
                 onClick={playClick}
                 className="shrink-0 text-[10px] font-medium text-sky-400 hover:text-sky-300 transition-colors"
               >
-                Test Sound
+                {t("settings.testSound")}
               </button>
             )}
           </div>
         </div>
 
         <div className="relative space-y-2">
-          <label className="text-xs text-slate-500 block">Data</label>
+          <label className="text-xs text-slate-500 block">{t("settings.data")}</label>
           <p className="text-[10px] text-slate-400 -mt-1">
-            Email unlocks Pro. Backup moves your numbers.
+            {t("settings.emailBackupLine")}
           </p>
           <p className="text-[10px] text-slate-500">
-            Last backup: {formatBackupAge(lastBackupAt)}
+            {t("settings.lastBackup", { age: formatBackupAge(lastBackupAt, Date.now(), lang) })}
           </p>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="glass" onClick={onExport} className="py-3 text-xs">
-              Export Backup (.json)
+              {t("settings.exportBackup")}
             </Button>
             <Button
               variant="glass"
               onClick={() => fileInputRef.current?.click()}
               className="py-3 text-xs"
             >
-              Restore Backup (.json)
+              {t("settings.restoreBackup")}
             </Button>
           </div>
           <Button variant="glass" onClick={handleExportCsv} className="w-full py-3 text-xs">
-            Export Expenses & Subs (.csv)
+            {t("settings.exportCsv")}
           </Button>
           <input
             ref={fileInputRef}
@@ -267,19 +290,19 @@ export function SettingsModal({
         </div>
 
         <div className="relative space-y-2">
-          <label className="text-xs text-slate-500 block">Legal & Support</label>
+          <label className="text-xs text-slate-500 block">{t("settings.legalSupport")}</label>
           <div className="flex items-center gap-4 text-xs text-slate-400 px-1">
             <button
               onClick={() => onNavigate("/privacy")}
               className="hover:text-white transition-colors underline underline-offset-2 decoration-white/20"
             >
-              Privacy
+              {t("settings.privacy")}
             </button>
             <button
               onClick={() => onNavigate("/terms")}
               className="hover:text-white transition-colors underline underline-offset-2 decoration-white/20"
             >
-              Terms
+              {t("settings.terms")}
             </button>
             <a
               href="mailto:support@runwayos.app"
@@ -292,9 +315,9 @@ export function SettingsModal({
 
         {import.meta.env.DEV && (
           <div className="relative space-y-2 pt-3 border-t border-white/[0.08]">
-            <label className="text-xs text-slate-500 block">Dev Mode — Trial State (local only)</label>
+            <label className="text-xs text-slate-500 block">{t("settings.devMode")}</label>
             <div className="grid grid-cols-2 gap-2">
-              {DEV_OVERRIDES.map((o) => (
+              {DEV_OVERRIDE_KEYS.map((o) => (
                 <button
                   key={String(o.value)}
                   onClick={() => onChangeDevOverride(o.value)}
@@ -304,13 +327,12 @@ export function SettingsModal({
                       : "bg-white/[0.03] border-white/[0.06] text-slate-400"
                   }`}
                 >
-                  {o.label}
+                  {t(o.labelKey)}
                 </button>
               ))}
             </div>
             <p className="text-[9px] text-slate-400 leading-relaxed">
-              Overrides the real trial calculation for testing this build. Only ever rendered in
-              local dev (`import.meta.env.DEV`) — stripped from production builds entirely.
+              {t("settings.devHelp")}
             </p>
           </div>
         )}

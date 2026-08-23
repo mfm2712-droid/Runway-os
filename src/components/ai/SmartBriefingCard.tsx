@@ -1,16 +1,25 @@
 import { useState } from "react";
 import type { FinanceState } from "../../types";
-import { BRIEFING_MODES, computeBriefing, type BriefingMode } from "../../lib/ai/briefing";
+import { computeBriefing, type BriefingMode } from "../../lib/ai/briefing";
 import { isBurnSpike } from "../../lib/calculations";
 import { useTypewriter } from "../../hooks/useTypewriter";
 import { GlassCard } from "../ui/GlassCard";
 import { SegmentedControl } from "../ui/SegmentedControl";
+import { useLanguage } from "../../lib/i18n/LanguageContext";
+
+const BRIEFING_MODE_KEYS: { value: BriefingMode; labelKey: string }[] = [
+  { value: "safe-flow", labelKey: "briefing.modeSafeFlow" },
+  { value: "bills-alert", labelKey: "briefing.modeBills" },
+  { value: "goal-velocity", labelKey: "briefing.modeVelocity" },
+];
 
 export function SmartBriefingCard({ state }: { state: FinanceState }) {
+  const { t, lang } = useLanguage();
   const [mode, setMode] = useState<BriefingMode>("safe-flow");
-  const { headline, detail } = computeBriefing(state, mode);
+  const { headline, detail } = computeBriefing(state, mode, lang);
   const { shown, done } = useTypewriter(detail, true, 10);
   const burnSpike = isBurnSpike(state);
+  const briefingModes = BRIEFING_MODE_KEYS.map((m) => ({ value: m.value, label: t(m.labelKey) }));
 
   return (
     <GlassCard strong className="relative overflow-hidden p-5 space-y-4">
@@ -24,7 +33,7 @@ export function SmartBriefingCard({ state }: { state: FinanceState }) {
         </span>
         <div className="min-w-0">
           <p className="text-[11px] font-semibold ai-gradient-text uppercase tracking-wider mb-1">
-            AI Briefing
+            {t("briefing.title")}
           </p>
           <p className="text-sm text-white font-medium leading-snug">{headline}</p>
           <p className="text-xs text-slate-400 leading-relaxed mt-1 min-h-[2.5em]">
@@ -40,8 +49,7 @@ export function SmartBriefingCard({ state }: { state: FinanceState }) {
             ⚠️
           </span>
           <p className="text-[11px] text-amber-300 leading-relaxed">
-            <span className="font-semibold">High Burn Pace:</span> Daily allowance adjusted to
-            protect your runway buffer.
+            <span className="font-semibold">{t("briefing.highBurnPace")}</span> {t("briefing.highBurnDetail")}
           </p>
         </div>
       )}
@@ -49,7 +57,7 @@ export function SmartBriefingCard({ state }: { state: FinanceState }) {
       <SegmentedControl
         value={mode}
         onChange={setMode}
-        options={BRIEFING_MODES}
+        options={briefingModes}
         className="relative"
       />
     </GlassCard>

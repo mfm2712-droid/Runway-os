@@ -1,4 +1,5 @@
 import type { FinanceState } from "../types";
+import { DICTIONARIES, EN, type Lang } from "./i18n/translations";
 
 export interface ScenarioInput {
   cash: number;
@@ -33,12 +34,12 @@ export function monthsToZero(input: ScenarioInput): number | null {
   return input.cash / -net;
 }
 
-export function freedomDateLabel(monthsFromNow: number | null): string {
-  if (monthsFromNow === null) return "Sustainable";
+export function freedomDateLabel(monthsFromNow: number | null, lang: Lang = "en"): string {
+  if (monthsFromNow === null) return DICTIONARIES[lang]["projection.sustainableLabel"];
   const d = new Date();
   d.setDate(1);
   d.setMonth(d.getMonth() + Math.round(monthsFromNow));
-  return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+  return d.toLocaleDateString(lang === "es" ? "es-ES" : "en-GB", { month: "short", year: "numeric" });
 }
 
 export interface ScenarioPreset {
@@ -50,24 +51,27 @@ export interface ScenarioPreset {
   apply: (state: FinanceState, sandbox: ScenarioInput, amount?: number) => ScenarioInput;
 }
 
-export const SCENARIO_PRESETS: ScenarioPreset[] = [
-  {
-    id: "zero-income",
-    label: "🚨 Zero Income Survival",
-    description: "Simulates losing your primary income entirely.",
-    apply: (_state, sandbox) => ({ ...sandbox, income: 0 }),
-  },
-  {
-    id: "aggressive-cut",
-    label: "🔥 Aggressive Cut (-30% Burn)",
-    description: "Cuts total monthly burn by 30% across the board.",
-    apply: (_state, sandbox) => ({ ...sandbox, burn: Math.max(0, sandbox.burn * 0.7) }),
-  },
-  {
-    id: "side-hustle",
-    label: "🚀 Side Hustle",
-    description: "Projects the runway impact of adding freelance income.",
-    editableAmount: { default: 600, suffix: "Side Hustle" },
-    apply: (_state, sandbox, amount) => ({ ...sandbox, income: sandbox.income + (amount ?? 600) }),
-  },
-];
+export function getScenarioPresets(lang: Lang = "en"): ScenarioPreset[] {
+  const t = (key: string) => DICTIONARIES[lang][key] ?? EN[key] ?? key;
+  return [
+    {
+      id: "zero-income",
+      label: t("projection.presetZeroIncome"),
+      description: t("projection.presetZeroIncomeDesc"),
+      apply: (_state, sandbox) => ({ ...sandbox, income: 0 }),
+    },
+    {
+      id: "aggressive-cut",
+      label: t("projection.presetAggressiveCut"),
+      description: t("projection.presetAggressiveCutDesc"),
+      apply: (_state, sandbox) => ({ ...sandbox, burn: Math.max(0, sandbox.burn * 0.7) }),
+    },
+    {
+      id: "side-hustle",
+      label: t("projection.presetSideHustle"),
+      description: t("projection.presetSideHustleDesc"),
+      editableAmount: { default: 600, suffix: t("projection.presetSideHustleSuffix") },
+      apply: (_state, sandbox, amount) => ({ ...sandbox, income: sandbox.income + (amount ?? 600) }),
+    },
+  ];
+}

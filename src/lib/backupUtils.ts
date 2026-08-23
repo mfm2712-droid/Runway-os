@@ -1,4 +1,5 @@
 import type { FinanceState } from "../types";
+import { DICTIONARIES, type Lang } from "./i18n/translations";
 
 export interface BackupMeta {
   onboarded: boolean;
@@ -29,12 +30,17 @@ export function isBackupDue(
   return now - new Date(lastBackupAt).getTime() > BACKUP_DUE_DAYS * 86400000;
 }
 
-export function formatBackupAge(lastBackupAt: string | null, now: number = Date.now()): string {
-  if (!lastBackupAt) return "never";
+export function formatBackupAge(
+  lastBackupAt: string | null,
+  now: number = Date.now(),
+  lang: Lang = "en",
+): string {
+  const dict = DICTIONARIES[lang];
+  if (!lastBackupAt) return dict["backupAge.never"];
   const days = Math.floor((now - new Date(lastBackupAt).getTime()) / 86400000);
-  if (days <= 0) return "today";
-  if (days === 1) return "1 day ago";
-  return `${days} days ago`;
+  if (days <= 0) return dict["backupAge.today"];
+  if (days === 1) return dict["backupAge.oneDay"];
+  return dict["backupAge.days"].replace("{count}", String(days));
 }
 
 export function downloadBackup(payload: BackupPayload): void {

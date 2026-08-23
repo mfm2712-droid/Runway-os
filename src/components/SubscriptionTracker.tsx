@@ -8,11 +8,19 @@ import { Button } from "./ui/Button";
 import { SegmentedControl } from "./ui/SegmentedControl";
 import { SkeletonLines } from "./ai/Skeleton";
 import { FlagIcon, PencilIcon, PlusIcon, TrashIcon } from "./ui/Icons";
+import { useLanguage } from "../lib/i18n/LanguageContext";
+import type { Lang } from "../lib/i18n/translations";
 
 function ordinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+// Spanish doesn't use ordinal suffixes for "renews on the 5th" — just the
+// plain day number reads naturally there ("Se renueva el 5").
+function renewalDay(n: number, lang: Lang): string {
+  return lang === "es" ? String(n) : ordinal(n);
 }
 
 function daysSince(iso?: string): number {
@@ -27,12 +35,13 @@ function SummaryBar({
   subscriptions: Subscription[];
   currency: Currency;
 }) {
+  const { t } = useLanguage();
   const total = subscriptions.reduce((sum, s) => sum + s.amount, 0);
   const flaggable = subscriptions.filter((s) => s.flaggedUnused).reduce((sum, s) => sum + s.amount, 0);
 
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-xs">
-      <span className="text-slate-400">Total Monthly Outflow</span>
+      <span className="text-slate-400">{t("subs.totalMonthlyOutflow")}</span>
       <span className="font-semibold tracking-tight tabular-nums text-white">{formatCurrency(total, currency)}</span>
       {flaggable > 0 && (
         <>
@@ -40,7 +49,7 @@ function SummaryBar({
           <span className="font-semibold tracking-tight tabular-nums text-rose-400">
             {formatCurrency(flaggable, currency)}
           </span>
-          <span className="text-rose-400/80">flaggable as unused</span>
+          <span className="text-rose-400/80">{t("subs.flaggableAsUnused")}</span>
         </>
       )}
     </div>
@@ -60,11 +69,12 @@ function AmountDayFields({
   renewsOn: string;
   onRenewsOnChange: (v: string) => void;
 }) {
+  const { t } = useLanguage();
   return (
     <>
       <div className="flex gap-2">
         <div className="w-1/2 space-y-1">
-          <label className="text-[10px] text-slate-500 block">Amount / month</label>
+          <label className="text-[10px] text-slate-500 block">{t("subs.amountPerMonth")}</label>
           <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 focus-within:border-sky-500 transition-colors">
             <span className="text-xs text-slate-500 mr-1">{CURRENCY_SYMBOLS[currency]}</span>
             <input
@@ -79,12 +89,12 @@ function AmountDayFields({
           </div>
         </div>
         <div className="w-1/2 space-y-1">
-          <label className="text-[10px] text-slate-500 block">Renews on (day of month)</label>
+          <label className="text-[10px] text-slate-500 block">{t("subs.renewsOnDay")}</label>
           <input
             type="number"
             min={1}
             max={31}
-            placeholder="1–31"
+            placeholder={t("subs.dayPlaceholder")}
             value={renewsOn}
             onChange={(e) => onRenewsOnChange(e.target.value)}
             onFocus={(e) => e.target.select()}
@@ -92,7 +102,7 @@ function AmountDayFields({
           />
         </div>
       </div>
-      <p className="text-[9px] text-slate-500">1–31. Example: 5 = 5th of each month.</p>
+      <p className="text-[9px] text-slate-500">{t("subs.renewsOnHelp")}</p>
     </>
   );
 }
@@ -108,6 +118,7 @@ function EditSubscriptionForm({
   onSave: (patch: { name: string; amount: number; renewsOn: number }) => void;
   onCancel: () => void;
 }) {
+  const { t } = useLanguage();
   const [name, setName] = useState(sub.name);
   const [amount, setAmount] = useState(String(sub.amount));
   const [renewsOn, setRenewsOn] = useState(String(sub.renewsOn));
@@ -132,7 +143,7 @@ function EditSubscriptionForm({
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Name"
+        placeholder={t("subs.name")}
         className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
       />
       <AmountDayFields
@@ -144,7 +155,7 @@ function EditSubscriptionForm({
       />
       <div className="flex gap-2">
         <Button variant="primary" onClick={save} className="flex-1 py-2.5 text-xs">
-          Save
+          {t("subs.save")}
         </Button>
         <button
           onClick={(e) => {
@@ -153,7 +164,7 @@ function EditSubscriptionForm({
           }}
           className="px-4 text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
         >
-          Cancel
+          {t("subs.cancel")}
         </button>
       </div>
     </div>
@@ -171,6 +182,7 @@ function CancelDrawer({
   state: FinanceState;
   onMarkCancelled: (id: string) => void;
 }) {
+  const { t, lang } = useLanguage();
   const [mode, setMode] = useState<CancelMode>("negotiate");
   const [draft, setDraft] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -182,8 +194,8 @@ function CancelDrawer({
     setGenerating(true);
     const result =
       mode === "negotiate"
-        ? await generateNegotiationScript(sub, state)
-        : await generateCancellationEmail(sub, state);
+        ? await generateNegotiationScript(sub, state, lang)
+        : await generateCancellationEmail(sub, state, lang);
     setDraft(result.draft);
     setIsLive(result.isLive);
     setGenerating(false);
@@ -215,8 +227,8 @@ function CancelDrawer({
         value={mode}
         onChange={switchMode}
         options={[
-          { value: "negotiate", label: "☎️ Negotiate First" },
-          { value: "cancel", label: "✨ Cancel Draft" },
+          { value: "negotiate", label: t("subs.negotiateFirst") },
+          { value: "cancel", label: t("subs.cancelDraft") },
         ]}
       />
 
@@ -226,14 +238,14 @@ function CancelDrawer({
           onClick={generate}
           className="w-full py-3 text-xs bg-gradient-to-r from-violet-400 to-sky-400"
         >
-          {mode === "negotiate" ? "☎️ Generate Negotiation Script" : "✨ Cancel Draft"}
+          {mode === "negotiate" ? t("subs.generateScript") : t("subs.generateCancelDraft")}
         </Button>
       )}
 
       {generating && (
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-3 space-y-2">
           <p className="text-[10px] ai-gradient-text font-semibold animate-pulse">
-            {mode === "negotiate" ? "☎️ Drafting script…" : "✨ Drafting…"}
+            {mode === "negotiate" ? t("subs.draftingScript") : t("subs.drafting")}
           </p>
           <SkeletonLines lines={4} />
         </div>
@@ -243,11 +255,11 @@ function CancelDrawer({
         <div className="space-y-2">
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] ai-gradient-text font-semibold">
-              {mode === "negotiate" ? "☎️ Script ready" : "✨ Draft ready"}
+              {mode === "negotiate" ? t("subs.scriptReady") : t("subs.draftReady")}
             </span>
             {!isLive && (
               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/[0.06] text-slate-500">
-                Simulated
+                {t("subs.simulated")}
               </span>
             )}
           </div>
@@ -259,7 +271,7 @@ function CancelDrawer({
             className="w-full py-2.5 rounded-xl text-[11px] font-semibold glass text-white active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
-            {copied ? "✓ Copied" : "Copy Draft"}
+            {copied ? t("subs.copied") : t("subs.copyDraft")}
           </button>
         </div>
       )}
@@ -272,7 +284,7 @@ function CancelDrawer({
         className="w-full py-3 rounded-xl text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 active:scale-[0.98] transition-transform"
         style={{ transitionTimingFunction: "var(--ease-spring)" }}
       >
-        Mark as Cancelled
+        {t("subs.markCancelled")}
       </button>
     </div>
   );
@@ -295,6 +307,7 @@ export function SubscriptionTracker({
   onToggleFlag: (id: string) => void;
   onUpdate: (id: string, patch: { name: string; amount: number; renewsOn: number }) => void;
 }) {
+  const { t, lang } = useLanguage();
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -329,7 +342,7 @@ export function SubscriptionTracker({
             <span className="font-bold tabular-nums">
               {formatCurrency(savedTotal * 12, state.currency)}/yr
             </span>{" "}
-            saved by trimming inactive leaks
+            {t("subs.savedByTrimming")}
           </p>
         </div>
       )}
@@ -338,14 +351,14 @@ export function SubscriptionTracker({
 
       <GlassCard className="p-6 space-y-4">
         <div className="flex justify-between items-center">
-          <h4 className="text-sm font-semibold text-white">Recurring Outflows</h4>
+          <h4 className="text-sm font-semibold text-white">{t("subs.recurringOutflows")}</h4>
           <button
             onClick={() => setAdding((v) => !v)}
             className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-medium transition-colors"
           >
-            {adding ? "Cancel" : (
+            {adding ? t("subs.cancel") : (
               <>
-                <PlusIcon width={12} height={12} strokeWidth={2.4} /> Add
+                <PlusIcon width={12} height={12} strokeWidth={2.4} /> {t("subs.add")}
               </>
             )}
           </button>
@@ -354,7 +367,7 @@ export function SubscriptionTracker({
         {adding && (
           <div className="space-y-2.5 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] animate-[floatIn_0.2s_var(--ease-spring)]">
             <input
-              placeholder="Name (e.g. Gym Membership)"
+              placeholder={t("subs.namePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
@@ -367,7 +380,7 @@ export function SubscriptionTracker({
               onRenewsOnChange={setRenewsOn}
             />
             <Button variant="primary" onClick={submit} className="w-full py-2.5 text-xs">
-              Add subscription
+              {t("subs.addSubscription")}
             </Button>
           </div>
         )}
@@ -378,14 +391,13 @@ export function SubscriptionTracker({
               🔄
             </p>
             <div className="space-y-1">
-              <h5 className="text-sm font-semibold text-white">No subscriptions yet</h5>
+              <h5 className="text-sm font-semibold text-white">{t("subs.noSubsYet")}</h5>
               <p className="text-xs text-slate-400 leading-relaxed max-w-[220px] mx-auto">
-                Track recurring charges here so forgotten renewals stop quietly eating your
-                runway.
+                {t("subs.noSubsDetail")}
               </p>
             </div>
             <Button variant="glass" onClick={() => setAdding(true)} className="mx-auto px-5 py-2 text-xs">
-              Add a subscription
+              {t("subs.addASubscription")}
             </Button>
           </div>
         )}
@@ -412,12 +424,13 @@ export function SubscriptionTracker({
                       <p className="font-medium text-slate-200 truncate">{s.name}</p>
                       {s.flaggedUnused && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/15 text-rose-400 shrink-0">
-                          Unused {days}+ days
+                          {t("subs.unusedDays", { days })}
                         </span>
                       )}
                     </div>
                     <p className="text-[10px] text-slate-500">
-                      {s.flaggedUnused ? "Tap to review & cancel · " : ""}Renews on the {ordinal(s.renewsOn)}
+                      {s.flaggedUnused ? t("subs.tapToReview") : ""}
+                      {t("subs.renewsOnThe", { day: renewalDay(s.renewsOn, lang) })}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">

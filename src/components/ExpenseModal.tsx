@@ -8,6 +8,8 @@ import { ReceiptDropzone } from "./ai/ReceiptDropzone";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 import { triggerHaptic } from "../lib/haptics";
 import { playClick } from "../lib/audio";
+import { useLanguage } from "../lib/i18n/LanguageContext";
+import { getBnplPlanLabel, getCategoryLabel } from "../lib/i18n/labels";
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ExpenseCategory[];
 const BNPL_PLANS = Object.keys(BNPL_PLAN_LABELS) as BnplPlan[];
@@ -37,6 +39,7 @@ export function ExpenseModal({
   onAdd: (expense: Omit<Expense, "id">) => void;
   onAddSubscription: (sub: Omit<Subscription, "id">) => void;
 }) {
+  const { t, lang } = useLanguage();
   const [mode, setMode] = useState<"manual" | "scan">("manual");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("food");
@@ -79,7 +82,7 @@ export function ExpenseModal({
     triggerHaptic("success");
     const trimmedNote = note.trim();
     const isBnpl = category === "bnpl";
-    const finalNote = trimmedNote || (isBnpl ? `BNPL · ${BNPL_PLAN_LABELS[bnplPlan]}` : "");
+    const finalNote = trimmedNote || (isBnpl ? `BNPL · ${getBnplPlanLabel(bnplPlan, lang)}` : "");
     onAdd({
       amount: amt,
       category,
@@ -110,7 +113,7 @@ export function ExpenseModal({
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-label="Add Expense"
+            aria-label={t("expense.title")}
           >
         <div className="mesh-glow opacity-60" />
         <div className="relative flex justify-center md:hidden -mt-1">
@@ -118,7 +121,7 @@ export function ExpenseModal({
         </div>
 
         <div className="relative flex justify-between items-center">
-          <h3 className="text-base font-semibold text-white">Add Expense</h3>
+          <h3 className="text-base font-semibold text-white">{t("expense.title")}</h3>
           <button
             onClick={close}
             className="h-8 w-8 flex items-center justify-center rounded-full glass text-slate-400 hover:text-white transition-colors"
@@ -132,8 +135,8 @@ export function ExpenseModal({
           value={mode}
           onChange={setMode}
           options={[
-            { value: "manual", label: "Manual" },
-            { value: "scan", label: "✨ Scan Receipt" },
+            { value: "manual", label: t("expense.manual") },
+            { value: "scan", label: t("expense.scanReceipt") },
           ]}
           className="relative"
         />
@@ -151,7 +154,7 @@ export function ExpenseModal({
         ) : (
           <>
             <div className="relative">
-              <label className="text-xs text-slate-500 block mb-2">Amount</label>
+              <label className="text-xs text-slate-500 block mb-2">{t("expense.amount")}</label>
               <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-4 focus-within:border-sky-500 transition-colors">
                 <span className="text-2xl text-slate-500 mr-1">{CURRENCY_SYMBOLS[currency]}</span>
                 <input
@@ -170,7 +173,7 @@ export function ExpenseModal({
             </div>
 
             <div className="relative">
-              <label className="text-xs text-slate-500 block mb-2">Category</label>
+              <label className="text-xs text-slate-500 block mb-2">{t("expense.category")}</label>
               <div className="grid grid-cols-4 gap-2">
                 {CATEGORIES.map((c) => (
                   <button
@@ -184,7 +187,7 @@ export function ExpenseModal({
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
                     <span className="text-lg leading-none">{CATEGORY_ICONS[c]}</span>
-                    {c === "bnpl" ? "BNPL" : CATEGORY_LABELS[c].split(" ")[0]}
+                    {c === "bnpl" ? t("category.bnpl.chip") : getCategoryLabel(c, lang).split(" ")[0]}
                   </button>
                 ))}
               </div>
@@ -192,7 +195,7 @@ export function ExpenseModal({
 
             {category === "bnpl" && (
               <div className="relative">
-                <label className="text-xs text-slate-500 block mb-2">Repayment plan</label>
+                <label className="text-xs text-slate-500 block mb-2">{t("expense.repaymentPlan")}</label>
                 <div className="grid grid-cols-5 gap-1.5">
                   {BNPL_PLANS.map((p) => (
                     <button
@@ -208,7 +211,7 @@ export function ExpenseModal({
                       }`}
                       style={{ transitionTimingFunction: "var(--ease-spring)" }}
                     >
-                      {BNPL_PLAN_LABELS[p]}
+                      {getBnplPlanLabel(p, lang)}
                     </button>
                   ))}
                 </div>
@@ -216,18 +219,18 @@ export function ExpenseModal({
             )}
 
             <div className="relative">
-              <label className="text-xs text-slate-500 block mb-2">Merchant / Note (optional)</label>
+              <label className="text-xs text-slate-500 block mb-2">{t("expense.merchantNote")}</label>
               <input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="e.g. Tesco"
+                placeholder={t("expense.merchantPlaceholder")}
                 maxLength={80}
                 className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500 transition-colors"
               />
             </div>
 
             <div className="relative">
-              <label className="text-xs text-slate-500 block mb-2">Date</label>
+              <label className="text-xs text-slate-500 block mb-2">{t("expense.date")}</label>
               <input
                 type="date"
                 value={date}
@@ -243,7 +246,7 @@ export function ExpenseModal({
               disabled={!valid}
               className="relative w-full py-4 text-sm"
             >
-              Add Expense
+              {t("expense.addExpense")}
             </Button>
           </>
         )}

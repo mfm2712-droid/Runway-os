@@ -7,3 +7,4 @@ export const STREAK_KEY = "runway-os:streak";
 export const DAILY_SERIES_KEY = "runway-os:dailySeries";
 export const LAST_BACKUP_AT_KEY = "runway-os:lastBackupAt";
 export const BACKUP_SNOOZE_UNTIL_KEY = "runway-os:backupSnoozeUntil";
+export const LANGUAGE_KEY = "runway-os:language";

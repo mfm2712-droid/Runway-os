@@ -1,12 +1,14 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { FinanceState } from "../types";
-import { CATEGORY_ICONS, CATEGORY_LABELS } from "../types";
+import { CATEGORY_ICONS } from "../types";
 import { formatCurrency } from "../lib/calculations";
 import { computeSpendBreakdown, isThisMonth, LEISURE_CATEGORIES, type SpendSlice } from "../lib/spendBreakdown";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 import { triggerHaptic } from "../lib/haptics";
 import { playClick } from "../lib/audio";
 import { TrashIcon } from "./ui/Icons";
+import { useLanguage } from "../lib/i18n/LanguageContext";
+import { getBucketLabel, getCategoryLabel } from "../lib/i18n/labels";
 
 export function CategoryDetailModal({
   bucketKey,
@@ -21,8 +23,10 @@ export function CategoryDetailModal({
   onRemoveExpense: (id: string) => void;
   onEditFixedCosts: () => void;
 }) {
+  const { t, lang } = useLanguage();
   const reduceMotion = useReducedMotion();
   const slice = bucketKey ? computeSpendBreakdown(state).find((s) => s.key === bucketKey) ?? null : null;
+  const bucketLabel = bucketKey ? getBucketLabel(bucketKey, lang) : "";
 
   const dismiss = () => {
     playClick();
@@ -74,7 +78,7 @@ export function CategoryDetailModal({
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-label={`${slice.label} details`}
+            aria-label={`${bucketLabel} details`}
           >
             <div className="mesh-glow opacity-60" />
             <div className="relative flex justify-center md:hidden -mt-1">
@@ -87,9 +91,12 @@ export function CategoryDetailModal({
                   {slice.icon}
                 </span>
                 <div>
-                  <h3 className="text-base font-semibold text-white">{slice.label}</h3>
+                  <h3 className="text-base font-semibold text-white">{bucketLabel}</h3>
                   <p className="text-[11px] text-slate-500">
-                    {formatCurrency(slice.amount, state.currency)} · {slice.pct.toFixed(0)}% of monthly spend
+                    {t("categoryDetail.of", {
+                      amount: formatCurrency(slice.amount, state.currency),
+                      pct: slice.pct.toFixed(0),
+                    })}
                   </p>
                 </div>
               </div>
@@ -105,8 +112,8 @@ export function CategoryDetailModal({
             {bucketKey === "housing" && state.fixedMonthlyOutflows > 0 && (
               <div className="relative flex justify-between items-center text-xs rounded-2xl bg-white/[0.03] border border-white/[0.06] px-4 py-3">
                 <div>
-                  <p className="text-slate-300">Fixed Monthly Outflows</p>
-                  <p className="text-[10px] text-slate-500">Rent, bills</p>
+                  <p className="text-slate-300">{t("categoryDetail.fixedOutflows")}</p>
+                  <p className="text-[10px] text-slate-500">{t("categoryDetail.rentBills")}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className="font-semibold tabular-nums text-slate-300">
@@ -116,7 +123,7 @@ export function CategoryDetailModal({
                     onClick={onEditFixedCosts}
                     className="text-[11px] font-medium text-sky-400 hover:text-sky-300 transition-colors"
                   >
-                    Edit
+                    {t("categoryDetail.edit")}
                   </button>
                 </div>
               </div>
@@ -125,7 +132,7 @@ export function CategoryDetailModal({
             {bucketKey === "subscriptions" ? (
               <div className="relative space-y-2">
                 <p className="text-[11px] text-slate-500 px-1">
-                  Manage or cancel these in the Subscriptions tab.
+                  {t("categoryDetail.manageInSubs")}
                 </p>
                 <ul className="space-y-2">
                   {state.subscriptions.map((s) => (
@@ -145,7 +152,7 @@ export function CategoryDetailModal({
               <div className="relative space-y-2">
                 {sorted.length === 0 && (
                   <p className="text-xs text-slate-400 py-2 text-center">
-                    No expenses logged in this category this month.
+                    {t("categoryDetail.noExpenses")}
                   </p>
                 )}
                 <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -160,7 +167,7 @@ export function CategoryDetailModal({
                         </span>
                         <div className="min-w-0">
                           <p className="font-medium text-slate-200 truncate">
-                            {e.note || CATEGORY_LABELS[e.category]}
+                            {e.note || getCategoryLabel(e.category, lang)}
                           </p>
                           <p className="text-[10px] text-slate-500">{e.date}</p>
                         </div>
@@ -186,17 +193,17 @@ export function CategoryDetailModal({
             {bucketKey !== "subscriptions" && (
               <div className="relative grid grid-cols-3 gap-2 pt-3 border-t border-white/[0.08] text-center">
                 <div>
-                  <p className="text-[9px] text-slate-500 uppercase tracking-wider">Count</p>
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wider">{t("categoryDetail.count")}</p>
                   <p className="text-sm font-semibold tabular-nums text-white mt-0.5">{count}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] text-slate-500 uppercase tracking-wider">Average</p>
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wider">{t("categoryDetail.average")}</p>
                   <p className="text-sm font-semibold tabular-nums text-white mt-0.5">
                     {formatCurrency(average, state.currency)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[9px] text-slate-500 uppercase tracking-wider">Sum</p>
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wider">{t("categoryDetail.sum")}</p>
                   <p className="text-sm font-semibold tabular-nums text-white mt-0.5">
                     {formatCurrency(sum, state.currency)}
                   </p>

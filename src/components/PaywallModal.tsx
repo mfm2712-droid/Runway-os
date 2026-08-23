@@ -7,6 +7,7 @@ import { startCheckout, type Plan } from "../lib/checkout";
 import { backdropVariants, panelVariants } from "../lib/motionPresets";
 import { playClick } from "../lib/audio";
 import { useSyncSubscriptionCheck } from "../hooks/useSyncSubscriptionCheck";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 type TokenState = "idle" | "checking" | "invalid" | "valid" | "error";
 type RestoreState = "idle" | "checking" | "not-found" | "found" | "error";
@@ -25,6 +26,7 @@ export function PaywallModal({
   onLicenseInvalid: () => void;
 }) {
   useSyncSubscriptionCheck(open, licenseKey, onLicenseInvalid);
+  const { t } = useLanguage();
   const [token, setToken] = useState("");
   const [tokenState, setTokenState] = useState<TokenState>("idle");
   const [email, setEmail] = useState("");
@@ -71,7 +73,7 @@ export function PaywallModal({
       // here, the promise resolved without a redirect happening, which
       // shouldn't occur, but leave the loading state cleared just in case.
     } catch {
-      setCheckoutError("Couldn't start checkout — Stripe may not be configured yet.");
+      setCheckoutError(t("paywall.checkoutError"));
       setCheckoutLoading(null);
     }
   };
@@ -119,14 +121,14 @@ export function PaywallModal({
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-label="Unlock Full Access"
+            aria-label={t("paywall.title")}
           >
         <div className="mesh-glow opacity-60" />
 
         <div className="relative flex justify-between items-center">
           <div className="flex items-center gap-1.5">
             <span aria-hidden>✨</span>
-            <h3 className="text-base font-semibold text-white">Unlock Full Access</h3>
+            <h3 className="text-base font-semibold text-white">{t("paywall.title")}</h3>
           </div>
           <button
             onClick={dismiss}
@@ -138,8 +140,7 @@ export function PaywallModal({
         </div>
 
         <p className="relative text-xs text-slate-400 leading-relaxed">
-          Your trial has ended. Keep the Projection Lab and Money Copilot with a
-          Pro plan — cancel anytime.
+          {t("paywall.trialEnded")}
         </p>
 
         <div className="relative grid grid-cols-2 gap-3">
@@ -150,14 +151,14 @@ export function PaywallModal({
           >
             <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 h-full flex flex-col hover:border-sky-400/40 transition-colors">
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                Monthly
+                {t("paywall.monthly")}
               </p>
               <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white mt-2">
                 £2.99
               </p>
-              <p className="text-[10px] text-slate-500 mb-3">/ month</p>
+              <p className="text-[10px] text-slate-500 mb-3">{t("paywall.perMonth")}</p>
               <span className="mt-auto text-[11px] font-semibold text-sky-300">
-                {checkoutLoading === "monthly" ? "Redirecting…" : "Choose Monthly →"}
+                {checkoutLoading === "monthly" ? t("paywall.redirecting") : t("paywall.chooseMonthly")}
               </span>
             </div>
           </button>
@@ -169,17 +170,17 @@ export function PaywallModal({
           >
             <div className="relative rounded-2xl bg-gradient-to-b from-sky-400/[0.08] to-emerald-400/[0.08] border border-sky-400/40 p-4 h-full flex flex-col">
               <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 whitespace-nowrap">
-                Most Popular · Save 30%
+                {t("paywall.mostPopular")}
               </span>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1.5">
-                Annual
+                {t("paywall.annual")}
               </p>
               <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white mt-2">
                 £25.00
               </p>
-              <p className="text-[10px] text-slate-500 mb-3">/ year</p>
+              <p className="text-[10px] text-slate-500 mb-3">{t("paywall.perYear")}</p>
               <span className="mt-auto text-[11px] font-semibold text-emerald-300">
-                {checkoutLoading === "annual" ? "Redirecting…" : "Choose Annual →"}
+                {checkoutLoading === "annual" ? t("paywall.redirecting") : t("paywall.chooseAnnual")}
               </span>
             </div>
           </button>
@@ -190,19 +191,17 @@ export function PaywallModal({
         )}
 
         <ul className="relative text-[11px] text-slate-400 space-y-1.5 pl-1">
-          <li>✓ Unlimited Projection Lab scenarios</li>
-          <li>✓ Money Copilot: ask, scan receipts, daily briefing</li>
-          <li>✓ Cancel anytime, no lock-in</li>
+          <li>{t("paywall.feature1")}</li>
+          <li>{t("paywall.feature2")}</li>
+          <li>{t("paywall.feature3")}</li>
         </ul>
 
         <div className="relative pt-3 border-t border-white/[0.08] space-y-2.5">
           <label className="text-xs text-slate-500 block">
-            Already subscribed? Restore Pro access with your email
+            {t("paywall.restoreLabel")}
           </label>
           <p className="text-[10px] text-slate-400 leading-relaxed">
-            This only restores your subscription via Stripe — it doesn't transfer your
-            balances or expenses. To move your numbers to a new device, use Settings →
-            Export/Import backup instead.
+            {t("paywall.restoreHelp")}
           </p>
           <div className="flex gap-2">
             <input
@@ -221,29 +220,28 @@ export function PaywallModal({
               disabled={restoreState === "checking"}
               className="px-4 py-2.5 text-xs shrink-0"
             >
-              {restoreState === "checking" ? "Checking…" : "Restore"}
+              {restoreState === "checking" ? t("paywall.checking") : t("paywall.restore")}
             </Button>
           </div>
           {restoreState === "not-found" && (
             <p className="text-[10px] text-rose-400">
-              No active subscription found for that email.
+              {t("paywall.notFound")}
             </p>
           )}
           {restoreState === "found" && (
             <p className="text-[10px] text-emerald-400">
-              ✓ Pro access restored — welcome back. This doesn't include your balances or
-              expenses; use Settings → Export/Import backup to bring your numbers across too.
+              {t("paywall.restored")}
             </p>
           )}
           {restoreState === "error" && (
             <p className="text-[10px] text-rose-400">
-              Couldn't check that right now — try again in a moment.
+              {t("paywall.restoreError")}
             </p>
           )}
         </div>
 
         <div className="relative space-y-2.5">
-          <label className="text-xs text-slate-500 block">Have a support access code?</label>
+          <label className="text-xs text-slate-500 block">{t("paywall.supportCode")}</label>
           <div className="flex gap-2">
             <input
               value={token}
@@ -251,7 +249,7 @@ export function PaywallModal({
                 setToken(e.target.value);
                 setTokenState("idle");
               }}
-              placeholder="Access code"
+              placeholder={t("paywall.accessCode")}
               className={`flex-1 bg-white/[0.04] border rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none ${
                 tokenState === "invalid" || tokenState === "error"
                   ? "border-rose-500/60 focus:border-rose-500"
@@ -266,23 +264,20 @@ export function PaywallModal({
               disabled={tokenState === "checking"}
               className="px-4 py-2.5 text-xs shrink-0"
             >
-              {tokenState === "checking" ? "Checking…" : "Verify"}
+              {tokenState === "checking" ? t("paywall.checking") : t("paywall.verify")}
             </Button>
           </div>
           {tokenState === "invalid" && (
-            <p className="text-[10px] text-rose-400">That code isn't valid — check with support.</p>
+            <p className="text-[10px] text-rose-400">{t("paywall.codeInvalid")}</p>
           )}
           {tokenState === "error" && (
-            <p className="text-[10px] text-rose-400">Couldn't verify that right now — try again in a moment.</p>
+            <p className="text-[10px] text-rose-400">{t("paywall.codeError")}</p>
           )}
           {tokenState === "valid" && (
-            <p className="text-[10px] text-emerald-400">✓ Access activated — welcome back.</p>
+            <p className="text-[10px] text-emerald-400">{t("paywall.codeValid")}</p>
           )}
           <p className="text-[9px] text-slate-400 leading-relaxed">
-            Runway OS keeps your financial data local to your browser. Checkout,
-            subscription status, and restore-by-email are verified against
-            Stripe server-side. Support access codes are verified the same
-            way — hand-issued only, never a client-side bypass.
+            {t("paywall.footerNote")}
           </p>
         </div>
           </motion.div>

@@ -40,6 +40,7 @@ import {
   BACKUP_SNOOZE_UNTIL_KEY,
 } from "../lib/storageKeys";
 import type { Currency, Expense, FinanceState, Subscription, WishlistItem } from "../types";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 function todayISO(): string {
   const d = new Date();
@@ -104,6 +105,7 @@ const DEMO_STATE: FinanceState = {
 };
 
 export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const { t } = useLanguage();
   const [state, setState] = useLocalStorage<FinanceState>(STORAGE_KEY, BLANK_STATE);
   const [onboarded, setOnboarded] = useLocalStorage<boolean>(
     ONBOARDED_KEY,
@@ -289,17 +291,17 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
 
         {checkoutBanner === "verifying" && (
           <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.1] text-slate-300">
-            Confirming your subscription…
+            {t("dashboard.confirmingSubscription")}
           </div>
         )}
         {checkoutBanner === "success" && (
           <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
-            ✓ Subscription active — full access unlocked.
+            {t("dashboard.subscriptionActive")}
           </div>
         )}
         {checkoutBanner === "error" && (
           <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300">
-            Couldn't confirm that payment — contact support if you were charged.
+            {t("dashboard.paymentError")}
           </div>
         )}
 
@@ -309,7 +311,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
             className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-gradient-to-r from-violet-400/10 to-sky-400/10 border border-violet-400/25 text-violet-200 active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
-            ✨ Pro Trial: {Math.max(1, Math.ceil(trialStatus.hoursLeft))}h left · Unlock Full Access
+            {t("dashboard.proTrial", { hours: Math.max(1, Math.ceil(trialStatus.hoursLeft)) })}
           </button>
         )}
 
@@ -319,7 +321,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
             className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
-            🔒 Trial Expired · Unlock Full Access
+            {t("dashboard.trialExpired")}
           </button>
         )}
 
@@ -367,16 +369,16 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
                     <p className="text-2xl" aria-hidden>
                       🔒
                     </p>
-                    <p className="text-sm font-semibold text-white">Projection Lab is a Pro feature</p>
+                    <p className="text-sm font-semibold text-white">{t("dashboard.projectionLabProFeature")}</p>
                     <p className="text-xs text-slate-400">
-                      Your trial has ended. Unlock full access to keep simulating scenarios.
+                      {t("dashboard.trialEndedUnlock")}
                     </p>
                     <Button
                       variant="primary"
                       onClick={() => openPaywall("trial_expired")}
                       className="w-full py-3 text-sm"
                     >
-                      Unlock Full Access
+                      {t("dashboard.unlockFullAccess")}
                     </Button>
                   </div>
                 </div>

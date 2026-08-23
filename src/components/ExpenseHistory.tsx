@@ -1,9 +1,11 @@
 import type { Currency, Expense } from "../types";
-import { CATEGORY_ICONS, CATEGORY_LABELS } from "../types";
+import { CATEGORY_ICONS } from "../types";
 import { formatCurrency } from "../lib/calculations";
 import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
 import { TrashIcon } from "./ui/Icons";
+import { useLanguage } from "../lib/i18n/LanguageContext";
+import { getCategoryLabel } from "../lib/i18n/labels";
 
 function isThisMonth(dateStr: string): boolean {
   const d = new Date(dateStr);
@@ -20,12 +22,13 @@ function SummaryBar({
   currency: Currency;
   stealth: boolean;
 }) {
+  const { t } = useLanguage();
   const thisMonth = expenses.filter((e) => isThisMonth(e.date));
   const total = thisMonth.reduce((sum, e) => sum + e.amount, 0);
 
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-xs">
-      <span className="text-slate-400">This Month</span>
+      <span className="text-slate-400">{t("history.thisMonth")}</span>
       <span
         className={`font-semibold tracking-tight tabular-nums text-white transition-all duration-300 ${
           stealth ? "blur-sm select-none" : ""
@@ -35,7 +38,7 @@ function SummaryBar({
       </span>
       <span className="text-slate-600">•</span>
       <span className="text-slate-400">
-        {thisMonth.length} transaction{thisMonth.length === 1 ? "" : "s"}
+        {thisMonth.length} {thisMonth.length === 1 ? t("history.transaction") : t("history.transactions")}
       </span>
     </div>
   );
@@ -54,6 +57,7 @@ export function ExpenseHistory({
   onAddExpense: () => void;
   stealth?: boolean;
 }) {
+  const { t, lang } = useLanguage();
   const sorted = [...expenses].sort((a, b) => b.date.localeCompare(a.date));
 
   if (sorted.length === 0) {
@@ -63,13 +67,13 @@ export function ExpenseHistory({
           🧾
         </p>
         <div className="space-y-1">
-          <h4 className="text-sm font-semibold text-white">No expenses yet</h4>
+          <h4 className="text-sm font-semibold text-white">{t("history.noExpensesYet")}</h4>
           <p className="text-xs text-slate-400 leading-relaxed max-w-[240px] mx-auto">
-            Every logged expense sharpens your Daily Safe Spend for the rest of the month.
+            {t("history.noExpensesDetail")}
           </p>
         </div>
         <Button variant="glass" onClick={onAddExpense} className="mx-auto px-5 py-2.5 text-xs">
-          Add an expense
+          {t("donut.addExpense")}
         </Button>
       </GlassCard>
     );
@@ -80,7 +84,7 @@ export function ExpenseHistory({
       <SummaryBar expenses={expenses} currency={currency} stealth={stealth} />
 
       <GlassCard className="p-6 space-y-4">
-        <h4 className="text-sm font-semibold text-white">Recent Expenses</h4>
+        <h4 className="text-sm font-semibold text-white">{t("history.recentExpenses")}</h4>
 
         <ul className="space-y-2 max-h-96 overflow-y-auto pr-1">
           {sorted.slice(0, 25).map((e) => (
@@ -94,10 +98,10 @@ export function ExpenseHistory({
                 </span>
                 <div className="min-w-0">
                   <p className="font-medium text-slate-200 truncate">
-                    {e.note || CATEGORY_LABELS[e.category]}
+                    {e.note || getCategoryLabel(e.category, lang)}
                   </p>
                   <p className="text-[10px] text-slate-500">
-                    {e.note ? `${CATEGORY_LABELS[e.category]} · ${e.date}` : e.date}
+                    {e.note ? `${getCategoryLabel(e.category, lang)} · ${e.date}` : e.date}
                   </p>
                 </div>
               </div>
