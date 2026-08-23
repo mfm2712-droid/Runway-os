@@ -25,7 +25,7 @@ import { useStripeVerification } from "../hooks/useStripeVerification";
 import { uid } from "../lib/id";
 import { computeTrialStatus, type DevOverride } from "../lib/trial";
 import { track } from "../lib/analytics";
-import { buildBackup, downloadBackup, type BackupMeta } from "../lib/backupUtils";
+import { buildBackup, downloadBackup, isBackupDue, type BackupMeta } from "../lib/backupUtils";
 import { BLANK_STREAK, updateStreak, type StreakData } from "../lib/streak";
 import { upsertToday, type DailySeries } from "../lib/dailySeries";
 import {
@@ -36,7 +36,8 @@ import {
   DEV_OVERRIDE_KEY,
   STREAK_KEY,
   DAILY_SERIES_KEY,
-  BACKUP_NUDGE_DISMISSED_KEY,
+  LAST_BACKUP_AT_KEY,
+  BACKUP_SNOOZE_UNTIL_KEY,
 } from "../lib/storageKeys";
 import type { Currency, Expense, FinanceState, Subscription, WishlistItem } from "../types";
 
@@ -125,9 +126,10 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
   const [savedTotal, setSavedTotal] = useLocalStorage<number>("runway-os:saved-total", 0);
   const [streak, setStreak] = useLocalStorage<StreakData>(STREAK_KEY, BLANK_STREAK);
   const [dailySeries, setDailySeries] = useLocalStorage<DailySeries>(DAILY_SERIES_KEY, []);
-  const [backupNudgeDismissed, setBackupNudgeDismissed] = useLocalStorage<boolean>(
-    BACKUP_NUDGE_DISMISSED_KEY,
-    false,
+  const [lastBackupAt, setLastBackupAt] = useLocalStorage<string | null>(LAST_BACKUP_AT_KEY, null);
+  const [backupSnoozeUntil, setBackupSnoozeUntil] = useLocalStorage<string | null>(
+    BACKUP_SNOOZE_UNTIL_KEY,
+    null,
   );
 
   // Refresh the streak and today's sparkline entry once per app open — safe
@@ -172,7 +174,15 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
 
   const backupMeta: BackupMeta = { onboarded, trialStartedAt, licenseKey };
 
-  const exportBackup = () => downloadBackup(buildBackup(state, backupMeta));
+  const exportBackup = () => {
+    downloadBackup(buildBackup(state, backupMeta));
+    setLastBackupAt(new Date().toISOString());
+    setBackupSnoozeUntil(null);
+  };
+
+  const snoozeBackup = () => setBackupSnoozeUntil(new Date(Date.now() + 7 * 86400000).toISOString());
+
+  const backupDue = onboarded && isBackupDue(lastBackupAt, backupSnoozeUntil);
 
   const restoreBackup = (restoredState: FinanceState, meta: BackupMeta) => {
     setState(restoredState);
@@ -303,15 +313,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
           </button>
         )}
 
-        {onboarded && !backupNudgeDismissed && (
-          <BackupNudge
-            onExport={() => {
-              exportBackup();
-              setBackupNudgeDismissed(true);
-            }}
-            onDismiss={() => setBackupNudgeDismissed(true)}
-          />
-        )}
+        {backupDue && <BackupNudge onExport={exportBackup} onSnooze={snoozeBackup} />}
 
         <div key={tab} className="space-y-5" style={{ animation: "floatIn 0.35s var(--ease-spring)" }}>
           {tab === "overview" && (
@@ -425,6 +427,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         onRestore={restoreBackup}
         onLicenseInvalid={() => setLicenseKey(null)}
         onNavigate={onNavigate}
+        lastBackupAt={lastBackupAt}
+        onExport={exportBackup}
       />
       <CategoryDetailModal
         bucketKey={detailBucket}

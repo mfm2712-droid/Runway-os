@@ -4,8 +4,7 @@ import type { Currency, FinanceState } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
 import type { DevOverride, TrialStatus } from "../lib/trial";
 import {
-  buildBackup,
-  downloadBackup,
+  formatBackupAge,
   parseBackupFile,
   readFileAsText,
   type BackupMeta,
@@ -37,6 +36,8 @@ export function SettingsModal({
   onRestore,
   onLicenseInvalid,
   onNavigate,
+  lastBackupAt,
+  onExport,
 }: {
   open: boolean;
   onClose: () => void;
@@ -49,6 +50,8 @@ export function SettingsModal({
   onRestore: (state: FinanceState, meta: BackupMeta) => void;
   onLicenseInvalid: () => void;
   onNavigate: (path: string) => void;
+  lastBackupAt: string | null;
+  onExport: () => void;
 }) {
   useSyncSubscriptionCheck(open, meta.licenseKey, onLicenseInvalid);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +62,6 @@ export function SettingsModal({
   const [audioMuted, setAudioMutedState] = useState(() => isAudioMuted());
   const reduceMotion = useReducedMotion();
 
-  const handleExport = () => downloadBackup(buildBackup(state, meta));
   const handleExportCsv = () => downloadExpensesCsv(state);
   const toggleAudio = () => {
     const next = !audioMuted;
@@ -229,8 +231,11 @@ export function SettingsModal({
           <p className="text-[10px] text-slate-400 -mt-1">
             Email unlocks Pro. Backup moves your numbers.
           </p>
+          <p className="text-[10px] text-slate-500">
+            Last backup: {formatBackupAge(lastBackupAt)}
+          </p>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="glass" onClick={handleExport} className="py-3 text-xs">
+            <Button variant="glass" onClick={onExport} className="py-3 text-xs">
               Export Backup (.json)
             </Button>
             <Button

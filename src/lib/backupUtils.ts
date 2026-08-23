@@ -17,6 +17,26 @@ export function buildBackup(state: FinanceState, meta: BackupMeta): BackupPayloa
   return { version: 1, exportedAt: new Date().toISOString(), state, meta };
 }
 
+export const BACKUP_DUE_DAYS = 7;
+
+export function isBackupDue(
+  lastBackupAt: string | null,
+  snoozeUntil: string | null,
+  now: number = Date.now(),
+): boolean {
+  if (snoozeUntil && new Date(snoozeUntil).getTime() > now) return false;
+  if (!lastBackupAt) return true;
+  return now - new Date(lastBackupAt).getTime() > BACKUP_DUE_DAYS * 86400000;
+}
+
+export function formatBackupAge(lastBackupAt: string | null, now: number = Date.now()): string {
+  if (!lastBackupAt) return "never";
+  const days = Math.floor((now - new Date(lastBackupAt).getTime()) / 86400000);
+  if (days <= 0) return "today";
+  if (days === 1) return "1 day ago";
+  return `${days} days ago`;
+}
+
 export function downloadBackup(payload: BackupPayload): void {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);

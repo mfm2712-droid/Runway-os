@@ -5,4 +5,5 @@ export const LICENSE_KEY = "runway-os:licenseKey";
 export const DEV_OVERRIDE_KEY = "runway-os:devOverride";
 export const STREAK_KEY = "runway-os:streak";
 export const DAILY_SERIES_KEY = "runway-os:dailySeries";
-export const BACKUP_NUDGE_DISMISSED_KEY = "runway-os:backupNudgeDismissed";
+export const LAST_BACKUP_AT_KEY = "runway-os:lastBackupAt";
+export const BACKUP_SNOOZE_UNTIL_KEY = "runway-os:backupSnoozeUntil";
