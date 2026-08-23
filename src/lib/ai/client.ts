@@ -8,6 +8,7 @@ import {
   simulateNegotiationScript,
   simulateReceiptParse,
 } from "./simulate";
+import { optimizeReceiptImage } from "../receiptOptimizer";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -118,11 +119,11 @@ export async function parseReceipt(input: { file?: File; text?: string }): Promi
   if (input.file) {
     let res: Response;
     try {
-      const base64 = await fileToBase64(input.file);
+      const optimized = await optimizeReceiptImage(input.file);
       res = await fetch("/api/parse-receipt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64, mimeType: input.file.type }),
+        body: JSON.stringify({ imageBase64: optimized.base64, mimeType: optimized.mimeType }),
       });
     } catch {
       throw new ReceiptParseError("unavailable", "Couldn't reach the receipt scanner — check your connection and try again.");
@@ -140,15 +141,6 @@ export async function parseReceipt(input: { file?: File; text?: string }): Promi
   }
 
   return { ...simulateReceiptParse(input.text ?? ""), isLive: false };
-}
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve((reader.result as string).split(",")[1] ?? "");
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 export interface GeneratedEmailResult {

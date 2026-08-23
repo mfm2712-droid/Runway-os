@@ -173,6 +173,7 @@ export default async function handler(req: Request): Promise<Response> {
     body: JSON.stringify({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5",
       max_tokens: 400,
+      temperature: 0,
       messages: [
         {
           role: "user",
