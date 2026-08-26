@@ -75,6 +75,23 @@ self.addEventListener("fetch", (event) => {
   }
   if (isBypassed(url)) return;
 
+  // Navigations (the HTML shell) go network-first so a returning online
+  // visitor always sees the latest deploy — falling back to the cached
+  // shell only when offline. Hashed static assets (JS/CSS/fonts/images)
+  // keep the instant-cache-then-revalidate strategy below, since their
+  // filenames change on every build and are safe to serve stale-first.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
+          return response;
+        })
+        .catch(() => caches.open(CACHE_NAME).then((cache) => cache.match(request))),
+    );
+    return;
+  }
+
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
       const cached = await cache.match(request);
