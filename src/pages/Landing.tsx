@@ -68,6 +68,12 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
 
   return (
     <div className="relative text-slate-100 min-h-screen overflow-x-hidden">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-obsidian-900 focus:text-white focus:outline focus:outline-2 focus:outline-cyan-400"
+      >
+        {t("landing.a11y.skipToContent")}
+      </a>
       <div className="mesh-glow" />
       <LanguageToggle />
 
@@ -76,11 +82,16 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
         <header className="text-center space-y-6">
           <div className="relative inline-flex items-center gap-2.5 mx-auto">
             <div className="absolute -inset-3 rounded-full bg-sky-400/25 blur-xl" aria-hidden />
-            <img
-              src="/app-icon.png"
-              alt="Runway OS"
-              className="relative w-11 h-11 rounded-2xl border border-white/15 shadow-lg shadow-cyan-500/30 object-cover"
-            />
+            <picture className="contents">
+              <source srcSet="/app-icon-sm.webp" type="image/webp" />
+              <img
+                src="/app-icon-sm.png"
+                alt="Runway OS"
+                width={128}
+                height={128}
+                className="relative w-11 h-11 rounded-2xl border border-white/15 shadow-lg shadow-cyan-500/30 object-cover"
+              />
+            </picture>
             <span className="relative flex items-center gap-1.5">
               <span className="font-bold text-white tracking-tight text-lg">Runway</span>
               <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-md border border-cyan-400/40 text-cyan-300 bg-cyan-400/5">
@@ -122,9 +133,10 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               {t("landing.hero.seePricing")}
             </a>
           </div>
-          <p className="text-[11px] text-slate-500">{t("landing.hero.finePrint")}</p>
+          <p className="text-[11px] text-[oklch(0.57_0.046_257.417)]">{t("landing.hero.finePrint")}</p>
         </header>
 
+        <main id="main-content" className="space-y-24">
         {/* Before / After — left is an illustrative mockup of spreadsheet chaos,
             right is the actual product's hero card with sample data. */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -142,7 +154,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                       className={`p-2 truncate ${
                         flagged
                           ? "bg-rose-500/15 text-rose-300 font-bold"
-                          : "bg-obsidian-900 text-slate-500"
+                          : "bg-obsidian-900 text-[oklch(0.57_0.046_257.417)]"
                       }`}
                     >
                       {flagged ? "!ERR" : (Math.random() * 900 + 10).toFixed(2)}
@@ -151,7 +163,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 })}
               </div>
             </GlassCard>
-            <p className="text-[11px] text-slate-500 text-center">{t("landing.before.caption")}</p>
+            <p className="text-[11px] text-[oklch(0.57_0.046_257.417)] text-center">{t("landing.before.caption")}</p>
           </div>
 
           <div className="space-y-3">
@@ -174,7 +186,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 </RingProgress>
               </GlassCard>
             </div>
-            <p className="text-[11px] text-slate-500 text-center">{t("landing.after.caption")}</p>
+            <p className="text-[11px] text-[oklch(0.57_0.046_257.417)] text-center">{t("landing.after.caption")}</p>
           </div>
         </section>
 
@@ -200,7 +212,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             },
           ].map((f) => (
             <GlassCard key={f.title} interactive className="p-5">
-              <h3 className="text-sm font-semibold text-white mb-2">{f.title}</h3>
+              <h2 className="text-sm font-semibold text-white mb-2">{f.title}</h2>
               <p className="text-xs text-slate-400 leading-relaxed">{f.body}</p>
             </GlassCard>
           ))}
@@ -272,13 +284,58 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
           </GlassCard>
         </section>
 
+        {/* Trust — every claim here must be verifiably true of the current
+            implementation (see Privacy.tsx); nothing invented, no scores or
+            certifications, only what we can actually stand behind. */}
+        <section className="space-y-6">
+          <p className="text-xs font-semibold text-emerald-300 uppercase tracking-wider text-center">
+            {t("landing.trust.eyebrow")}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: "🔒", title: t("landing.trust.card1.title"), body: t("landing.trust.card1.body") },
+              { icon: "💳", title: t("landing.trust.card2.title"), body: t("landing.trust.card2.body") },
+              { icon: "🏦", title: t("landing.trust.card3.title"), body: t("landing.trust.card3.body") },
+              { icon: "🛡️", title: t("landing.trust.card4.title"), body: t("landing.trust.card4.body") },
+            ].map((c) => (
+              <GlassCard key={c.title} className="p-4 space-y-1.5">
+                <span className="text-lg" aria-hidden>
+                  {c.icon}
+                </span>
+                <h3 className="text-xs font-semibold text-white leading-snug">{c.title}</h3>
+                <p className="text-[11px] text-slate-400 leading-relaxed">{c.body}</p>
+              </GlassCard>
+            ))}
+          </div>
+
+          <GlassCard className="p-4">
+            <h3 className="text-xs font-semibold text-white text-center mb-3">
+              {t("landing.trust.score.title")}
+            </h3>
+            <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[11px] text-slate-400">
+              <li className="flex items-center gap-1.5">
+                <span aria-hidden>🔐</span> {t("landing.trust.score.item1")}
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span aria-hidden>🚫</span> {t("landing.trust.score.item2")}
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span aria-hidden>📊</span> {t("landing.trust.score.item3")}
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span aria-hidden>📄</span> {t("landing.trust.score.item4")}
+              </li>
+            </ul>
+          </GlassCard>
+        </section>
+
         {/* Pricing */}
         <section id="pricing" className="max-w-sm mx-auto space-y-4 scroll-mt-8">
           <div className="text-center space-y-1.5">
             <p className="text-xs font-semibold text-violet-300 uppercase tracking-wider">
               {t("landing.pricing.eyebrow")}
             </p>
-            <p className="text-xs text-slate-500">{t("landing.pricing.subtitle")}</p>
+            <p className="text-xs text-[oklch(0.57_0.046_257.417)]">{t("landing.pricing.subtitle")}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -291,13 +348,13 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 interactive
                 className="p-4 pb-5 space-y-1 text-center h-full hover:border-sky-400/40 transition-colors"
               >
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                <p className="text-[10px] font-semibold text-[oklch(0.57_0.046_257.417)] uppercase tracking-wider">
                   {t("landing.pricing.monthly")}
                 </p>
                 <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
                   £2.99
                 </p>
-                <p className="text-[10px] text-slate-500 mb-2">{t("landing.pricing.perMonth")}</p>
+                <p className="text-[10px] text-[oklch(0.57_0.046_257.417)] mb-2">{t("landing.pricing.perMonth")}</p>
                 <p className="text-[11px] font-semibold text-sky-300">
                   {checkoutLoading === "monthly" ? t("landing.pricing.redirecting") : t("landing.pricing.chooseMonthly")}
                 </p>
@@ -323,7 +380,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
                   £25.00
                 </p>
-                <p className="text-[10px] text-slate-500 mb-2">{t("landing.pricing.perYear")}</p>
+                <p className="text-[10px] text-[oklch(0.57_0.046_257.417)] mb-2">{t("landing.pricing.perYear")}</p>
                 <p className="text-[11px] font-semibold text-emerald-300">
                   {checkoutLoading === "annual" ? t("landing.pricing.redirecting") : t("landing.pricing.chooseAnnual")}
                 </p>
@@ -372,11 +429,13 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               { q: t("landing.faq.q6"), a: t("landing.faq.a6") },
               { q: t("landing.faq.q7"), a: t("landing.faq.a7") },
               { q: t("landing.faq.q8"), a: t("landing.faq.a8") },
+              { q: t("landing.faq.q9"), a: t("landing.faq.a9") },
+              { q: t("landing.faq.q10"), a: t("landing.faq.a10") },
             ].map(({ q, a }) => (
               <details key={q} className="group p-4">
                 <summary className="flex items-center justify-between gap-3 text-sm font-medium text-white cursor-pointer list-none">
                   {q}
-                  <span className="shrink-0 text-slate-500 transition-transform duration-200 group-open:rotate-45">
+                  <span className="shrink-0 text-[oklch(0.57_0.046_257.417)] transition-transform duration-200 group-open:rotate-45">
                     +
                   </span>
                 </summary>
@@ -385,18 +444,25 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             ))}
           </GlassCard>
         </section>
+        </main>
 
         <footer className="pt-8 border-t border-white/[0.06] space-y-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <img
-                src="/app-icon.png"
-                alt="Runway OS"
-                className="w-6 h-6 rounded-lg border border-white/10 object-cover"
-              />
+              <picture className="contents">
+                <source srcSet="/app-icon-sm.webp" type="image/webp" />
+                <img
+                  src="/app-icon-sm.png"
+                  alt="Runway OS"
+                  loading="lazy"
+                  width={128}
+                  height={128}
+                  className="w-6 h-6 rounded-lg border border-white/10 object-cover"
+                />
+              </picture>
               <span className="text-xs font-semibold text-slate-400">{t("landing.footer.brand")}</span>
             </div>
-            <nav className="flex items-center gap-5 text-xs text-slate-500">
+            <nav className="flex items-center gap-5 text-xs text-[oklch(0.57_0.046_257.417)]">
               <button onClick={() => onNavigate("/privacy")} className="hover:text-white transition-colors">
                 {t("landing.footer.privacy")}
               </button>

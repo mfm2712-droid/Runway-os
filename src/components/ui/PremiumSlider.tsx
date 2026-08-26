@@ -28,7 +28,7 @@ export function PremiumSlider({
   return (
     <div className="space-y-2.5">
       <div className="flex justify-between items-baseline">
-        <span className="text-xs text-slate-500">{label}</span>
+        <span className="text-xs text-[oklch(0.57_0.046_257.417)]">{label}</span>
         <span className="text-sm font-semibold tracking-tight text-white tabular-nums">{format(value)}</span>
       </div>
       <input
@@ -39,6 +39,7 @@ export function PremiumSlider({
         max={max}
         step={step}
         value={value}
+        aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
       />
     </div>

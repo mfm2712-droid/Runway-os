@@ -74,7 +74,7 @@ export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) =
         <p className="text-xs font-semibold text-sky-300 uppercase tracking-wider">
           {t("landing.calc.eyebrow")}
         </p>
-        <p className="text-xs text-slate-500">{t("landing.calc.subtitle")}</p>
+        <p className="text-xs text-[oklch(0.57_0.046_257.417)]">{t("landing.calc.subtitle")}</p>
       </div>
 
       <GlassCard strong className="relative overflow-hidden p-6 space-y-6">
@@ -92,7 +92,7 @@ export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) =
               <span className="text-[9px] text-slate-400 mt-1">{t("landing.common.safePerDay")}</span>
             </div>
           </RingProgress>
-          <p className="text-[11px] text-slate-500 mt-3">
+          <p className="text-[11px] text-[oklch(0.57_0.046_257.417)] mt-3">
             {t("landing.calc.runwayLabel")}{" "}
             <AnimatedNumber
               value={runway}

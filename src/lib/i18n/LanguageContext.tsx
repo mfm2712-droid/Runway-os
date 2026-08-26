@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { LANGUAGE_KEY } from "../storageKeys";
 import { DICTIONARIES, EN, type Lang } from "./translations";
@@ -22,6 +22,10 @@ function interpolate(template: string, vars?: Record<string, string | number>): 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useLocalStorage<Lang>(LANGUAGE_KEY, "en");
   const dict = DICTIONARIES[lang];
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const t = useMemo(
     () => (key: string, vars?: Record<string, string | number>) =>

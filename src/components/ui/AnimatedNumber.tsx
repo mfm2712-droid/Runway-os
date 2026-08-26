@@ -1,7 +1,23 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { useReducedMotion } from "motion/react";
 
 const SETTLE_EPSILON = 0.01;
+
+// Local stand-in for motion/react's useReducedMotion: importing that hook
+// alone pulls the whole `motion` runtime into any bundle that references
+// this component, including the eager landing chunk. This is behaviorally
+// identical (reactive to the OS-level media query) without the dependency.
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = () => setReduced(mq.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return reduced;
+}
 
 /**
  * Spring-driven count-up/count-down via a plain requestAnimationFrame
