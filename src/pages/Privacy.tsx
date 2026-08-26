@@ -3,18 +3,27 @@ import { GlassCard } from "../components/ui/GlassCard";
 export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) {
   return (
     <div className="relative text-slate-100 min-h-screen overflow-x-hidden">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-obsidian-900 focus:text-white focus:outline focus:outline-2 focus:outline-cyan-400"
+      >
+        Skip to content
+      </a>
       <div className="mesh-glow" />
       <div className="relative max-w-2xl mx-auto px-4 md:px-8 py-16 space-y-8">
-        <button
-          onClick={() => onNavigate("/")}
-          className="text-sm text-slate-400 hover:text-white transition-colors"
-        >
-          ← Runway OS
-        </button>
+        <header>
+          <button
+            onClick={() => onNavigate("/")}
+            className="text-sm text-slate-400 hover:text-white transition-colors"
+          >
+            ← Runway OS
+          </button>
+        </header>
 
+        <main id="main-content" className="space-y-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-white tracking-tight">Privacy Policy</h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[oklch(0.57_0.046_257.417)]">
             Describes what actually happens in the product, not boilerplate. Last updated
             21 August 2026.
           </p>
@@ -123,6 +132,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
             </a>
           </p>
         </section>
+        </main>
       </div>
     </div>
   );
