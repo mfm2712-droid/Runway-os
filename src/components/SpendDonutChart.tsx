@@ -36,7 +36,7 @@ export function SpendDonutChart({
 
   if (total <= 0) {
     return (
-      <GlassCard className="p-6 space-y-3 text-center">
+      <GlassCard opaque className="p-6 space-y-3 text-center">
         <p className="text-2xl" aria-hidden>
           🍩
         </p>
@@ -54,7 +54,7 @@ export function SpendDonutChart({
   }
 
   return (
-    <GlassCard className="p-6 space-y-5">
+    <GlassCard opaque className="p-6 space-y-5">
       <div className="flex justify-between items-center gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <h4 className="text-sm font-semibold text-white shrink-0">{t("donut.breakdown")}</h4>
@@ -62,9 +62,9 @@ export function SpendDonutChart({
             <span
               className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full tabular-nums shrink-0 ${
                 momDelta > 0.5
-                  ? "bg-rose-500/15 text-rose-300"
+                  ? "bg-red-400/15 text-red-400"
                   : momDelta < -0.5
-                  ? "bg-emerald-500/15 text-emerald-300"
+                  ? "bg-mint-400/15 text-mint-400"
                   : "bg-white/[0.06] text-slate-400"
               }`}
             >

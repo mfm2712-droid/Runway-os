@@ -34,7 +34,7 @@ export function BurnProjectionChart({
   const [hoverMonth, setHoverMonth] = useState<number | null>(null);
   const horizon = points[points.length - 1]?.month ?? 12;
   const sustainable = zeroMonth === null;
-  const accent = sustainable ? "#34d399" : "#fb7185";
+  const accent = sustainable ? "#00ffc6" : "#ff5c72";
 
   const balances = points.map((p) => p.balance);
   const rawMin = Math.min(0, ...balances);
@@ -125,7 +125,7 @@ export function BurnProjectionChart({
               y1={PAD_TOP}
               x2={x(zeroMonth)}
               y2={zeroY}
-              stroke="#fb7185"
+              stroke="#ff5c72"
               strokeWidth={1}
               strokeDasharray="2 3"
               opacity={0.6}
@@ -134,8 +134,8 @@ export function BurnProjectionChart({
               cx={x(zeroMonth)}
               cy={zeroY}
               r={5}
-              fill="#fb7185"
-              style={{ filter: "drop-shadow(0 0 6px #fb7185cc)" }}
+              fill="#ff5c72"
+              style={{ filter: "drop-shadow(0 0 6px #ff5c72cc)" }}
             />
           </g>
         )}

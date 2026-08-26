@@ -8,3 +8,4 @@ export const DAILY_SERIES_KEY = "runway-os:dailySeries";
 export const LAST_BACKUP_AT_KEY = "runway-os:lastBackupAt";
 export const BACKUP_SNOOZE_UNTIL_KEY = "runway-os:backupSnoozeUntil";
 export const LANGUAGE_KEY = "runway-os:language";
+export const DESIGN_LAB_TOKENS_KEY = "runway-os:designLabTokens";

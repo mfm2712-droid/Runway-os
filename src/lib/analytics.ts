@@ -10,7 +10,9 @@ export type AnalyticsEvent =
   | { name: "trial_started" }
   | { name: "paywall_viewed"; trigger: "trial_expired" | "manual" }
   | { name: "checkout_clicked"; plan: "monthly" | "annual" }
-  | { name: "simulation_scrubbed" };
+  | { name: "simulation_scrubbed" }
+  | { name: "trial_cta_clicked"; source: "hero" | "pricing" }
+  | { name: "trial_calculator_clicked" };
 
 export function track(event: AnalyticsEvent): void {
   const { name, ...rest } = event;

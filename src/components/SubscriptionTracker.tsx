@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Currency, FinanceState, Subscription } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
-import { formatCurrency } from "../lib/calculations";
+import { formatCurrency, subscriptionRunwayImpactDays, subscriptionsRunwayImpactDays } from "../lib/calculations";
 import { generateCancellationEmail, generateNegotiationScript } from "../lib/ai/client";
 import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
@@ -30,26 +30,37 @@ function daysSince(iso?: string): number {
 
 function SummaryBar({
   subscriptions,
-  currency,
+  state,
 }: {
   subscriptions: Subscription[];
-  currency: Currency;
+  state: FinanceState;
 }) {
   const { t } = useLanguage();
+  const currency = state.currency;
   const total = subscriptions.reduce((sum, s) => sum + s.amount, 0);
   const flaggable = subscriptions.filter((s) => s.flaggedUnused).reduce((sum, s) => sum + s.amount, 0);
+  const impactDays = subscriptionsRunwayImpactDays(state);
 
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-xs">
       <span className="text-slate-400">{t("subs.totalMonthlyOutflow")}</span>
       <span className="font-semibold tracking-tight tabular-nums text-white">{formatCurrency(total, currency)}</span>
+      {Number.isFinite(impactDays) && impactDays > 0 && (
+        <>
+          <span className="text-slate-600">•</span>
+          <span className="text-slate-400">{t("subs.impactOnRunway")}</span>
+          <span className="font-semibold tracking-tight tabular-nums text-red-400">
+            −{impactDays.toFixed(1)} {t("subs.daysAbbrev")}
+          </span>
+        </>
+      )}
       {flaggable > 0 && (
         <>
           <span className="text-slate-600">•</span>
-          <span className="font-semibold tracking-tight tabular-nums text-rose-400">
+          <span className="font-semibold tracking-tight tabular-nums text-red-400">
             {formatCurrency(flaggable, currency)}
           </span>
-          <span className="text-rose-400/80">{t("subs.flaggableAsUnused")}</span>
+          <span className="text-red-400/80">{t("subs.flaggableAsUnused")}</span>
         </>
       )}
     </div>
@@ -75,7 +86,7 @@ function AmountDayFields({
       <div className="flex gap-2">
         <div className="w-1/2 space-y-1">
           <label className="text-[10px] text-slate-500 block">{t("subs.amountPerMonth")}</label>
-          <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 focus-within:border-sky-500 transition-colors">
+          <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 focus-within:border-cyan-400 transition-colors">
             <span className="text-xs text-slate-500 mr-1">{CURRENCY_SYMBOLS[currency]}</span>
             <input
               type="number"
@@ -98,7 +109,7 @@ function AmountDayFields({
             value={renewsOn}
             onChange={(e) => onRenewsOnChange(e.target.value)}
             onFocus={(e) => e.target.select()}
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"
           />
         </div>
       </div>
@@ -144,7 +155,7 @@ function EditSubscriptionForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder={t("subs.name")}
-        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"
       />
       <AmountDayFields
         currency={currency}
@@ -236,7 +247,7 @@ function CancelDrawer({
         <Button
           variant="primary"
           onClick={generate}
-          className="w-full py-3 text-xs bg-gradient-to-r from-violet-400 to-sky-400"
+          className="w-full py-3 text-xs bg-gradient-to-r from-violet-400 to-cyan-400"
         >
           {mode === "negotiate" ? t("subs.generateScript") : t("subs.generateCancelDraft")}
         </Button>
@@ -281,7 +292,7 @@ function CancelDrawer({
           e.stopPropagation();
           onMarkCancelled(sub.id);
         }}
-        className="w-full py-3 rounded-xl text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 active:scale-[0.98] transition-transform"
+        className="w-full py-3 rounded-xl text-xs font-semibold bg-mint-400/15 border border-mint-400/30 text-mint-400 active:scale-[0.98] transition-transform"
         style={{ transitionTimingFunction: "var(--ease-spring)" }}
       >
         {t("subs.markCancelled")}
@@ -334,11 +345,11 @@ export function SubscriptionTracker({
   return (
     <div className="space-y-4">
       {savedTotal > 0 && (
-        <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400/10 to-sky-400/10 border border-emerald-400/25">
+        <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-mint-400/10 to-cyan-400/10 border border-mint-400/25">
           <span className="text-xl" aria-hidden>
             🎉
           </span>
-          <p className="text-xs text-emerald-200">
+          <p className="text-xs text-mint-400">
             <span className="font-bold tabular-nums">
               {formatCurrency(savedTotal * 12, state.currency)}/yr
             </span>{" "}
@@ -347,14 +358,14 @@ export function SubscriptionTracker({
         </div>
       )}
 
-      <SummaryBar subscriptions={subscriptions} currency={state.currency} />
+      <SummaryBar subscriptions={subscriptions} state={state} />
 
-      <GlassCard className="p-6 space-y-4">
+      <GlassCard opaque className="p-6 space-y-4">
         <div className="flex justify-between items-center">
           <h4 className="text-sm font-semibold text-white">{t("subs.recurringOutflows")}</h4>
           <button
             onClick={() => setAdding((v) => !v)}
-            className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-medium transition-colors"
+            className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-400 font-medium transition-colors"
           >
             {adding ? t("subs.cancel") : (
               <>
@@ -370,7 +381,7 @@ export function SubscriptionTracker({
               placeholder={t("subs.namePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"
             />
             <AmountDayFields
               currency={state.currency}
@@ -407,13 +418,14 @@ export function SubscriptionTracker({
             const days = daysSince(s.flaggedSince);
             const expanded = expandedId === s.id;
             const editing = editingId === s.id;
+            const impactDays = subscriptionRunwayImpactDays(state, s);
             return (
               <li
                 key={s.id}
                 onClick={() => s.flaggedUnused && setExpandedId(expanded ? null : s.id)}
                 className={`text-xs p-3.5 rounded-2xl border group transition-colors ${
                   s.flaggedUnused
-                    ? "bg-rose-500/[0.04] border-rose-500/20 cursor-pointer"
+                    ? "bg-red-400/[0.04] border-red-400/20 cursor-pointer"
                     : "bg-white/[0.025] border-white/[0.06]"
                 }`}
                 style={{ transitionTimingFunction: "var(--ease-spring)" }}
@@ -423,7 +435,7 @@ export function SubscriptionTracker({
                     <div className="flex items-center gap-1.5">
                       <p className="font-medium text-slate-200 truncate">{s.name}</p>
                       {s.flaggedUnused && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/15 text-rose-400 shrink-0">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-400/15 text-red-400 shrink-0">
                           {t("subs.unusedDays", { days })}
                         </span>
                       )}
@@ -434,9 +446,16 @@ export function SubscriptionTracker({
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="font-semibold tracking-tight text-slate-200 tabular-nums">
-                      {formatCurrency(s.amount, state.currency)}/mo
-                    </span>
+                    <div className="text-right">
+                      <p className="font-semibold tracking-tight text-slate-200 tabular-nums">
+                        {formatCurrency(s.amount, state.currency)}/mo
+                      </p>
+                      {Number.isFinite(impactDays) && impactDays > 0 && (
+                        <p className="text-[10px] font-medium text-red-400 tabular-nums">
+                          −{impactDays.toFixed(1)} {t("subs.daysAbbrev")}
+                        </p>
+                      )}
+                    </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -458,7 +477,7 @@ export function SubscriptionTracker({
                       aria-label={s.flaggedUnused ? "Unflag as unused" : "Flag as unused"}
                       aria-pressed={s.flaggedUnused}
                       className={`transition-colors ${
-                        s.flaggedUnused ? "text-rose-400" : "text-slate-400 hover:text-rose-400"
+                        s.flaggedUnused ? "text-red-400" : "text-slate-400 hover:text-red-400"
                       }`}
                     >
                       <FlagIcon width={15} height={15} />

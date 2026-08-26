@@ -71,7 +71,7 @@ export function CategoryDetailModal({
         >
           <motion.div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5 max-h-[85vh] overflow-y-auto"
+            className="relative w-full md:max-w-sm card-opaque glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5 max-h-[85vh] overflow-y-auto"
             variants={panelVariants(!!reduceMotion)}
             initial="hidden"
             animate="visible"
@@ -121,7 +121,7 @@ export function CategoryDetailModal({
                   </span>
                   <button
                     onClick={onEditFixedCosts}
-                    className="text-[11px] font-medium text-sky-400 hover:text-sky-300 transition-colors"
+                    className="text-[11px] font-medium text-cyan-400 hover:text-cyan-400 transition-colors"
                   >
                     {t("categoryDetail.edit")}
                   </button>

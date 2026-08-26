@@ -33,7 +33,7 @@ export function SafeSpendSparkline({ series }: { series: DailySeries }) {
               width={Math.max(1, barW)}
               height={barH}
               rx={1}
-              fill={over ? "#fbbf24" : "#34d399"}
+              fill={over ? "#ffb457" : "#00ffc6"}
               opacity={lowData ? baseOpacity * 0.7 : baseOpacity}
             />
           );

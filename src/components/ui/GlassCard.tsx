@@ -5,11 +5,14 @@ export function GlassCard({
   className = "",
   strong = false,
   interactive = false,
+  opaque = false,
 }: {
   children: ReactNode;
   className?: string;
   strong?: boolean;
   interactive?: boolean;
+  /** V2 style — flat, solid obsidian surface instead of the blurred glass look. */
+  opaque?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -25,8 +28,8 @@ export function GlassCard({
     <div
       ref={ref}
       onMouseMove={interactive ? handleMouseMove : undefined}
-      className={`group relative rounded-[28px] gradient-border glass-inset ${
-        strong ? "glass-strong" : "glass"
+      className={`group relative rounded-[var(--radius-xl)] gradient-border glass-inset ${
+        opaque ? "card-opaque" : strong ? "glass-strong" : "glass"
       } ${
         interactive
           ? "transition-transform duration-150 [transition-timing-function:var(--ease-spring)] active:scale-[0.98]"
@@ -36,7 +39,7 @@ export function GlassCard({
       {interactive && (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-[28px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+          className="pointer-events-none absolute inset-0 rounded-[32px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
           style={{
             background:
               "radial-gradient(circle 240px at var(--spot-x, 50%) var(--spot-y, 50%), rgba(255,255,255,0.08), transparent 70%)",

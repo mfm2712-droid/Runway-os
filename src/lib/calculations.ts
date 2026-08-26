@@ -1,4 +1,4 @@
-import type { Currency, FinanceState } from "../types";
+import type { Currency, FinanceState, Subscription } from "../types";
 
 export function daysLeftInMonth(today: Date = new Date()): number {
   const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
@@ -53,6 +53,16 @@ export function dailySpend(state: FinanceState, dateISO: string): number {
   return state.expenses
     .filter((e) => e.date === dateISO)
     .reduce((sum, e) => sum + e.amount, 0);
+}
+
+function localISODate(d: Date): string {
+  const off = d.getTimezoneOffset();
+  return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+}
+
+/** Sum of logged expenses dated today (device-local calendar day). */
+export function spentToday(state: FinanceState, today: Date = new Date()): number {
+  return dailySpend(state, localISODate(today));
 }
 
 function hasDataInMonth(state: FinanceState, year: number, month: number): boolean {
@@ -161,6 +171,33 @@ export function formatCurrency(amount: number, currency: Currency = "GBP"): stri
 export function formatMonths(months: number): string {
   if (!Number.isFinite(months)) return "∞";
   return months.toFixed(1);
+}
+
+/** Runway in days at a given monthly burn (avg 30.44 days/month), Infinity at zero burn. */
+function runwayDaysAtBurn(cashBalance: number, burn: number): number {
+  if (burn <= 0) return Infinity;
+  return (cashBalance / burn) * 30.44;
+}
+
+/**
+ * How many fewer runway days you have today because of `monthlyCost`,
+ * compared to a world without it — a real, derived number (not invented),
+ * used to show each subscription's actual drag on runway.
+ */
+export function runwayImpactDaysOfCost(state: FinanceState, monthlyCost: number): number {
+  const burn = totalMonthlyOutflow(state);
+  const withCost = runwayDaysAtBurn(state.cashBalance, burn);
+  const withoutCost = runwayDaysAtBurn(state.cashBalance, burn - monthlyCost);
+  if (!Number.isFinite(withoutCost)) return Infinity;
+  return withoutCost - withCost;
+}
+
+export function subscriptionRunwayImpactDays(state: FinanceState, subscription: Subscription): number {
+  return runwayImpactDaysOfCost(state, subscription.amount);
+}
+
+export function subscriptionsRunwayImpactDays(state: FinanceState): number {
+  return runwayImpactDaysOfCost(state, subscriptionsTotal(state));
 }
 
 /** Runway display for the headline stat: months normally, years past a year, ∞/Sustainable at zero burn. */

@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runway OS · Design Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@font-face{
+  font-family:"Geist";
+  src:url("/fonts/Geist-Variable.woff2") format("woff2-variations");
+  font-weight:100 900; font-style:normal; font-display:swap;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ui-bg:#0A0B0D; --ui-panel:#111316; --ui-panel-2:#171A1E; --ui-line:#22262B;
+  --ui-t1:#EDEFF2; --ui-t2:#9BA4AF; --ui-t3:#646D78; --ui-acc:#19D9A0;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+}
+html,body{height:100%}
+body{background:var(--ui-bg);color:var(--ui-t1);font:14px/1.5 'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+.app{display:grid;grid-template-columns:1fr 372px;height:100vh}
+@media(max-width:1080px){.app{grid-template-columns:1fr;overflow:auto;height:auto}}
+
+/* ---------- stage ---------- */
+.stage{position:relative;display:flex;align-items:center;justify-content:center;overflow:auto;
+  background:
+    radial-gradient(60% 50% at 50% 0%,rgba(25,217,160,.05),transparent 70%),
+    repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.018) 39px 40px),
+    repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.018) 39px 40px),
+    var(--ui-bg);
+  padding:32px}
+.stagebar{position:absolute;top:14px;left:16px;right:16px;display:flex;flex-wrap:wrap;row-gap:8px;align-items:center;gap:10px;z-index:5}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;letter-spacing:-.01em}
+.brandicon{display:inline-flex;width:16px;height:16px}
+.brandicon svg,.plogo svg{width:100%;height:100%;display:block;overflow:visible}
+.spacer{flex:1}
+.seg{display:flex;gap:2px;padding:3px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:8px}
+.seg button{border:0;background:transparent;color:var(--ui-t3);font:500 11px/1 'Inter',sans-serif;padding:6px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--ui-panel-2);color:var(--ui-t1)}
+.seg.scrollx{overflow-x:auto;max-width:min(46vw,440px);scrollbar-width:none}
+.seg.scrollx::-webkit-scrollbar{display:none}
+.clonebtn{border:1px solid var(--ui-acc);background:rgba(25,217,160,.12);color:var(--ui-acc);
+  font:600 11px 'Inter',sans-serif;padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.clonebtn:hover{background:rgba(25,217,160,.2)}
+.clonebtn.done{background:var(--ui-acc);color:#05201A}
+
+/* ---------- phone ---------- */
+.phonewrap{transform-origin:center center}
+.phone{
+  width:390px;height:768px;border-radius:44px;padding:10px;
+  background:#000;border:1px solid #24282D;box-shadow:0 40px 90px rgba(0,0,0,.7);
+  position:relative;flex:0 0 auto}
+.screen{
+  width:100%;height:100%;border-radius:35px;overflow:hidden;position:relative;
+  background:var(--p-bg);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;
+  color:var(--p-t1);display:flex;flex-direction:column}
+.screen::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(110% 55% at 50% -8%,var(--p-wash),transparent 62%)}
+.notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:104px;height:24px;border-radius:14px;background:#000;z-index:9}
+.statusbar{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:14px 24px 2px;font-size:12px;font-weight:600;color:var(--p-t1);letter-spacing:.01em}
+.scroll{position:relative;z-index:2;flex:1;overflow-y:auto;scrollbar-width:none;padding:0 var(--p-gutter) calc(var(--p-navH) + 30px);display:flex;flex-direction:column;gap:var(--p-gap)}
+.scroll::-webkit-scrollbar{display:none}
+
+.pbar{display:flex;align-items:center;gap:8px;height:46px;flex:0 0 46px}
+.plogo{width:22px;height:22px;flex:0 0 22px;display:inline-flex}
+@keyframes dlLogoSpin{to{transform:rotate(360deg)}}
+.pname{font-size:16px;font-weight:650;letter-spacing:-.015em}
+.pname i{font-style:normal;font-size:10px;font-weight:600;color:var(--p-t3);border:1px solid var(--p-border);padding:2px 5px;border-radius:6px;margin-left:5px;vertical-align:2px}
+.picon{margin-left:auto;color:var(--p-t2);display:flex;gap:12px}
+
+/* card system driven by tokens */
+.card{
+  position:relative;background:var(--p-card);
+  border-radius:var(--p-radius);
+  border:var(--p-bw) solid var(--p-border);
+  box-shadow:var(--p-shadow);
+  backdrop-filter:blur(var(--p-blur));
+  padding:14px 16px;flex:0 0 auto}
+.card.hl::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(255,255,255,var(--p-hl)),transparent 36%)}
+.card.bar{border-left-width:3px;border-left-color:var(--p-accent)}
+.card.plain{border-color:transparent}
+
+.hero{padding:18px 16px 16px;text-align:center;overflow:visible}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--p-accent)}
+.ringbox{position:relative;display:grid;place-items:center;margin:var(--p-ringgapT) auto var(--p-ringgapB);
+  width:var(--p-ringD);height:var(--p-ringD);
+  transform:translateY(calc(var(--p-lift) * -1px))}
+.ringglow{position:absolute;border-radius:50%;inset:calc(var(--p-stroke) * .5);
+  background:radial-gradient(circle,var(--p-ringglow) 0%,transparent 70%);
+  filter:blur(calc(2px + var(--p-bloom) * 6px));opacity:var(--p-bloomA)}
+.ringsvg{position:relative;transform:rotate(-90deg)}
+.ringc{position:absolute;display:grid;place-content:center;gap:5px;text-align:center;pointer-events:none}
+.hv{font-size:var(--p-hero);font-weight:var(--p-heroW);letter-spacing:var(--p-heroLS);line-height:1;
+  color:var(--p-t1);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hc{font-size:10.5px;color:var(--p-t2);line-height:1.35;max-width:150px;margin:0 auto}
+.hpct{font-size:10px;color:var(--p-t3);margin-top:2px}
+
+.row{display:flex;align-items:center;gap:12px;padding:11px 14px}
+.rowic{flex:0 0 34px;width:34px;height:34px;border-radius:calc(var(--p-radius) * .4);display:grid;place-items:center;
+  border:1px solid var(--p-border);background:var(--p-surf);color:var(--p-accent)}
+.rowb{flex:1;min-width:0}
+.rowt,.rowm,.rowv,.rows2{display:block}
+.rowt{font-size:14.5px;font-weight:560;letter-spacing:-.005em;line-height:1.2}
+.rowm{font-size:11px;color:var(--p-t3);margin-top:2px;line-height:1.2}
+.rowr{text-align:right;flex:0 0 auto}
+.rowv{font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.rows2{font-size:10.5px;color:var(--p-t3);margin-top:2px;line-height:1.2}
+.chev{color:var(--p-t3);opacity:.6}
+
+.calc .ct{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--p-accent)}
+.crow{display:flex;align-items:stretch;gap:3px;margin-top:10px}
+.cc{flex:1;border-radius:calc(var(--p-radius) * .42);border:1px solid var(--p-border);background:var(--p-surf);padding:7px 2px 8px;text-align:center}
+.cck{font-size:7.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--p-t3);line-height:1.25}
+.ccv{font-size:11px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums}
+.cop{flex:0 0 10px;display:grid;place-items:center;font-size:11px;color:var(--p-t3);opacity:.7}
+.cc.res{border-color:var(--p-accent);background:var(--p-accsoft)}
+.cc.res .ccv{color:var(--p-accent);font-size:12px;font-weight:700}
+.cnote{font-size:10px;color:var(--p-t3);line-height:1.5;margin-top:9px}
+
+.nav{position:absolute;z-index:6;left:0;right:0;bottom:0;display:flex;justify-content:center;pointer-events:none}
+.navin{display:grid;align-items:center;height:var(--p-navH);pointer-events:auto}
+.nav.pill .navin{width:calc(100% - 32px);margin-bottom:14px;border-radius:var(--p-radius);
+  border:var(--p-bw) solid var(--p-border);background:var(--p-navbg);backdrop-filter:blur(18px);
+  box-shadow:0 -6px 24px rgba(0,0,0,.5)}
+.nav.flat .navin{width:100%;padding-bottom:8px;height:calc(var(--p-navH) + 8px);
+  border-top:var(--p-bw) solid var(--p-border);background:var(--p-navbg);backdrop-filter:blur(18px)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--p-t3);font-size:8.5px;font-weight:600;letter-spacing:.03em}
+.tab.on{color:var(--p-accent)}
+.tab.on svg{filter:drop-shadow(0 0 6px var(--p-accent))}
+.fab{justify-self:center;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  background:var(--p-accent);color:#04140F;box-shadow:0 0 16px var(--p-ringglow)}
+
+/* ---------- multi-screen extras ---------- */
+.stepdots{display:flex;gap:6px;justify-content:center;margin-bottom:18px}
+.stepdots span{width:6px;height:6px;border-radius:50%;background:var(--p-border)}
+.stepdots span.on{background:var(--p-accent);width:16px;border-radius:3px}
+.orb{width:118px;height:118px;margin:6px auto 18px}
+.orb svg{width:100%;height:100%;overflow:visible}
+.ob-title{font-size:20px;font-weight:650;text-align:center;letter-spacing:-.01em;line-height:1.25;margin-bottom:8px}
+.ob-sub{font-size:12.5px;color:var(--p-t2);text-align:center;line-height:1.5;max-width:260px;margin:0 auto}
+.cta{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;border-radius:var(--p-radius);
+  background:var(--p-accent);color:#04140F;font-size:14px;font-weight:650;text-align:center}
+.presetrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.presetrow::-webkit-scrollbar{display:none}
+.pchip{flex:0 0 auto;padding:7px 12px;border-radius:20px;border:1px solid var(--p-border);background:var(--p-surf);
+  font-size:11px;color:var(--p-t2);white-space:nowrap}
+.pchip.on{background:var(--p-accsoft);border-color:var(--p-accent);color:var(--p-accent);font-weight:600}
+.listrow{display:flex;align-items:center;gap:12px;padding:11px 2px}
+.datelabel{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--p-t3);
+  padding:2px 2px 6px}
+.toggle{width:38px;height:22px;border-radius:12px;background:var(--p-surf);border:1px solid var(--p-border);
+  position:relative;flex:0 0 auto}
+.toggle.on{background:var(--p-accent)}
+.toggle i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;
+  font-style:normal;transition:left .15s ease}
+.toggle.on i{left:18px;background:#04140F}
+
+/* ---------- stat pills + CTA + canvas (Surface panel) ---------- */
+.statpillrow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.statpillrow::-webkit-scrollbar{display:none}
+.statpill{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:8px 13px;font-size:11.5px;font-weight:600;
+  color:var(--p-t1);white-space:nowrap;
+  border-radius:var(--pill-radius,999px);
+  border:var(--pill-bw,1px) solid var(--pill-border,var(--p-border));
+  background:var(--pill-bg,var(--p-surf));
+  background-image:var(--pill-bgimg,none);
+  backdrop-filter:blur(var(--pill-blur,0px))}
+.hv.grad{background-image:var(--hero-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stage.bg-grid{background:
+    radial-gradient(60% 50% at 50% 0%,rgba(25,217,160,.05),transparent 70%),
+    repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.018) 39px 40px),
+    repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.018) 39px 40px),
+    var(--ui-bg)}
+.stage.bg-spotlight{background:
+    radial-gradient(55% 55% at 50% 22%,rgba(25,217,160,.14),transparent 68%),
+    var(--ui-bg)}
+.stage.bg-obsidian{background:var(--ui-bg)}
+
+/* ---------- panel ---------- */
+.panel{background:var(--ui-panel);border-left:1px solid var(--ui-line);display:flex;flex-direction:column;min-height:0}
+.ptabs{display:flex;border-bottom:1px solid var(--ui-line);flex:0 0 auto}
+.ptabs button{flex:1;border:0;background:transparent;color:var(--ui-t3);font:600 11.5px/1 'Inter',sans-serif;padding:14px 0;cursor:pointer;border-bottom:2px solid transparent}
+.ptabs button[aria-selected="true"]{color:var(--ui-t1);border-bottom-color:var(--ui-acc)}
+.pbody{flex:1;overflow-y:auto;padding:4px 0 40px;min-height:0}
+.pbody::-webkit-scrollbar{width:8px}
+.pbody::-webkit-scrollbar-thumb{background:#252A30;border-radius:4px}
+
+.grp{border-bottom:1px solid var(--ui-line);padding:14px 16px}
+.grph{font:700 9.5px/1 'Inter',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ui-t3);margin-bottom:12px}
+.ctl{margin-bottom:11px}
+.ctl:last-child{margin-bottom:0}
+.lab{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--ui-t2);margin-bottom:6px}
+.lab b{font:500 11px/1 var(--mono);color:var(--ui-t1)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:2px;background:#2A2F36;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--ui-t1);border:2px solid var(--ui-panel);box-shadow:0 0 0 1px #3A4048;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--ui-t1);border:2px solid var(--ui-panel);cursor:pointer}
+input[type=color]{-webkit-appearance:none;appearance:none;width:100%;height:26px;border:1px solid var(--ui-line);border-radius:6px;background:none;cursor:pointer;padding:2px}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+input[type=color]::-webkit-color-swatch{border:0;border-radius:4px}
+select{width:100%;background:var(--ui-panel-2);color:var(--ui-t1);border:1px solid var(--ui-line);border-radius:6px;padding:7px 9px;font:500 11.5px 'Inter',sans-serif;cursor:pointer}
+.sw{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sw>div{text-align:center}
+.sw label{display:block;font-size:9px;color:var(--ui-t3);margin-top:4px}
+.chk{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ui-t2);cursor:pointer;padding:3px 0}
+.chk input{accent-color:var(--ui-acc);width:14px;height:14px;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chips button{border:1px solid var(--ui-line);background:var(--ui-panel-2);color:var(--ui-t2);font:500 10.5px 'Inter',sans-serif;padding:6px 9px;border-radius:6px;cursor:pointer}
+.chips button:hover{color:var(--ui-t1);border-color:#333A42}
+
+.out{width:100%;height:300px;background:#0B0D0F;border:1px solid var(--ui-line);border-radius:8px;
+  color:#B6C2CC;font:400 10.5px/1.6 var(--mono);padding:11px;resize:vertical;white-space:pre;overflow:auto}
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;border-radius:8px;
+  border:1px solid var(--ui-line);background:var(--ui-panel-2);color:var(--ui-t1);font:600 12px 'Inter',sans-serif;cursor:pointer;margin-top:9px}
+.btn.pri{background:var(--ui-acc);border-color:var(--ui-acc);color:#05201A}
+.btn:hover{border-color:#3A4148}
+.hint{font-size:10.5px;color:var(--ui-t3);line-height:1.55;margin-top:9px}
+.warn{font-size:10.5px;color:#FFC24D;line-height:1.55;margin-top:9px}
+.thr{position:relative;height:20px;border-radius:5px;overflow:hidden;border:1px solid var(--ui-line);margin:10px 0 14px}
+.sw{margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <section class="stage">
+    <div class="stagebar">
+      <span class="brand">
+        <span class="brandicon" id="brandlogo"></span>
+        Design Lab
+      </span>
+      <div class="seg scrollx" id="screenseg">
+        <button data-s="overview" aria-pressed="true">Overview</button>
+        <button data-s="onboarding">Onboarding</button>
+        <button data-s="simulate">Simulate</button>
+        <button data-s="subs">Subs</button>
+        <button data-s="history">History</button>
+        <button data-s="settings">Settings</button>
+      </div>
+      <span class="spacer"></span>
+      <div class="seg" id="langseg">
+        <button data-lang="es" aria-pressed="true">ES</button><button data-lang="en">EN</button>
+      </div>
+      <button class="clonebtn" id="clonebtn" title="Guarda estos tokens en localStorage para que /app los cargue al vuelo. Solo funciona si abres esto en el mismo servidor (http://localhost:xxxx/design-lab.html), no como archivo local.">⇪ Clonar a la app</button>
+      <div class="seg" id="zoomseg">
+        <button data-z="0.72">72%</button><button data-z="0.86" aria-pressed="true">86%</button><button data-z="1">100%</button>
+      </div>
+    </div>
+
+    <div class="phonewrap" id="phonewrap">
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen" id="screen">
+          <div class="statusbar"><span>9:41</span><span>▪▪▪ ᯤ ▰</span></div>
+          <div class="scroll" id="scroll"></div>
+
+          <div class="nav pill" id="nav">
+            <div class="navin" id="navin"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <div class="ptabs" role="tablist">
+      <button role="tab" aria-selected="true" data-t="ring">Anillo</button>
+      <button role="tab" data-t="logo">Logo</button>
+      <button role="tab" data-t="color">Color</button>
+      <button role="tab" data-t="card">Tarjetas</button>
+      <button role="tab" data-t="surface">Superficie</button>
+      <button role="tab" data-t="type">Tipo</button>
+      <button role="tab" data-t="exp">Export</button>
+    </div>
+    <div class="pbody" id="pbody"></div>
+  </aside>
+</div>
+
+<script>
+/* =======================================================================
+   STATE
+   ======================================================================= */
+const S = {
+  pct: 0.72,
+  ringD: 236, stroke: 24, cap: 'round', trackA: 0.09,
+  bloom: 0.55, bloomA: 0.5, lift: 8, gapT: 14, gapB: 10,
+  colorMode: 'gradual',
+  gradA:'#8DFFFF', gradB:'#19D9A0', gradC:'#2E9FD8',
+  cHealthy:'#19D9A0', cCaution:'#FFC24D', cDanger:'#FF5C72', cNeg:'#C8323F',
+  tHigh: 0.5, tLow: 0.2,
+  accentFollows: true, accent:'#19D9A0',
+  bg:'#04070A', card:'#0A1218', surf:'#0E181F',
+  borderCol:'#19D9A0', borderA:0.14, bw:1, borderStyle:'realce',
+  radius:22, shadow:0.5, blur:8, highlight:0.05, wash:0.08,
+  gap:9, gutter:16,
+  hero:38, heroW:650, heroLS:-0.02,
+  heroFont:'inter', heroColorMode:'solid', heroColor:'#F8FAFC',
+  heroGradA:'#8DFFFF', heroGradB:'#19D9A0',
+  navStyle:'pill', navH:62, fab:true, tabs:5,
+  currency:'$',
+  logoSpeed:6, logoPaused:false, logoDir:'cw',
+  logoGradA:'#8DFFFF', logoGradB:'#19D9A0',
+  logoGlowBlur:6, logoGlowOpacity:0.55,
+  logoThickness:2.6, logoDiameter:16.8,
+  pillBg:'glass', pillBlur:12, pillGradA:'#00B6B4', pillGradB:'#19D9A0',
+  pillMeshColor:'#19D9A0', pillMeshA:0.18,
+  pillBorderCol:'#19D9A0', pillBorderA:0.16, pillBw:1, pillRadiusMode:'full',
+  ctaGradient:'cyanEmerald', ctaGlow:14, ctaLift:1.03,
+  canvasBg:'grid'
+};
+
+let currentScreen = 'overview';
+let LANG = 'es';
+
+/* =======================================================================
+   TRANSLATIONS — editor chrome + preview screen copy.
+   The Export payload (buildExport) is NEVER driven by this — it is always
+   written in English regardless of LANG, since it's meant to be pasted
+   into code/instructions for Claude.
+   ======================================================================= */
+const T = {
+es: {
+  'tab.ring':'Anillo','tab.logo':'Logo','tab.color':'Color','tab.card':'Tarjetas','tab.surface':'Superficie','tab.type':'Tipo','tab.exp':'Export',
+  'clone.btn':'⇪ Clonar a la app','clone.done':'✓ Guardado — abre /app','clone.fail':'No se pudo guardar (¿localStorage bloqueado?)',
+  'clone.tooltip':'Guarda estos tokens en localStorage para que /app los cargue al vuelo. Solo funciona si abres esto en el mismo servidor (http://localhost:xxxx/design-lab.html), no como archivo local.',
+  'ring.simTitle':'Simulador de estado','ring.pct':'Gasto seguro sin gastar',
+  'ring.chip.new':'Día nuevo','ring.chip.60':'60%','ring.chip.35':'35%','ring.chip.10':'10%','ring.chip.depleted':'Agotado','ring.chip.over':'Sobregasto',
+  'ring.simHint':'Mueve esto para ver cómo cambia el color en cada momento del día. Es el estado que la app calculará sola.',
+  'ring.geoTitle':'Geometría','ring.diameter':'Diámetro','ring.stroke':'Grosor del trazo','ring.trackA':'Opacidad del track',
+  'ring.cap':'Extremo del arco','ring.cap.round':'Redondeado','ring.cap.butt':'Recto',
+  'ring.floatTitle':'Flotación y brillo','ring.lift':'Elevación','ring.haloR':'Radio del halo','ring.haloI':'Intensidad del halo',
+  'ring.airT':'Aire arriba','ring.airB':'Aire abajo',
+  'logo.rotTitle':'Rotación','logo.speed':'Velocidad (segundos por vuelta)','logo.dir':'Dirección','logo.dir.cw':'Horario','logo.dir.ccw':'Antihorario','logo.paused':'Pausado',
+  'logo.gradTitle':'Gradiente','logo.primary':'Primario','logo.secondary':'Secundario',
+  'logo.preset.ce':'Cian → Esmeralda','logo.preset.pg':'Púrpura → Oro','logo.preset.pa':'Rosa → Ámbar','logo.preset.solid':'Sólido',
+  'logo.glowTitle':'Brillo','logo.glowR':'Radio del halo','logo.glowI':'Intensidad del halo',
+  'logo.geoTitle':'Geometría','logo.strokeW':'Grosor del trazo','logo.diameter':'Diámetro del anillo',
+  'logo.geoHint':'Diámetro y grosor son unidades internas del icono (viewBox 22×22), no px de pantalla.',
+  'logo.whereTitle':'Dónde se aplica','logo.whereHint':'Se ve aquí arriba a la izquierda (marca del propio Design Lab) y en la barra superior del teléfono, en cualquier pantalla.',
+  'logo.whereWarn':'En la app real el logo es una imagen fija (app-icon.png), no un anillo vectorial. Al clonar, solo se sincronizan velocidad, dirección y pausa — el gradiente/grosor/halo son exclusivos de esta previsualización.',
+  'color.modeTitle':'Cómo decide el color','color.mode':'Modo',
+  'color.mode.gradual':'Gradual · verde → ámbar → rojo','color.mode.umbral':'Umbrales · saltos secos','color.mode.fijo':'Gradiente fijo · siempre igual',
+  'color.hint.gradual':'El color se interpola de forma continua. Por la mañana verde, y va virando a ámbar y a rojo a medida que gastas. Sin saltos.',
+  'color.hint.umbral':'Tres colores fijos con saltos secos en los umbrales. Más legible de un vistazo, menos elegante en la transición.',
+  'color.hint.fijo':'Un único gradiente que no reacciona al gasto. Es lo que hace el render original: bonito, pero no informa.',
+  'color.statesTitle':'Colores de estado','color.healthy':'Holgado','color.caution':'Justo','color.danger':'Crítico','color.negative':'Negativo',
+  'color.threshHigh':'Umbral holgado / justo','color.threshLow':'Umbral justo / crítico',
+  'color.fixedTitle':'Gradiente fijo','color.top':'Arriba','color.right':'Derecha','color.left':'Izquierda',
+  'color.fixedHint':'Solo se usa en modo “Gradiente fijo”. Es la versión más parecida al render original.',
+  'color.surfacesTitle':'Superficies','color.bg':'Fondo','color.card':'Tarjeta','color.inner':'Interior','color.border':'Borde',
+  'color.wash':'Halo de fondo','color.accentFollows':'El acento de la UI sigue al anillo',
+  'card.bordersTitle':'Bordes','card.style':'Estilo',
+  'card.style.hairline':'Hairline · fino y tenue','card.style.realce':'Realce superior · efecto cristal','card.style.barra':'Barra lateral de acento','card.style.solido':'Sólido visible','card.style.sin':'Sin borde · solo superficie',
+  'card.bw':'Grosor del borde','card.ba':'Opacidad del borde','card.radius':'Radio',
+  'card.depthTitle':'Profundidad','card.shadow':'Sombra','card.blur':'Desenfoque de fondo','card.highlight':'Brillo superior',
+  'card.rhythmTitle':'Ritmo','card.gap':'Separación entre tarjetas','card.gutter':'Margen lateral',
+  'card.navTitle':'Navegación','card.navShape':'Forma','card.nav.pill':'Píldora flotante','card.nav.flat':'Barra pegada al borde',
+  'card.navH':'Altura','card.fab':'Botón + central (FAB)',
+  'surf.pillsTitle':'Pills / tarjetas de estadística','surf.pillBg':'Fondo','surf.pillBg.solid':'Sólido','surf.pillBg.glass':'Glassmorphism','surf.pillBg.gradient':'Gradiente sutil','surf.pillBg.mesh':'Mesh / glow radial',
+  'surf.pillBlur':'Intensidad del blur','surf.pillGradA':'Gradiente A','surf.pillGradB':'Gradiente B','surf.pillMesh':'Color del mesh','surf.pillMeshI':'Intensidad del mesh',
+  'surf.borderTitle':'Bordes y radio de las pills','surf.borderColor':'Color del borde','surf.borderA':'Opacidad del borde','surf.borderW':'Grosor del trazo',
+  'surf.radius':'Redondez de esquina','surf.radius.lg':'rounded-lg','surf.radius.2xl':'rounded-2xl','surf.radius.full':'rounded-full',
+  'surf.ctaTitle':'Botones CTA','surf.ctaGradient':'Preset de gradiente',
+  'surf.cta.cyanEmerald':'Cian / Esmeralda','surf.cta.neonBlue':'Azul Neón','surf.cta.solidTeal':'Verde azulado sólido','surf.cta.outlinedGlass':'Contorno de cristal',
+  'surf.ctaGlow':'Difusión del glow','surf.ctaLift':'Escala al hover',
+  'surf.canvasTitle':'Fondo del lienzo (Design Lab)','surf.canvas':'Patrón','surf.canvas.grid':'Rejilla sutil','surf.canvas.spotlight':'Foco radial','surf.canvas.obsidian':'Obsidiana negra',
+  'surf.hint':'Estos tokens afectan a las pills de estadística, el CTA de Onboarding, los chips de Projection Lab y el lienzo detrás del teléfono (no la pantalla del teléfono, que sigue el fondo de la pestaña Color).',
+  'type.heroTitle':'Cifra principal','type.size':'Tamaño','type.weight':'Peso','type.tracking':'Tracking',
+  'type.font':'Tipografía','type.font.inter':'Inter','type.font.sfpro':'SF Pro / Sistema','type.font.geist':'Geist','type.font.jakarta':'Plus Jakarta Sans','type.font.mono':'JetBrains Mono','type.font.serif':'Serif',
+  'type.colorMode':'Color','type.colorMode.solid':'Sólido','type.colorMode.gradient':'Gradiente dinámico',
+  'type.solidColor':'Color del texto','type.gradA':'Gradiente A','type.gradB':'Gradiente B',
+  'type.hint':'El render de referencia usa peso 300. Si tu app está en 700, esto solo ya cambia toda la sensación.',
+  'type.presetsTitle':'Presets completos','type.preset.render':'Como el render','type.preset.verde':'Verde flotante','type.preset.sobrio':'Sobrio sin glow','type.preset.grueso':'Anillo grueso','type.preset.minimo':'Mínimo plano',
+  'type.presetHint':'Parte de un preset y luego ajusta. Todo lo que toques se refleja en la pestaña Export.',
+  'exp.cloneTitle':'Clonar a la app en vivo','exp.openApp':'Abrir /app ↗',
+  'exp.cloneHint':'Guarda estos tokens en localStorage bajo la clave <b style="font:500 11px var(--mono);color:var(--ui-t1)">runway-os:designLabTokens</b>. La app los aplica en cuanto carga, y si ya tienes /app abierta en otra pestaña se actualiza sola al instante.',
+  'exp.cloneWarn':'Solo funciona si abres este archivo desde el mismo servidor que la app (p. ej. http://localhost:5173/design-lab.html), no como archivo local (file://) — son orígenes distintos y no comparten localStorage.',
+  'exp.syncedHint':'Se sincronizan: fondo, tarjetas, bordes, radio, sombra, blur, separaciones, acento, geometría y brillo del anillo, tipografía de la cifra principal, altura de nav/FAB y velocidad·dirección·pausa del logo. La lógica de color del anillo por estado real y el gradiente del logo (imagen fija en la app) no se clonan.',
+  'exp.claudeTitle':'Para Claude','exp.copyBtn':'Copiar al portapapeles','exp.copyDone':'Copiado','exp.copyFail':'Selecciona y copia a mano (Cmd/Ctrl+C)','exp.dlBtn':'Descargar .txt',
+  'exp.claudeHint':'Pégale esto directamente. Son valores concretos sobre tus componentes actuales, no una descripción de estilo. El texto se genera siempre en inglés, sin importar el idioma del editor.',
+  'exp.claudeWarn':'Recuerda: esto solo cambia tokens visuales. La lógica del anillo (el cálculo de pct) es la del v2, no se toca aquí.',
+  'exp.saveTitle':'Guardar tu configuración','exp.loadBtn':'Cargar configuración pegada','exp.loadFail':'No se pudo leer ese texto',
+  'exp.saveHint':'Copia ese texto y guárdatelo. Para volver a un diseño, pégalo aquí y pulsa cargar.',
+  's.ov.eyebrow':'Gasto seguro hoy','s.ov.runway':'Runway','s.ov.runwaySub':'Tiempo hasta 0','s.ov.onTrack':'Sin problemas',
+  's.ov.fixed':'Gastos fijos','s.ov.fixedSub':'Próximos 30 días','s.ov.viewBreak':'Ver desglose',
+  's.ov.subs':'Suscripciones','s.ov.subsSub':'Activas','s.ov.subsCount':'7 suscripciones',
+  's.ov.calcTitle':'Cómo se calcula esta cifra','s.ov.available':'Disponible','s.ov.upcoming':'Próximo','s.ov.buffer':'Colchón','s.ov.safe':'Seguro',
+  's.ov.calcNote':'Miramos tu dinero real, lo ya comprometido y tus objetivos.',
+  's.ov.remaining':'queda de los {d} de hoy','s.ov.overPast':'has pasado el límite de hoy','s.ov.overspend':'sobregasto','s.ov.pctLeft':'{p}% del día sin gastar',
+  's.ov.pill1':'🔥 62 días','s.ov.pill2':'💰 $4,812','s.ov.pill3':'📅 Día 12',
+  's.ob.title':'Bienvenido a Runway OS','s.ob.subtitle':'Configura tu colchón financiero en menos de un minuto. Sin bancos conectados — todo vive en tu teléfono.',
+  's.ob.s1t':'Añade tus ingresos','s.ob.s1s':'Sueldo, freelance, lo que sea',
+  's.ob.s2t':'Marca tus gastos fijos','s.ob.s2s':'Alquiler, suscripciones, deudas',
+  's.ob.s3t':'Elige tu colchón de seguridad','s.ob.s3s':'Cuánto no quieres tocar nunca','s.ob.cta':'Empezar →',
+  's.sim.title':'Projection Lab','s.sim.p1':'Base','s.sim.p2':'+ Freelance','s.sim.p3':'− Renta','s.sim.p4':'Recorte 10%',
+  's.sim.cur':'Runway actual','s.sim.curSub':'Con tus números de hoy','s.sim.proj':'Runway proyectado','s.sim.projSub':'Con este escenario',
+  's.sim.diff':'Diferencia','s.sim.diffSub':'Ganancia neta',
+  's.subs.total':'Total mensual','s.subs.active':'6 suscripciones activas','s.subs.streaming':'Streaming','s.subs.music':'Música','s.subs.prod':'Productividad','s.subs.work':'Trabajo','s.subs.storage':'Almacenamiento','s.subs.health':'Salud','s.subs.perMonth':'/mes',
+  's.hist.spent':'Gastado esta semana','s.hist.moves':'18 movimientos','s.hist.today':'Hoy','s.hist.yesterday':'Ayer',
+  's.hist.food':'Comida','s.hist.transport':'Transporte','s.hist.market':'Supermercado','s.hist.sub':'Suscripción','s.hist.income':'Ingreso',
+  's.set.currency':'Moneda','s.set.payday':'Día de pago','s.set.day1':'Día 1','s.set.buffer':'Colchón de seguridad',
+  's.set.stealth':'Modo sigilo','s.set.stealthSub':'Difumina cifras sensibles','s.set.weekend':'Refuerzo de fin de semana','s.set.weekendSub':'Ajusta el gasto seguro sáb-dom',
+  's.set.backup':'Exportar copia de seguridad','s.set.csv':'Exportar CSV'
+},
+en: {
+  'tab.ring':'Ring','tab.logo':'Logo','tab.color':'Color','tab.card':'Cards','tab.surface':'Surface','tab.type':'Type','tab.exp':'Export',
+  'clone.btn':'⇪ Clone to app','clone.done':'✓ Saved — open /app','clone.fail':'Could not save (localStorage blocked?)',
+  'clone.tooltip':'Saves these tokens to localStorage so /app picks them up live. Only works if you open this from the same server (http://localhost:xxxx/design-lab.html), not as a local file.',
+  'ring.simTitle':'State simulator','ring.pct':'Safe-to-spend remaining',
+  'ring.chip.new':'New day','ring.chip.60':'60%','ring.chip.35':'35%','ring.chip.10':'10%','ring.chip.depleted':'Depleted','ring.chip.over':'Overspent',
+  'ring.simHint':'Drag this to see how the colour changes at each point in the day. This is the state the app will compute on its own.',
+  'ring.geoTitle':'Geometry','ring.diameter':'Diameter','ring.stroke':'Stroke width','ring.trackA':'Track opacity',
+  'ring.cap':'Arc line cap','ring.cap.round':'Round','ring.cap.butt':'Butt',
+  'ring.floatTitle':'Float and glow','ring.lift':'Lift','ring.haloR':'Halo radius','ring.haloI':'Halo intensity',
+  'ring.airT':'Space above','ring.airB':'Space below',
+  'logo.rotTitle':'Rotation','logo.speed':'Speed (seconds per turn)','logo.dir':'Direction','logo.dir.cw':'Clockwise','logo.dir.ccw':'Counter-clockwise','logo.paused':'Paused',
+  'logo.gradTitle':'Gradient','logo.primary':'Primary','logo.secondary':'Secondary',
+  'logo.preset.ce':'Cyan → Emerald','logo.preset.pg':'Purple → Gold','logo.preset.pa':'Pink → Amber','logo.preset.solid':'Solid',
+  'logo.glowTitle':'Glow','logo.glowR':'Halo radius','logo.glowI':'Halo intensity',
+  'logo.geoTitle':'Geometry','logo.strokeW':'Stroke width','logo.diameter':'Ring diameter',
+  'logo.geoHint':'Diameter and thickness are internal icon units (22×22 viewBox), not screen px.',
+  'logo.whereTitle':'Where it applies','logo.whereHint':'Visible up here on the top-left (the Design Lab\'s own mark) and in the phone\'s top bar, on any screen.',
+  'logo.whereWarn':'In the real app the logo is a fixed image (app-icon.png), not a vector ring. Cloning only syncs speed, direction and pause — gradient/thickness/glow are preview-only here.',
+  'color.modeTitle':'How colour is decided','color.mode':'Mode',
+  'color.mode.gradual':'Gradual · green → amber → red','color.mode.umbral':'Thresholds · hard steps','color.mode.fijo':'Fixed gradient · always the same',
+  'color.hint.gradual':'The colour interpolates continuously. Green in the morning, drifting to amber and red as you spend. No hard jumps.',
+  'color.hint.umbral':'Three fixed colours with hard jumps at the thresholds. More legible at a glance, less elegant in transition.',
+  'color.hint.fijo':'A single gradient that never reacts to spend. This is what the original render does: pretty, but uninformative.',
+  'color.statesTitle':'State colours','color.healthy':'Healthy','color.caution':'Caution','color.danger':'Danger','color.negative':'Negative',
+  'color.threshHigh':'Healthy / caution threshold','color.threshLow':'Caution / danger threshold',
+  'color.fixedTitle':'Fixed gradient','color.top':'Top','color.right':'Right','color.left':'Left',
+  'color.fixedHint':'Only used in "Fixed gradient" mode. The closest match to the original render.',
+  'color.surfacesTitle':'Surfaces','color.bg':'Background','color.card':'Card','color.inner':'Inner surface','color.border':'Border',
+  'color.wash':'Background wash','color.accentFollows':'UI accent follows the ring',
+  'card.bordersTitle':'Borders','card.style':'Style',
+  'card.style.hairline':'Hairline · thin and faint','card.style.realce':'Top highlight · glass effect','card.style.barra':'Accent side bar','card.style.solido':'Solid visible','card.style.sin':'No border · surface only',
+  'card.bw':'Border width','card.ba':'Border opacity','card.radius':'Radius',
+  'card.depthTitle':'Depth','card.shadow':'Shadow','card.blur':'Backdrop blur','card.highlight':'Top highlight',
+  'card.rhythmTitle':'Rhythm','card.gap':'Gap between cards','card.gutter':'Page gutter',
+  'card.navTitle':'Navigation','card.navShape':'Shape','card.nav.pill':'Floating pill','card.nav.flat':'Bar pinned to edge',
+  'card.navH':'Height','card.fab':'Center + button (FAB)',
+  'surf.pillsTitle':'Pills / stat cards','surf.pillBg':'Background','surf.pillBg.solid':'Solid','surf.pillBg.glass':'Glassmorphism','surf.pillBg.gradient':'Subtle gradient','surf.pillBg.mesh':'Mesh / radial glow',
+  'surf.pillBlur':'Blur intensity','surf.pillGradA':'Gradient A','surf.pillGradB':'Gradient B','surf.pillMesh':'Mesh colour','surf.pillMeshI':'Mesh intensity',
+  'surf.borderTitle':'Pill borders and radius','surf.borderColor':'Border colour','surf.borderA':'Border opacity','surf.borderW':'Stroke width',
+  'surf.radius':'Corner roundness','surf.radius.lg':'rounded-lg','surf.radius.2xl':'rounded-2xl','surf.radius.full':'rounded-full',
+  'surf.ctaTitle':'CTA buttons','surf.ctaGradient':'Gradient preset',
+  'surf.cta.cyanEmerald':'Cyan / Emerald','surf.cta.neonBlue':'Neon Blue','surf.cta.solidTeal':'Solid Teal','surf.cta.outlinedGlass':'Outlined Glass',
+  'surf.ctaGlow':'Glow spread','surf.ctaLift':'Hover lift scale',
+  'surf.canvasTitle':'Canvas background (Design Lab)','surf.canvas':'Pattern','surf.canvas.grid':'Subtle grid','surf.canvas.spotlight':'Radial spotlight','surf.canvas.obsidian':'Pitch-black obsidian',
+  'surf.hint':'These tokens drive the stat pills, the Onboarding CTA, the Projection Lab chips, and the canvas behind the phone (not the phone screen itself, which follows the Color tab\'s background).',
+  'type.heroTitle':'Hero figure','type.size':'Size','type.weight':'Weight','type.tracking':'Tracking',
+  'type.font':'Font family','type.font.inter':'Inter','type.font.sfpro':'SF Pro / System Sans','type.font.geist':'Geist','type.font.jakarta':'Plus Jakarta Sans','type.font.mono':'JetBrains Mono','type.font.serif':'Serif',
+  'type.colorMode':'Color','type.colorMode.solid':'Solid','type.colorMode.gradient':'Dynamic gradient',
+  'type.solidColor':'Text color','type.gradA':'Gradient A','type.gradB':'Gradient B',
+  'type.hint':'The reference render uses weight 300. If your app is at 700, this alone changes the whole feel.',
+  'type.presetsTitle':'Full presets','type.preset.render':'Like the render','type.preset.verde':'Floating green','type.preset.sobrio':'Sober, no glow','type.preset.grueso':'Thick ring','type.preset.minimo':'Flat minimal',
+  'type.presetHint':'Start from a preset, then adjust. Everything you touch shows up in the Export tab.',
+  'exp.cloneTitle':'Clone to the live app','exp.openApp':'Open /app ↗',
+  'exp.cloneHint':'Saves these tokens to localStorage under the key <b style="font:500 11px var(--mono);color:var(--ui-t1)">runway-os:designLabTokens</b>. The app applies them as soon as it loads, and if you already have /app open in another tab it updates instantly on its own.',
+  'exp.cloneWarn':'Only works if you open this file from the same server as the app (e.g. http://localhost:5173/design-lab.html), not as a local file (file://) — those are different origins and don\'t share localStorage.',
+  'exp.syncedHint':'Synced: background, cards, borders, radius, shadow, blur, spacing, accent, ring geometry and glow, hero number typography, nav height/FAB, and logo speed·direction·pause. The ring\'s real-state colour logic and the logo gradient (a fixed image in the app) are not cloned.',
+  'exp.claudeTitle':'For Claude','exp.copyBtn':'Copy to clipboard','exp.copyDone':'Copied','exp.copyFail':'Select and copy by hand (Cmd/Ctrl+C)','exp.dlBtn':'Download .txt',
+  'exp.claudeHint':'Paste this directly. These are concrete values for your existing components, not a style description. This text is always generated in English, regardless of the editor language.',
+  'exp.claudeWarn':'Remember: this only changes visual tokens. The ring\'s logic (the pct calculation) is the v2 one and is untouched here.',
+  'exp.saveTitle':'Save your configuration','exp.loadBtn':'Load pasted configuration','exp.loadFail':'Could not read that text',
+  'exp.saveHint':'Copy that text and keep it. To return to a design, paste it here and click load.',
+  's.ov.eyebrow':'Safe to spend today','s.ov.runway':'Runway','s.ov.runwaySub':'Time to zero','s.ov.onTrack':'On track',
+  's.ov.fixed':'Fixed costs','s.ov.fixedSub':'Next 30 days','s.ov.viewBreak':'View breakdown',
+  's.ov.subs':'Subscriptions','s.ov.subsSub':'Active','s.ov.subsCount':'7 subscriptions',
+  's.ov.calcTitle':'How this number is calculated','s.ov.available':'Available','s.ov.upcoming':'Upcoming','s.ov.buffer':'Buffer','s.ov.safe':'Safe',
+  's.ov.calcNote':'We look at your real money, what\'s already committed, and your goals.',
+  's.ov.remaining':'left of today\'s {d}','s.ov.overPast':'you\'ve passed today\'s limit','s.ov.overspend':'overspent','s.ov.pctLeft':'{p}% of the day unspent',
+  's.ov.pill1':'🔥 62-day streak','s.ov.pill2':'💰 $4,812','s.ov.pill3':'📅 Day 12',
+  's.ob.title':'Welcome to Runway OS','s.ob.subtitle':'Set up your financial cushion in under a minute. No banks connected — it all lives on your phone.',
+  's.ob.s1t':'Add your income','s.ob.s1s':'Salary, freelance, whatever it is',
+  's.ob.s2t':'Mark your fixed costs','s.ob.s2s':'Rent, subscriptions, debts',
+  's.ob.s3t':'Pick your safety buffer','s.ob.s3s':'How much you never want to touch','s.ob.cta':'Get started →',
+  's.sim.title':'Projection Lab','s.sim.p1':'Base','s.sim.p2':'+ Freelance','s.sim.p3':'− Rent','s.sim.p4':'10% cut',
+  's.sim.cur':'Current runway','s.sim.curSub':'With today\'s numbers','s.sim.proj':'Projected runway','s.sim.projSub':'With this scenario',
+  's.sim.diff':'Difference','s.sim.diffSub':'Net gain',
+  's.subs.total':'Monthly total','s.subs.active':'6 active subscriptions','s.subs.streaming':'Streaming','s.subs.music':'Music','s.subs.prod':'Productivity','s.subs.work':'Work','s.subs.storage':'Storage','s.subs.health':'Health','s.subs.perMonth':'/mo',
+  's.hist.spent':'Spent this week','s.hist.moves':'18 transactions','s.hist.today':'Today','s.hist.yesterday':'Yesterday',
+  's.hist.food':'Food','s.hist.transport':'Transport','s.hist.market':'Groceries','s.hist.sub':'Subscription','s.hist.income':'Income',
+  's.set.currency':'Currency','s.set.payday':'Payday','s.set.day1':'Day 1','s.set.buffer':'Safety buffer',
+  's.set.stealth':'Stealth mode','s.set.stealthSub':'Blurs sensitive figures','s.set.weekend':'Weekend booster','s.set.weekendSub':'Adjusts safe spend Sat-Sun',
+  's.set.backup':'Export backup','s.set.csv':'Export CSV'
+}
+};
+function t(k){ const v=T[LANG]&&T[LANG][k]; return v!==undefined?v:k; }
+function tf(k,vars){ let s=t(k); if(vars) for(const key in vars) s=s.replace('{'+key+'}', vars[key]); return s; }
+
+/* =======================================================================
+   HELPERS
+   ======================================================================= */
+const $ = s => document.querySelector(s);
+const screen = $('#screen');
+
+function hex2rgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');
+  return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function rgba(h,a){const[r,g,b]=hex2rgb(h);return `rgba(${r}, ${g}, ${b}, ${a})`;}
+function rgb2hsl(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
+  let h=0;if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360;}
+  const l=(mx+mn)/2, s=d?d/(1-Math.abs(2*l-1)):0;return [h,s,l];}
+function hsl2hex(h,s,l){const c=(1-Math.abs(2*l-1))*s,hp=((h%360)+360)%360/60,x=c*(1-Math.abs(hp%2-1));
+  let r=0,g=0,b=0;
+  if(hp<1){r=c;g=x}else if(hp<2){r=x;g=c}else if(hp<3){g=c;b=x}else if(hp<4){g=x;b=c}else if(hp<5){r=x;b=c}else{r=c;b=x}
+  const m=l-c/2;
+  return '#'+[r,g,b].map(v=>Math.round((v+m)*255).toString(16).padStart(2,'0')).join('').toUpperCase();}
+/* interpolate through HSL so amber -> green passes through lime, not olive mud */
+function mix(h1,h2,t){
+  t=Math.max(0,Math.min(1,t));
+  const A=rgb2hsl(...hex2rgb(h1)), B=rgb2hsl(...hex2rgb(h2));
+  let dh=B[0]-A[0]; if(dh>180)dh-=360; if(dh<-180)dh+=360;
+  return hsl2hex(A[0]+dh*t, A[1]+(B[1]-A[1])*t, A[2]+(B[2]-A[2])*t);}
+
+const HERO_FONTS = {
+  inter:"'Inter',-apple-system,sans-serif",
+  sfpro:"-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif",
+  geist:"'Geist',-apple-system,sans-serif",
+  jakarta:"'Plus Jakarta Sans',-apple-system,sans-serif",
+  mono:"'JetBrains Mono',ui-monospace,monospace",
+  serif:"Georgia,'Times New Roman',serif"
+};
+const HERO_FONT_EXPORT = {
+  inter:'Inter', sfpro:'SF Pro Display / -apple-system (system sans)', geist:'Geist (self-hosted variable font)',
+  jakarta:'Plus Jakarta Sans', mono:'JetBrains Mono', serif:'Georgia / system serif'
+};
+const PILL_BG_EXPORT = {
+  solid:'flat solid fill using --surface',
+  glass:'glassmorphism — semi-transparent white 6% + backdrop-filter blur',
+  gradient:'subtle 120deg linear-gradient overlay between two accent tones at 35% opacity, over --surface',
+  mesh:'radial mesh glow (30% 20% origin) in one accent tone at low opacity, over --surface'
+};
+const CTA_EXPORT = {
+  cyanEmerald:'linear-gradient(120deg, healthy-accent, #00B6B4), dark text',
+  neonBlue:'linear-gradient(120deg, #38BDF8, #6366F1), dark text',
+  solidTeal:'solid #00B6B4, dark text',
+  outlinedGlass:'transparent glass fill, 1.5px accent-colour border, accent-colour text'
+};
+
+/* colour the ring gets at the current pct */
+function ringColor(){
+  const p = S.pct;
+  if(p <= 0) return {a:S.cNeg, b:S.cNeg, single:true};
+  if(S.colorMode === 'fijo')    return {a:S.gradA, b:S.gradB, c:S.gradC, single:false};
+  if(S.colorMode === 'umbral'){
+    const c = p >= S.tHigh ? S.cHealthy : (p >= S.tLow ? S.cCaution : S.cDanger);
+    return {a:c, b:c, single:true};
+  }
+  /* gradual — interpolate danger -> caution -> healthy */
+  let c;
+  if(p <= S.tLow)      c = mix(S.cDanger, S.cCaution, S.tLow ? p/S.tLow : 1);
+  else if(p <= S.tHigh) c = mix(S.cCaution, S.cHealthy, (p-S.tLow)/Math.max(.001,S.tHigh-S.tLow));
+  else                  c = S.cHealthy;
+  return {a:c, b:c, single:true};
+}
+
+/* =======================================================================
+   LOGO — animated gradient ring, drives stagebar brand mark + in-phone pbar
+   ======================================================================= */
+function logoSVG(){
+  const gid = 'lg' + Math.random().toString(36).slice(2, 9);
+  const r = Math.max(1, (S.logoDiameter - S.logoThickness) / 2).toFixed(2);
+  const dur = S.logoPaused ? '999999s' : S.logoSpeed + 's';
+  const dir = S.logoDir === 'ccw' ? 'reverse' : 'normal';
+  const glow = rgba(S.logoGradA, S.logoGlowOpacity);
+  const style = `animation:dlLogoSpin ${dur} linear infinite;animation-direction:${dir};`
+    + `transform-box:fill-box;transform-origin:50% 50%;`
+    + `filter:drop-shadow(0 0 ${S.logoGlowBlur}px ${glow})`;
+  return `<svg viewBox="0 0 22 22" style="${style}" aria-hidden="true">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${S.logoGradA}"/><stop offset="100%" stop-color="${S.logoGradB}"/>
+    </linearGradient></defs>
+    <circle cx="11" cy="11" r="${r}" fill="none" stroke="url(#${gid})" stroke-width="${S.logoThickness}"/>
+    <circle cx="11" cy="11" r="3.2" fill="url(#${gid})" opacity=".3"/>
+  </svg>`;
+}
+function renderLogo(){
+  const brand = $('#brandlogo'); if(brand) brand.innerHTML = logoSVG();
+  const plogo = $('#plogo'); if(plogo) plogo.innerHTML = logoSVG();
+}
+
+/* =======================================================================
+   SCREENS — multi-screen preview inside the phone chassis
+   ======================================================================= */
+function pbarHTML(){
+  return `<div class="pbar">
+    <span class="plogo" id="plogo"></span>
+    <span class="pname">Runway<i>OS</i></span>
+    <span class="picon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 17l5-6 4 3 6-8"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>
+    </span>
+  </div>`;
+}
+function listRow(icon, title, meta, value, sub, idx){
+  const border = idx > 0 ? 'border-top:1px solid var(--p-border);' : '';
+  return `<div class="listrow" style="${border}">
+    ${icon}
+    <span class="rowb"><span class="rowt">${title}</span><span class="rowm">${meta}</span></span>
+    <span class="rowr"><span class="rowv">${value}</span>${sub ? `<span class="rows2">${sub}</span>` : ''}</span>
+  </div>`;
+}
+function dotIcon(color){
+  return `<span class="rowic" style="background:${color}22;border-color:${color}44">
+    <span style="width:8px;height:8px;border-radius:50%;background:${color};display:block"></span></span>`;
+}
+
+function statPillRow(){
+  return `<div class="statpillrow">
+    <span class="statpill">${t('s.ov.pill1')}</span>
+    <span class="statpill">${t('s.ov.pill2')}</span>
+    <span class="statpill">${t('s.ov.pill3')}</span>
+  </div>`;
+}
+
+const SCREENS = {
+  overview: () => `
+    <div class="card hero" id="heroCard">
+      <div class="eyebrow" id="eyebrow">${t('s.ov.eyebrow')}</div>
+      <div class="ringbox" id="ringbox">
+        <div class="ringglow"></div>
+        <svg class="ringsvg" id="ringsvg" aria-hidden="true"></svg>
+        <div class="ringc">
+          <div class="hv" id="hv">$126.34</div>
+          <div class="hc" id="hc">${tf('s.ov.remaining',{d:'$175'})}</div>
+        </div>
+      </div>
+      <div class="hpct" id="hpct">${tf('s.ov.pctLeft',{p:72})}</div>
+    </div>
+
+    ${statPillRow()}
+
+    <div class="card row" id="r1">
+      <span class="rowic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.5V12l3 2"/></svg></span>
+      <span class="rowb"><span class="rowt">${t('s.ov.runway')}</span><span class="rowm">${t('s.ov.runwaySub')}</span></span>
+      <span class="rowr"><span class="rowv">38 ${LANG==='es'?'días':'days'}</span><span class="rows2" id="r1s">${t('s.ov.onTrack')}</span></span>
+      <span class="chev">›</span>
+    </div>
+
+    <div class="card row" id="r2">
+      <span class="rowic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M8 10h8M8 14h5"/></svg></span>
+      <span class="rowb"><span class="rowt">${t('s.ov.fixed')}</span><span class="rowm">${t('s.ov.fixedSub')}</span></span>
+      <span class="rowr"><span class="rowv">$2,341.00</span><span class="rows2">${t('s.ov.viewBreak')}</span></span>
+      <span class="chev">›</span>
+    </div>
+
+    <div class="card row" id="r3">
+      <span class="rowic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 12a8 8 0 0 1 13.5-5.8M20 12a8 8 0 0 1-13.5 5.8"/><path d="M17 3v4h-4M7 21v-4h4"/></svg></span>
+      <span class="rowb"><span class="rowt">${t('s.ov.subs')}</span><span class="rowm">${t('s.ov.subsSub')}</span></span>
+      <span class="rowr"><span class="rowv" id="subv">$264.50</span><span class="rows2">${t('s.ov.subsCount')}</span></span>
+      <span class="chev">›</span>
+    </div>
+
+    <div class="card calc" id="calcCard">
+      <div class="ct">${t('s.ov.calcTitle')}</div>
+      <div class="crow">
+        <div class="cc"><div class="cck">${t('s.ov.available')}</div><div class="ccv">$4,812</div></div>
+        <div class="cop">−</div>
+        <div class="cc"><div class="cck">${t('s.ov.upcoming')}</div><div class="ccv">$2,341</div></div>
+        <div class="cop">−</div>
+        <div class="cc"><div class="cck">${t('s.ov.buffer')}</div><div class="ccv">$1,500</div></div>
+        <div class="cop">=</div>
+        <div class="cc res"><div class="cck">${t('s.ov.safe')}</div><div class="ccv" id="calcres">$971</div></div>
+      </div>
+      <div class="cnote">${t('s.ov.calcNote')}</div>
+    </div>`,
+
+  onboarding: () => `
+    <div style="padding-top:22px">
+      <div class="stepdots"><span class="on"></span><span></span><span></span></div>
+      <div class="orb">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--p-border)" stroke-width="1"/>
+          <circle cx="60" cy="60" r="40" fill="none" stroke="var(--p-accent)" stroke-width="2" stroke-dasharray="6 10" opacity=".5"/>
+          <circle cx="60" cy="60" r="26" fill="var(--p-accsoft)" stroke="var(--p-accent)" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="ob-title">${t('s.ob.title')}</div>
+      <div class="ob-sub">${t('s.ob.subtitle')}</div>
+    </div>
+    <div class="card" style="margin-top:22px">
+      ${listRow('<span class="rowic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 2v20M2 12h20"/></svg></span>',t('s.ob.s1t'),t('s.ob.s1s'),'','',0)}
+      ${listRow('<span class="rowic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2.5"/></svg></span>',t('s.ob.s2t'),t('s.ob.s2s'),'','',1)}
+      ${listRow('<span class="rowic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/></svg></span>',t('s.ob.s3t'),t('s.ob.s3s'),'','',2)}
+    </div>
+    <div class="cta" style="margin-top:16px">${t('s.ob.cta')}</div>`,
+
+  simulate: () => `
+    <div class="card">
+      <div class="ct">${t('s.sim.title')}</div>
+      <div class="presetrow" style="margin-top:10px">
+        <span class="pchip on">${t('s.sim.p1')}</span><span class="pchip">${t('s.sim.p2')}</span><span class="pchip">${t('s.sim.p3')}</span><span class="pchip">${t('s.sim.p4')}</span>
+      </div>
+      <div style="margin-top:14px">
+        <svg viewBox="0 0 300 110" width="100%" height="110" preserveAspectRatio="none" aria-hidden="true">
+          <defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--p-accent)" stop-opacity=".35"/>
+            <stop offset="100%" stop-color="var(--p-accent)" stop-opacity="0"/>
+          </linearGradient></defs>
+          <path d="M0,70 L30,64 L60,68 L90,52 L120,58 L150,40 L180,46 L210,30 L240,36 L270,20 L300,26 L300,110 L0,110 Z" fill="url(#pg)"/>
+          <path d="M0,70 L30,64 L60,68 L90,52 L120,58 L150,40 L180,46 L210,30 L240,36 L270,20 L300,26" fill="none" stroke="var(--p-accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="card row"><span class="rowb"><span class="rowt">${t('s.sim.cur')}</span><span class="rowm">${t('s.sim.curSub')}</span></span><span class="rowr"><span class="rowv">38 ${LANG==='es'?'días':'days'}</span></span></div>
+    <div class="card row"><span class="rowb"><span class="rowt">${t('s.sim.proj')}</span><span class="rowm">${t('s.sim.projSub')}</span></span><span class="rowr"><span class="rowv" style="color:var(--p-accent)">54 ${LANG==='es'?'días':'days'}</span></span></div>
+    <div class="card row"><span class="rowb"><span class="rowt">${t('s.sim.diff')}</span><span class="rowm">${t('s.sim.diffSub')}</span></span><span class="rowr"><span class="rowv" style="color:var(--p-accent)">+16 ${LANG==='es'?'días':'days'}</span></span></div>`,
+
+  subs: () => `
+    <div class="card row"><span class="rowb"><span class="rowt">${t('s.subs.total')}</span><span class="rowm">${t('s.subs.active')}</span></span><span class="rowr"><span class="rowv">$264.50</span></span></div>
+    <div class="card">
+      ${listRow(dotIcon('#E5484D'),'Netflix',t('s.subs.streaming'),'$17.99',t('s.subs.perMonth'),0)}
+      ${listRow(dotIcon('#5CFFB2'),'Spotify',t('s.subs.music'),'$11.99',t('s.subs.perMonth'),1)}
+      ${listRow(dotIcon('#A2A2A2'),'Notion',t('s.subs.prod'),'$10.00',t('s.subs.perMonth'),2)}
+      ${listRow(dotIcon('#8DFFFF'),'Linear',t('s.subs.work'),'$8.00',t('s.subs.perMonth'),3)}
+      ${listRow(dotIcon('#5CA8FF'),'iCloud+',t('s.subs.storage'),'$2.99',t('s.subs.perMonth'),4)}
+      ${listRow(dotIcon('#FFB457'),LANG==='es'?'Gimnasio':'Gym',t('s.subs.health'),'$45.00',t('s.subs.perMonth'),5)}
+    </div>`,
+
+  history: () => `
+    <div class="card row"><span class="rowb"><span class="rowt">${t('s.hist.spent')}</span><span class="rowm">${t('s.hist.moves')}</span></span><span class="rowr"><span class="rowv">$412.80</span></span></div>
+    <div class="datelabel">${t('s.hist.today')}</div>
+    <div class="card">
+      ${listRow(dotIcon('#FFB457'),'Café Blue Bottle',t('s.hist.food'),'−$6.40','',0)}
+      ${listRow(dotIcon('#5CA8FF'),'Uber',t('s.hist.transport'),'−$14.20','',1)}
+    </div>
+    <div class="datelabel">${t('s.hist.yesterday')}</div>
+    <div class="card">
+      ${listRow(dotIcon('#FFB457'),"Trader Joe's",t('s.hist.market'),'−$58.13','',0)}
+      ${listRow(dotIcon('#E5484D'),'Netflix',t('s.hist.sub'),'−$17.99','',1)}
+      ${listRow(dotIcon('#19D9A0'),LANG==='es'?'Nómina':'Payroll',t('s.hist.income'),'<span style="color:var(--p-accent)">+$2,400.00</span>','',2)}
+    </div>`,
+
+  settings: () => `
+    <div class="card">
+      ${listRow('<span class="rowic">$</span>',t('s.set.currency'),'','USD','›',0)}
+      ${listRow('<span class="rowic">📅</span>',t('s.set.payday'),'',t('s.set.day1'),'›',1)}
+      ${listRow('<span class="rowic">🛡️</span>',t('s.set.buffer'),'','$1,500','›',2)}
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="listrow"><span class="rowb"><span class="rowt">${t('s.set.stealth')}</span><span class="rowm">${t('s.set.stealthSub')}</span></span><span class="toggle on"><i></i></span></div>
+      <div class="listrow" style="border-top:1px solid var(--p-border)"><span class="rowb"><span class="rowt">${t('s.set.weekend')}</span><span class="rowm">${t('s.set.weekendSub')}</span></span><span class="toggle"><i></i></span></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      ${listRow('<span class="rowic">⇩</span>',t('s.set.backup'),'','','›',0)}
+      ${listRow('<span class="rowic">▤</span>',t('s.set.csv'),'','','›',1)}
+    </div>`
+};
+
+function paintScreen(){
+  const mount = $('#scroll');
+  mount.innerHTML = pbarHTML() + SCREENS[currentScreen]();
+  renderLogo();
+}
+
+/* =======================================================================
+   RENDER
+   ======================================================================= */
+function drawRing(){
+  const D = S.ringD, r = (D - S.stroke)/2, C = 2*Math.PI*r;
+  const off = C * (1 - Math.max(0, Math.min(1, S.pct)));
+  const col = ringColor();
+  const svg = $('#ringsvg');
+  if(svg){
+    const stops = col.single
+      ? `<stop offset="0%" stop-color="${col.a}"/><stop offset="100%" stop-color="${col.b}"/>`
+      : `<stop offset="0%" stop-color="${col.a}"/><stop offset="45%" stop-color="${col.b}"/><stop offset="100%" stop-color="${col.c}"/>`;
+    const arc = S.pct > 0 ? `<circle cx="${D/2}" cy="${D/2}" r="${r}" fill="none" stroke="url(#g)"
+        stroke-width="${S.stroke}" stroke-linecap="${S.cap}"
+        stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+        style="filter:drop-shadow(0 0 ${(4+S.bloom*12).toFixed(0)}px ${rgba(col.a, S.bloomA)})"/>` : '';
+    svg.setAttribute('width', D); svg.setAttribute('height', D);
+    svg.setAttribute('viewBox', `0 0 ${D} ${D}`);
+    svg.innerHTML = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">${stops}</linearGradient></defs>
+      <circle cx="${D/2}" cy="${D/2}" r="${r}" fill="none" stroke="${rgba(col.a, S.trackA)}" stroke-width="${S.stroke}"/>${arc}`;
+  }
+  return col;
+}
+
+const SCREEN_NAV = { overview:'home', simulate:'tx', subs:'goals', history:'tx', settings:'set' };
+function drawNav(){
+  const nav = $('#nav'), navin = $('#navin');
+  if(!nav || !navin) return;
+  if(currentScreen === 'onboarding'){ nav.style.display = 'none'; return; }
+  nav.style.display = '';
+  nav.className = 'nav ' + S.navStyle;
+  const activeKey = (currentScreen === 'simulate' && !S.fab) ? 'plan' : (SCREEN_NAV[currentScreen] || 'home');
+  const ic = {
+    home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+    tx:'<path d="M4 7h16M4 12h11M4 17h7"/>',
+    plan:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/>',
+    goals:'<path d="M5 3v18l7-4 7 4V3z"/>',
+    set:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>'
+  };
+  const tab = (k,l,on)=>`<span class="tab${on?' on':''}">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg><span>${l}</span></span>`;
+  let cells;
+  if(S.fab) cells = [tab('home','Overview',activeKey==='home'), tab('tx','Trans',activeKey==='tx'), '<span class="fab"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>', tab('goals','Goals',activeKey==='goals'), tab('set','Settings',activeKey==='set')];
+  else cells = [tab('home','Overview',activeKey==='home'), tab('tx','Trans',activeKey==='tx'), tab('plan','Plan',activeKey==='plan'), tab('goals','Goals',activeKey==='goals'), tab('set','Settings',activeKey==='set')];
+  navin.style.gridTemplateColumns = `repeat(${cells.length},1fr)`;
+  navin.innerHTML = cells.join('');
+}
+
+function render(){
+  const col = drawRing();
+  const acc = S.accentFollows ? col.a : S.accent;
+  const v = {
+    '--p-bg':S.bg, '--p-card':S.card, '--p-surf':S.surf,
+    '--p-wash':rgba(acc, S.wash),
+    '--p-t1':'#EDF6FB', '--p-t2':'#A2B3BF', '--p-t3':'#63737E',
+    '--p-accent':acc, '--p-accsoft':rgba(acc,0.10),
+    '--p-border':rgba(S.borderCol, S.borderA),
+    '--p-bw':S.bw+'px', '--p-radius':S.radius+'px',
+    '--p-shadow':`0 ${(S.shadow*22).toFixed(0)}px ${(S.shadow*54).toFixed(0)}px rgba(0,0,0,${(S.shadow).toFixed(2)})`,
+    '--p-blur':S.blur+'px', '--p-hl':S.highlight,
+    '--p-ringD':S.ringD+'px', '--p-stroke':S.stroke+'px',
+    '--p-ringglow':rgba(acc, 0.45),
+    '--p-bloom':S.bloom, '--p-bloomA':S.bloomA, '--p-lift':S.lift,
+    '--p-ringgapT':S.gapT+'px', '--p-ringgapB':S.gapB+'px',
+    '--p-gap':S.gap+'px', '--p-gutter':S.gutter+'px',
+    '--p-hero':S.hero+'px', '--p-heroW':S.heroW, '--p-heroLS':S.heroLS+'em',
+    '--p-navH':S.navH+'px', '--p-navbg':rgba(S.card.replace('#','#'), 0.9)
+  };
+  for(const k in v) screen.style.setProperty(k, v[k]);
+  screen.style.setProperty('--p-navbg', rgba(S.card, 0.88));
+
+  /* border style variants */
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(c=>{
+    c.classList.remove('hl','bar','plain');
+    if(S.borderStyle==='realce') c.classList.add('hl');
+    if(S.borderStyle==='barra')  c.classList.add('bar');
+    if(S.borderStyle==='sin')    c.classList.add('plain');
+  });
+
+  /* numbers that follow pct — only present on the Overview screen */
+  const daily = 175, left = daily * S.pct;
+  const cur = S.currency;
+  const hv = $('#hv'), hc = $('#hc'), hpct = $('#hpct'), r1s = $('#r1s'), calcres = $('#calcres');
+  if(hv){
+    hv.textContent = (S.pct<0? '−':'') + cur + Math.abs(left).toFixed(2);
+    hv.style.color = S.pct<=0 ? S.cNeg : (S.heroColorMode==='gradient' ? '' : S.heroColor);
+    hv.classList.toggle('grad', S.heroColorMode==='gradient' && S.pct>0);
+    hv.style.setProperty('--hero-grad', `linear-gradient(90deg, ${S.heroGradA}, ${S.heroGradB})`);
+    hv.style.fontFamily = HERO_FONTS[S.heroFont] || HERO_FONTS.inter;
+  }
+  if(hc) hc.textContent = S.pct<=0 ? t('s.ov.overPast') : tf('s.ov.remaining',{d:cur+daily});
+  if(hpct) hpct.textContent = S.pct<=0 ? t('s.ov.overspend') : tf('s.ov.pctLeft',{p:Math.round(S.pct*100)});
+  if(r1s) r1s.style.color = acc;
+  if(calcres) calcres.textContent = cur+'971';
+
+  /* surface: pills, CTA, canvas */
+  const pillVars = {
+    '--pill-border': rgba(S.pillBorderCol, S.pillBorderA),
+    '--pill-bw': S.pillBw+'px',
+    '--pill-radius': S.pillRadiusMode==='full' ? '999px' : (S.pillRadiusMode==='2xl' ? '20px' : '10px'),
+    '--pill-blur': (S.pillBg==='glass' ? S.pillBlur : 0)+'px'
+  };
+  if(S.pillBg==='solid'){ pillVars['--pill-bg']=S.surf; pillVars['--pill-bgimg']='none'; }
+  else if(S.pillBg==='glass'){ pillVars['--pill-bg']='rgba(255,255,255,0.06)'; pillVars['--pill-bgimg']='none'; }
+  else if(S.pillBg==='gradient'){ pillVars['--pill-bg']=S.surf; pillVars['--pill-bgimg']=`linear-gradient(120deg, ${rgba(S.pillGradA,0.35)}, ${rgba(S.pillGradB,0.35)})`; }
+  else { pillVars['--pill-bg']=S.surf; pillVars['--pill-bgimg']=`radial-gradient(circle at 30% 20%, ${rgba(S.pillMeshColor,S.pillMeshA)}, transparent 65%)`; }
+  for(const k in pillVars) screen.style.setProperty(k, pillVars[k]);
+
+  const ctaPresets = {
+    cyanEmerald:{bg:`linear-gradient(120deg, ${S.cHealthy}, #00B6B4)`, fg:'#04140F', border:'transparent'},
+    neonBlue:{bg:'linear-gradient(120deg, #38BDF8, #6366F1)', fg:'#04101F', border:'transparent'},
+    solidTeal:{bg:'#00B6B4', fg:'#04140F', border:'transparent'},
+    outlinedGlass:{bg:'rgba(255,255,255,0.04)', fg:acc, border:acc}
+  };
+  const ctaP = ctaPresets[S.ctaGradient] || ctaPresets.cyanEmerald;
+  const ctaEl = $('.cta');
+  if(ctaEl){
+    ctaEl.style.background = ctaP.bg;
+    ctaEl.style.color = ctaP.fg;
+    ctaEl.style.border = ctaP.border==='transparent' ? 'none' : `1.5px solid ${ctaP.border}`;
+    ctaEl.style.boxShadow = `0 0 ${S.ctaGlow}px ${rgba(S.ctaGradient==='outlinedGlass'?acc:S.cHealthy, 0.5)}`;
+    ctaEl.style.setProperty('--cta-lift', S.ctaLift);
+    ctaEl.onmouseenter = () => ctaEl.style.transform = `scale(${S.ctaLift})`;
+    ctaEl.onmouseleave = () => ctaEl.style.transform = 'scale(1)';
+  }
+
+  const stage = document.querySelector('.stage');
+  if(stage) stage.className = 'stage bg-' + S.canvasBg;
+
+  renderLogo();
+  drawNav();
+  if(activeTab==='exp') buildExport();
+}
+
+/* =======================================================================
+   CONTROLS
+   ======================================================================= */
+const FMT = {};
+function slider(key,label,min,max,step,fmt){
+  if(fmt) FMT[key]=fmt;
+  return `<div class="ctl"><div class="lab"><span>${label}</span><b data-out="${key}">${fmt?fmt(S[key]):S[key]}</b></div>
+    <input type="range" data-k="${key}" min="${min}" max="${max}" step="${step}" value="${S[key]}"></div>`;
+}
+function color(key,label){return `<div><input type="color" data-k="${key}" value="${S[key]}"><label>${label}</label></div>`;}
+function sel(key,label,opts){
+  return `<div class="ctl"><div class="lab"><span>${label}</span></div><select data-k="${key}">
+    ${opts.map(o=>`<option value="${o[0]}"${S[key]===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></div>`;
+}
+function chk(key,label){return `<label class="chk"><input type="checkbox" data-k="${key}"${S[key]?' checked':''}><span>${label}</span></label>`;}
+
+const TABS = {
+  ring: () => `
+    <div class="grp"><div class="grph">${t('ring.simTitle')}</div>
+      ${slider('pct',t('ring.pct'),-0.2,1,0.01,v=>Math.round(v*100)+'%')}
+      <div class="chips">
+        <button data-set="pct:1">${t('ring.chip.new')}</button><button data-set="pct:0.6">${t('ring.chip.60')}</button>
+        <button data-set="pct:0.35">${t('ring.chip.35')}</button><button data-set="pct:0.1">${t('ring.chip.10')}</button>
+        <button data-set="pct:0">${t('ring.chip.depleted')}</button><button data-set="pct:-0.12">${t('ring.chip.over')}</button>
+      </div>
+      <div class="hint">${t('ring.simHint')}</div>
+    </div>
+    <div class="grp"><div class="grph">${t('ring.geoTitle')}</div>
+      ${slider('ringD',t('ring.diameter'),120,300,2,v=>v+'px')}
+      ${slider('stroke',t('ring.stroke'),4,44,1,v=>v+'px')}
+      ${slider('trackA',t('ring.trackA'),0,0.4,0.01,v=>v.toFixed(2))}
+      ${sel('cap',t('ring.cap'),[['round',t('ring.cap.round')],['butt',t('ring.cap.butt')]])}
+    </div>
+    <div class="grp"><div class="grph">${t('ring.floatTitle')}</div>
+      ${slider('lift',t('ring.lift'),0,26,1,v=>v+'px')}
+      ${slider('bloom',t('ring.haloR'),0,1,0.02,v=>Math.round(v*100)+'%')}
+      ${slider('bloomA',t('ring.haloI'),0,1,0.02,v=>Math.round(v*100)+'%')}
+      ${slider('gapT',t('ring.airT'),0,40,1,v=>v+'px')}
+      ${slider('gapB',t('ring.airB'),0,40,1,v=>v+'px')}
+    </div>`,
+
+  logo: () => `
+    <div class="grp"><div class="grph">${t('logo.rotTitle')}</div>
+      ${slider('logoSpeed',t('logo.speed'),0.5,20,0.5,v=>v.toFixed(1)+'s')}
+      ${sel('logoDir',t('logo.dir'),[['cw',t('logo.dir.cw')],['ccw',t('logo.dir.ccw')]])}
+      ${chk('logoPaused',t('logo.paused'))}
+    </div>
+    <div class="grp"><div class="grph">${t('logo.gradTitle')}</div>
+      <div class="sw" style="grid-template-columns:repeat(2,1fr)">${color('logoGradA',t('logo.primary'))}${color('logoGradB',t('logo.secondary'))}</div>
+      <div class="chips">
+        <button data-lp="8DFFFF,19D9A0">${t('logo.preset.ce')}</button>
+        <button data-lp="A78BFA,FBBF24">${t('logo.preset.pg')}</button>
+        <button data-lp="FF6B9D,FFB457">${t('logo.preset.pa')}</button>
+        <button data-lp="19D9A0,19D9A0">${t('logo.preset.solid')}</button>
+      </div>
+    </div>
+    <div class="grp"><div class="grph">${t('logo.glowTitle')}</div>
+      ${slider('logoGlowBlur',t('logo.glowR'),0,20,1,v=>v+'px')}
+      ${slider('logoGlowOpacity',t('logo.glowI'),0,1,0.02,v=>Math.round(v*100)+'%')}
+    </div>
+    <div class="grp"><div class="grph">${t('logo.geoTitle')}</div>
+      ${slider('logoThickness',t('logo.strokeW'),0.5,5,0.1,v=>v.toFixed(1))}
+      ${slider('logoDiameter',t('logo.diameter'),8,20,0.5,v=>v.toFixed(1))}
+      <div class="hint">${t('logo.geoHint')}</div>
+    </div>
+    <div class="grp"><div class="grph">${t('logo.whereTitle')}</div>
+      <div class="hint">${t('logo.whereHint')}</div>
+      <div class="warn">${t('logo.whereWarn')}</div>
+    </div>`,
+
+  color: () => `
+    <div class="grp"><div class="grph">${t('color.modeTitle')}</div>
+      ${sel('colorMode',t('color.mode'),[['gradual',t('color.mode.gradual')],['umbral',t('color.mode.umbral')],['fijo',t('color.mode.fijo')]])}
+      <div class="hint" id="modehint"></div>
+    </div>
+    <div class="grp"><div class="grph">${t('color.statesTitle')}</div>
+      <div class="sw">${color('cHealthy',t('color.healthy'))}${color('cCaution',t('color.caution'))}${color('cDanger',t('color.danger'))}${color('cNeg',t('color.negative'))}</div>
+      <div class="thr" id="thrbar"></div>
+      ${slider('tHigh',t('color.threshHigh'),0.25,0.9,0.01,v=>Math.round(v*100)+'%')}
+      ${slider('tLow',t('color.threshLow'),0.02,0.4,0.01,v=>Math.round(v*100)+'%')}
+    </div>
+    <div class="grp"><div class="grph">${t('color.fixedTitle')}</div>
+      <div class="sw" style="grid-template-columns:repeat(3,1fr)">${color('gradA',t('color.top'))}${color('gradB',t('color.right'))}${color('gradC',t('color.left'))}</div>
+      <div class="hint">${t('color.fixedHint')}</div>
+    </div>
+    <div class="grp"><div class="grph">${t('color.surfacesTitle')}</div>
+      <div class="sw">${color('bg',t('color.bg'))}${color('card',t('color.card'))}${color('surf',t('color.inner'))}${color('borderCol',t('color.border'))}</div>
+      ${slider('wash',t('color.wash'),0,0.2,0.005,v=>v.toFixed(3))}
+      ${chk('accentFollows',t('color.accentFollows'))}
+    </div>`,
+
+  card: () => `
+    <div class="grp"><div class="grph">${t('card.bordersTitle')}</div>
+      ${sel('borderStyle',t('card.style'),[['hairline',t('card.style.hairline')],['realce',t('card.style.realce')],['barra',t('card.style.barra')],['solido',t('card.style.solido')],['sin',t('card.style.sin')]])}
+      ${slider('bw',t('card.bw'),0,3,0.5,v=>v+'px')}
+      ${slider('borderA',t('card.ba'),0,0.6,0.01,v=>v.toFixed(2))}
+      ${slider('radius',t('card.radius'),0,34,1,v=>v+'px')}
+    </div>
+    <div class="grp"><div class="grph">${t('card.depthTitle')}</div>
+      ${slider('shadow',t('card.shadow'),0,1,0.02,v=>Math.round(v*100)+'%')}
+      ${slider('blur',t('card.blur'),0,24,1,v=>v+'px')}
+      ${slider('highlight',t('card.highlight'),0,0.12,0.005,v=>v.toFixed(3))}
+    </div>
+    <div class="grp"><div class="grph">${t('card.rhythmTitle')}</div>
+      ${slider('gap',t('card.gap'),2,20,1,v=>v+'px')}
+      ${slider('gutter',t('card.gutter'),8,28,1,v=>v+'px')}
+    </div>
+    <div class="grp"><div class="grph">${t('card.navTitle')}</div>
+      ${sel('navStyle',t('card.navShape'),[['pill',t('card.nav.pill')],['flat',t('card.nav.flat')]])}
+      ${slider('navH',t('card.navH'),48,78,1,v=>v+'px')}
+      ${chk('fab',t('card.fab'))}
+    </div>`,
+
+  surface: () => `
+    <div class="grp"><div class="grph">${t('surf.pillsTitle')}</div>
+      ${sel('pillBg',t('surf.pillBg'),[['solid',t('surf.pillBg.solid')],['glass',t('surf.pillBg.glass')],['gradient',t('surf.pillBg.gradient')],['mesh',t('surf.pillBg.mesh')]])}
+      ${S.pillBg==='glass' ? slider('pillBlur',t('surf.pillBlur'),0,24,1,v=>v+'px') : ''}
+      ${S.pillBg==='gradient' ? `<div class="sw" style="grid-template-columns:repeat(2,1fr)">${color('pillGradA',t('surf.pillGradA'))}${color('pillGradB',t('surf.pillGradB'))}</div>` : ''}
+      ${S.pillBg==='mesh' ? `<div class="sw" style="grid-template-columns:repeat(2,1fr)">${color('pillMeshColor',t('surf.pillMesh'))}</div>${slider('pillMeshA',t('surf.pillMeshI'),0,0.6,0.02,v=>Math.round(v*100)+'%')}` : ''}
+    </div>
+    <div class="grp"><div class="grph">${t('surf.borderTitle')}</div>
+      ${color('pillBorderCol',t('surf.borderColor'))}
+      ${slider('pillBorderA',t('surf.borderA'),0,0.6,0.01,v=>v.toFixed(2))}
+      ${slider('pillBw',t('surf.borderW'),0,3,0.5,v=>v+'px')}
+      ${sel('pillRadiusMode',t('surf.radius'),[['lg',t('surf.radius.lg')],['2xl',t('surf.radius.2xl')],['full',t('surf.radius.full')]])}
+    </div>
+    <div class="grp"><div class="grph">${t('surf.ctaTitle')}</div>
+      ${sel('ctaGradient',t('surf.ctaGradient'),[['cyanEmerald',t('surf.cta.cyanEmerald')],['neonBlue',t('surf.cta.neonBlue')],['solidTeal',t('surf.cta.solidTeal')],['outlinedGlass',t('surf.cta.outlinedGlass')]])}
+      ${slider('ctaGlow',t('surf.ctaGlow'),0,40,1,v=>v+'px')}
+      ${slider('ctaLift',t('surf.ctaLift'),1,1.15,0.01,v=>v.toFixed(2)+'×')}
+    </div>
+    <div class="grp"><div class="grph">${t('surf.canvasTitle')}</div>
+      ${sel('canvasBg',t('surf.canvas'),[['grid',t('surf.canvas.grid')],['spotlight',t('surf.canvas.spotlight')],['obsidian',t('surf.canvas.obsidian')]])}
+      <div class="hint">${t('surf.hint')}</div>
+    </div>`,
+
+  type: () => `
+    <div class="grp"><div class="grph">${t('type.heroTitle')}</div>
+      ${sel('heroFont',t('type.font'),[['inter',t('type.font.inter')],['sfpro',t('type.font.sfpro')],['geist',t('type.font.geist')],['jakarta',t('type.font.jakarta')],['mono',t('type.font.mono')],['serif',t('type.font.serif')]])}
+      ${slider('hero',t('type.size'),32,64,1,v=>v+'px')}
+      ${slider('heroW',t('type.weight'),500,900,50,v=>v)}
+      ${slider('heroLS',t('type.tracking'),-0.05,0.02,0.005,v=>v.toFixed(3)+'em')}
+      ${sel('heroColorMode',t('type.colorMode'),[['solid',t('type.colorMode.solid')],['gradient',t('type.colorMode.gradient')]])}
+      ${S.heroColorMode==='solid' ? color('heroColor',t('type.solidColor')) : `<div class="sw" style="grid-template-columns:repeat(2,1fr)">${color('heroGradA',t('type.gradA'))}${color('heroGradB',t('type.gradB'))}</div>`}
+      <div class="hint">${t('type.hint')}</div>
+    </div>
+    <div class="grp"><div class="grph">${t('type.presetsTitle')}</div>
+      <div class="chips">
+        <button data-preset="render">${t('type.preset.render')}</button>
+        <button data-preset="verde">${t('type.preset.verde')}</button>
+        <button data-preset="sobrio">${t('type.preset.sobrio')}</button>
+        <button data-preset="grueso">${t('type.preset.grueso')}</button>
+        <button data-preset="minimo">${t('type.preset.minimo')}</button>
+      </div>
+      <div class="hint">${t('type.presetHint')}</div>
+    </div>`,
+
+  exp: () => `
+    <div class="grp"><div class="grph">${t('exp.cloneTitle')}</div>
+      <button class="btn pri" id="clonebtn2">${t('clone.btn')}</button>
+      <a href="/app" target="_blank" class="btn" style="text-decoration:none;box-sizing:border-box">${t('exp.openApp')}</a>
+      <div class="hint">${t('exp.cloneHint')}</div>
+      <div class="warn">${t('exp.cloneWarn')}</div>
+      <div class="hint">${t('exp.syncedHint')}</div>
+    </div>
+    <div class="grp"><div class="grph">${t('exp.claudeTitle')}</div>
+      <textarea class="out" id="outbox" readonly></textarea>
+      <button class="btn pri" id="copybtn">${t('exp.copyBtn')}</button>
+      <button class="btn" id="dlbtn">${t('exp.dlBtn')}</button>
+      <div class="hint">${t('exp.claudeHint')}</div>
+      <div class="warn">${t('exp.claudeWarn')}</div>
+    </div>
+    <div class="grp"><div class="grph">${t('exp.saveTitle')}</div>
+      <textarea class="out" id="cfgbox" style="height:120px"></textarea>
+      <button class="btn" id="loadbtn">${t('exp.loadBtn')}</button>
+      <div class="hint">${t('exp.saveHint')}</div>
+    </div>`
+};
+
+const PRESETS = {
+  render:{ringD:264,stroke:32,cap:'round',trackA:0.10,bloom:0.75,bloomA:0.7,lift:0,colorMode:'fijo',
+    gradA:'#8DFFFF',gradB:'#19D9A0',gradC:'#2E9FD8',bg:'#000105',card:'#030A10',surf:'#081016',
+    borderCol:'#19D9A0',borderA:0.12,bw:1,borderStyle:'hairline',radius:14,shadow:0.3,blur:0,highlight:0.03,
+    hero:40,heroW:500,heroLS:-0.02,gap:10,navStyle:'flat',navH:62,fab:false,wash:0.06},
+  verde:{ringD:236,stroke:24,cap:'round',trackA:0.09,bloom:0.55,bloomA:0.5,lift:8,colorMode:'gradual',
+    cHealthy:'#19D9A0',cCaution:'#FFC24D',cDanger:'#FF5C72',bg:'#04070A',card:'#0A1218',surf:'#0E181F',
+    borderCol:'#19D9A0',borderA:0.14,bw:1,borderStyle:'realce',radius:22,shadow:0.5,blur:8,highlight:0.05,
+    hero:38,heroW:600,heroLS:-0.02,gap:9,navStyle:'pill',navH:62,fab:true,wash:0.08},
+  sobrio:{ringD:210,stroke:14,cap:'butt',trackA:0.12,bloom:0.1,bloomA:0.12,lift:0,colorMode:'umbral',
+    cHealthy:'#4FB89A',cCaution:'#C9A24D',cDanger:'#C86A6A',bg:'#0A0C0D',card:'#121618',surf:'#171C1F',
+    borderCol:'#8FA8B0',borderA:0.16,bw:1,borderStyle:'solido',radius:12,shadow:0.2,blur:0,highlight:0,
+    hero:34,heroW:550,heroLS:-0.015,gap:8,navStyle:'flat',navH:58,fab:false,wash:0.01},
+  grueso:{ringD:280,stroke:40,cap:'round',trackA:0.08,bloom:0.9,bloomA:0.8,lift:14,colorMode:'gradual',
+    bg:'#000206',card:'#050C12',surf:'#0A141B',borderCol:'#19D9A0',borderA:0.1,bw:1,borderStyle:'sin',
+    radius:26,shadow:0.6,blur:12,highlight:0.06,hero:34,heroW:500,heroLS:-0.03,gap:10,
+    navStyle:'pill',navH:66,fab:true,wash:0.1},
+  minimo:{ringD:190,stroke:8,cap:'round',trackA:0.14,bloom:0,bloomA:0,lift:0,colorMode:'umbral',
+    cHealthy:'#EDF6FB',cCaution:'#FFC24D',cDanger:'#FF5C72',bg:'#0B0D0F',card:'#111417',surf:'#15191C',
+    borderCol:'#FFFFFF',borderA:0.08,bw:1,borderStyle:'sin',radius:16,shadow:0.15,blur:0,highlight:0,
+    hero:44,heroW:500,heroLS:-0.03,gap:6,navStyle:'flat',navH:56,fab:false,wash:0}
+};
+
+let activeTab = 'ring';
+function paint(){
+  $('#pbody').innerHTML = TABS[activeTab]();
+  if(activeTab==='color'){ updModeHint(); updThrBar(); }
+  if(activeTab==='exp'){ buildExport(); $('#cfgbox').value = JSON.stringify(S); }
+}
+function updModeHint(){
+  const h = $('#modehint'); if(!h) return;
+  h.textContent = t('color.hint.'+S.colorMode);
+}
+function applyChrome(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('.ptabs button[data-t]').forEach(b=>{
+    b.textContent = t('tab.'+b.dataset.t);
+  });
+  const cb = $('#clonebtn');
+  if(cb){ cb.textContent = t('clone.btn'); cb.title = t('clone.tooltip'); }
+  document.querySelectorAll('#langseg button').forEach(b=>{
+    b.setAttribute('aria-pressed', b.dataset.lang===LANG ? 'true' : 'false');
+  });
+}
+function updThrBar(){
+  const b = $('#thrbar'); if(!b) return;
+  b.style.background = `linear-gradient(90deg, ${S.cDanger} 0%, ${S.cDanger} ${S.tLow*100}%, ${S.cCaution} ${S.tLow*100}%, ${S.cCaution} ${S.tHigh*100}%, ${S.cHealthy} ${S.tHigh*100}%)`;
+  if(S.colorMode==='gradual') b.style.background = `linear-gradient(90deg, ${S.cDanger} 0%, ${S.cCaution} ${S.tLow*100}%, ${S.cHealthy} ${S.tHigh*100}%, ${S.cHealthy} 100%)`;
+}
+
+document.querySelectorAll('.ptabs button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.ptabs button').forEach(x=>x.setAttribute('aria-selected','false'));
+  b.setAttribute('aria-selected','true'); activeTab=b.dataset.t; paint();
+}));
+
+$('#pbody').addEventListener('input', e=>{
+  const k = e.target.dataset.k; if(!k) return;
+  if(e.target.type==='checkbox') S[k]=e.target.checked;
+  else if(e.target.type==='range') S[k]=parseFloat(e.target.value);
+  else S[k]=e.target.value;
+  const out = document.querySelector(`[data-out="${k}"]`);
+  if(out && e.target.type==='range'){
+    out.textContent = FMT[k] ? FMT[k](S[k]) : S[k];
+  }
+  if(activeTab==='color'){ updModeHint(); updThrBar(); }
+  render();
+  if(e.target.tagName==='SELECT' && (k==='colorMode'||k==='borderStyle'||k==='navStyle'||k==='cap')) { /* no repaint needed */ }
+});
+const BSTYLE = {
+  hairline:{bw:1,borderA:0.12,highlight:0},
+  realce:{bw:1,borderA:0.14,highlight:0.05},
+  barra:{bw:1,borderA:0.12,highlight:0},
+  solido:{bw:1,borderA:0.40,highlight:0},
+  sin:{bw:0,borderA:0,highlight:0}
+};
+const REPAINT_ON_CHANGE = ['borderStyle','heroColorMode','pillBg'];
+$('#pbody').addEventListener('change', e=>{
+  const k=e.target.dataset.k;
+  if(k && e.target.tagName==='SELECT'){
+    if(k==='borderStyle'){ Object.assign(S, BSTYLE[S.borderStyle]); }
+    if(REPAINT_ON_CHANGE.includes(k)) paint();
+    if(activeTab==='color'){updModeHint();updThrBar();}
+    render();
+  }
+});
+$('#pbody').addEventListener('click', e=>{
+  const st = e.target.dataset.set;
+  if(st){ const [k,v]=st.split(':'); S[k]=parseFloat(v); paint(); render(); return; }
+  const pr = e.target.dataset.preset;
+  if(pr){ Object.assign(S, PRESETS[pr]); paint(); render(); return; }
+  const lp = e.target.dataset.lp;
+  if(lp){ const [a,b] = lp.split(','); S.logoGradA = '#'+a; S.logoGradB = '#'+b; paint(); render(); return; }
+  if(e.target.id==='clonebtn2'){ cloneToApp(e.target); return; }
+  if(e.target.id==='copybtn'){
+    const box=$('#outbox'); box.select(); box.setSelectionRange(0, box.value.length);
+    const flash = (msg)=>{e.target.textContent=msg;setTimeout(()=>e.target.textContent=t('exp.copyBtn'),1600);};
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(box.value).then(
+        ()=>flash(t('exp.copyDone')),
+        ()=>legacyCopy());
+    } else legacyCopy();
+    function legacyCopy(){
+      /* navigator.clipboard needs a secure context (https/localhost) — under
+         file:// it's simply undefined, so this execCommand fallback is what
+         actually makes the button do something when opened as a plain file. */
+      try{
+        const ok = document.execCommand('copy');
+        flash(ok ? t('exp.copyDone') : t('exp.copyFail'));
+      }catch(_err){ flash(t('exp.copyFail')); }
+    }
+  }
+  if(e.target.id==='dlbtn'){
+    const blob=new Blob([$('#outbox').value],{type:'text/plain'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='runway-design-tokens.txt';a.click();
+  }
+  if(e.target.id==='loadbtn'){
+    try{ Object.assign(S, JSON.parse($('#cfgbox').value)); paint(); render(); }
+    catch(err){ e.target.textContent=t('exp.loadFail'); setTimeout(()=>e.target.textContent=t('exp.loadBtn'),1600); }
+  }
+});
+
+document.querySelectorAll('#zoomseg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#zoomseg button').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');
+  $('#phonewrap').style.transform=`scale(${b.dataset.z})`;
+}));
+
+document.querySelectorAll('#screenseg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#screenseg button').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');
+  currentScreen = b.dataset.s;
+  paintScreen();
+  render();
+}));
+
+document.querySelectorAll('#langseg button').forEach(b=>b.addEventListener('click',()=>{
+  if(b.dataset.lang===LANG) return;
+  LANG = b.dataset.lang;
+  applyChrome();
+  paintScreen();
+  paint();
+  render();
+}));
+
+/* =======================================================================
+   CLONE / APPLY TO APP
+   ======================================================================= */
+const DESIGN_LAB_STORAGE_KEY = 'runway-os:designLabTokens';
+function cloneToApp(btn){
+  try{
+    localStorage.setItem(DESIGN_LAB_STORAGE_KEY, JSON.stringify(S));
+    btn.classList.add('done');
+    btn.textContent = t('clone.done');
+    setTimeout(()=>{ btn.classList.remove('done'); btn.textContent = t('clone.btn'); }, 2400);
+  }catch(err){
+    btn.textContent = t('clone.fail');
+    setTimeout(()=>{ btn.textContent = t('clone.btn'); }, 2400);
+  }
+}
+$('#clonebtn').addEventListener('click', ()=>cloneToApp($('#clonebtn')));
+
+/* =======================================================================
+   EXPORT
+   ======================================================================= */
+function buildExport(){
+  const box=$('#outbox'); if(!box) return;
+  const acc = S.accentFollows ? S.cHealthy : S.accent;
+  const modeTxt = {
+    gradual:`Interpolate continuously, in HSL, taking the shortest hue path — an RGB lerp turns amber into olive mud.
+  At pct = 0 use danger. At pct = ${S.tLow} use caution. At pct = ${S.tHigh} and above use healthy.
+  Interpolate between those anchors. No hard steps. Animate the colour change over ~400ms.`,
+    umbral:`Step, no interpolation. pct >= ${S.tHigh} -> healthy. ${S.tLow} <= pct < ${S.tHigh} -> caution. 0 < pct < ${S.tLow} -> danger.`,
+    fijo:`Fixed 3-stop gradient regardless of pct: ${S.gradA} at top, ${S.gradB} to the right, ${S.gradC} to the left.`
+  }[S.colorMode];
+  const bs = {
+    hairline:'1px hairline border at low opacity. No inner highlight.',
+    realce:`Hairline border plus a top inner highlight: linear-gradient(to bottom, rgba(255,255,255,${S.highlight}), transparent 36%). This is what makes cards read as glass rather than flat grey.`,
+    barra:'Hairline border on all sides, plus a 3px left border in the accent colour.',
+    solido:'Visible solid border, higher opacity, no inner highlight.',
+    sin:'No border at all. The card surface colour alone carries the shape.'
+  }[S.borderStyle];
+
+  box.value =
+`RUNWAY OS — VISUAL TOKENS FROM DESIGN LAB
+Apply these exact values to the existing components.
+Change only what is listed here. Delete nothing. No new dependencies.
+Keep TypeScript, the existing i18n and the existing currency formatter.
+
+RING GEOMETRY
+  outer diameter        ${S.ringD}px   (express as ${(S.ringD/390*100).toFixed(0)}% of viewport width so it scales)
+  stroke width          ${S.stroke}px
+  inner content circle  ${S.ringD - S.stroke*2}px
+  line cap              ${S.cap}
+  track                 same geometry, accent at ${S.trackA} opacity
+  lift                  translateY(-${S.lift}px)
+  outer bloom           drop-shadow(0 0 ${(4+S.bloom*12).toFixed(0)}px accent @ ${S.bloomA.toFixed(2)} alpha)
+  space above ring      ${S.gapT}px
+  space below ring      ${S.gapB}px
+
+RING COLOUR — MODE: ${S.colorMode.toUpperCase()}
+  ${modeTxt}
+
+  healthy   ${S.cHealthy}
+  caution   ${S.cCaution}
+  danger    ${S.cDanger}
+  negative  ${S.cNeg}     (pct <= 0, i.e. overspent)
+
+  Thresholds: high ${S.tHigh}, low ${S.tLow}
+  When pct <= 0: draw no arc, track only, and set the hero figure to ${S.cNeg}.
+
+SURFACES
+  --bg           ${S.bg}
+  --card         ${S.card}
+  --surface      ${S.surf}
+  --accent       ${acc}${S.accentFollows ? '   (accent follows the ring colour — recompute it from pct)' : ''}
+  --accent-soft  rgba on accent at 0.10
+  --border       ${rgba(S.borderCol, S.borderA)}
+  background wash: radial-gradient(110% 55% at 50% -8%, accent @ ${S.wash}, transparent 62%)
+
+CARDS
+  border style   ${bs}
+  border width   ${S.bw}px
+  radius         ${S.radius}px
+  shadow         0 ${(S.shadow*22).toFixed(0)}px ${(S.shadow*54).toFixed(0)}px rgba(0,0,0,${S.shadow.toFixed(2)})
+  backdrop blur  ${S.blur}px
+  gap between    ${S.gap}px
+  page gutter    ${S.gutter}px
+
+HERO FIGURE
+  font-family    ${HERO_FONT_EXPORT[S.heroFont]}
+  font-size      ${S.hero}px
+  font-weight    ${S.heroW}
+  letter-spacing ${S.heroLS}em
+  color          ${S.heroColorMode==='gradient' ? `gradient text, linear-gradient(90deg, ${S.heroGradA}, ${S.heroGradB}), background-clip:text` : S.heroColor}
+  tabular-nums   on
+  eyebrow label  10px, uppercase, tracking 0.15em, accent colour
+
+PILLS / STAT CARDS
+  background     ${PILL_BG_EXPORT[S.pillBg]}
+  border         ${S.pillBw}px solid ${rgba(S.pillBorderCol, S.pillBorderA)}
+  radius         ${S.pillRadiusMode==='full' ? '999px (fully rounded)' : S.pillRadiusMode==='2xl' ? '20px (rounded-2xl)' : '10px (rounded-lg)'}
+
+CTA BUTTONS
+  gradient preset   ${S.ctaGradient}  (${CTA_EXPORT[S.ctaGradient]})
+  glow spread       0 0 ${S.ctaGlow}px accent @ 0.5 alpha
+  hover lift        scale(${S.ctaLift})
+
+DESIGN LAB CANVAS BACKGROUND (editor only, not the app)
+  ${S.canvasBg==='grid' ? 'faint 40px grid + soft radial glow at top' : S.canvasBg==='spotlight' ? 'stronger radial spotlight glow, no grid' : 'flat obsidian black, no pattern'}
+
+NAVIGATION
+  shape          ${S.navStyle === 'pill' ? 'floating pill, 16px inset from both edges, 14px above the bottom' : 'flat bar pinned to the bottom edge'}
+  height         ${S.navH}px
+  centre FAB     ${S.fab ? 'present' : 'absent — five equal labelled tabs instead'}
+  active tab     accent colour plus a soft glow on the icon only
+
+GLOW BUDGET
+  Glow is permitted on exactly these: the ring arc, the active nav tab, the
+  result cell of the calculation breakdown, primary CTAs${S.fab?', the FAB':''}.
+  Strip glow and cyan-tinted borders from everything else.
+
+DO NOT
+  - do not change any copy or label wording
+  - do not hardcode a currency symbol
+  - do not remove the FAB, trial, stealth mode, streak, backup or PWA behaviour
+  - do not introduce a new design system file; edit the existing tokens
+
+If any value above conflicts with something you see in the repo, stop and
+tell me rather than following it.`;
+}
+
+/* boot */
+applyChrome();
+paintScreen();
+paint(); render();
+$('#phonewrap').style.transform='scale(0.86)';
+</script>
+<script data-pplx-inline-edit>
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+
+</script></body>
+</html>

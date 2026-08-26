@@ -62,7 +62,7 @@ export function ExpenseHistory({
 
   if (sorted.length === 0) {
     return (
-      <GlassCard className="p-6 space-y-3 text-center">
+      <GlassCard opaque className="p-6 space-y-3 text-center">
         <p className="text-2xl" aria-hidden>
           🧾
         </p>
@@ -83,7 +83,7 @@ export function ExpenseHistory({
     <div className="space-y-4">
       <SummaryBar expenses={expenses} currency={currency} stealth={stealth} />
 
-      <GlassCard className="p-6 space-y-4">
+      <GlassCard opaque className="p-6 space-y-4">
         <h4 className="text-sm font-semibold text-white">{t("history.recentExpenses")}</h4>
 
         <ul className="space-y-2 max-h-96 overflow-y-auto pr-1">

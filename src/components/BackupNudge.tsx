@@ -16,7 +16,7 @@ export function BackupNudge({
   };
 
   return (
-    <div className="relative w-full flex flex-col gap-2.5 px-4 py-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
+    <div className="relative w-full flex flex-col gap-2.5 px-4 py-3.5 rounded-2xl card-opaque">
       <p className="text-[11px] text-slate-300 leading-relaxed">
         {t("backupNudge.body")}
       </p>

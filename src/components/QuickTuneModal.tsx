@@ -60,7 +60,7 @@ export function QuickTuneModal({
         >
           <motion.div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6"
+            className="relative w-full md:max-w-sm card-opaque glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6"
             variants={panelVariants(!!reduceMotion)}
             initial="hidden"
             animate="visible"
@@ -87,7 +87,7 @@ export function QuickTuneModal({
 
         <div className="relative space-y-2">
           <label className="text-xs text-slate-500 block">{t("quickTune.liquidCash")}</label>
-          <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-sky-500 transition-colors">
+          <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-cyan-400 transition-colors">
             <span className="text-lg text-slate-500 mr-1">{CURRENCY_SYMBOLS[state.currency]}</span>
             <input
               autoFocus
@@ -104,7 +104,7 @@ export function QuickTuneModal({
         <div className="relative space-y-2">
           <label className="text-xs text-slate-500 block">{t("quickTune.fixedOutflows")}</label>
           <p className="text-[10px] text-slate-400">{t("quickTune.fixedOutflowsHelp")}</p>
-          <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-sky-500 transition-colors">
+          <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-cyan-400 transition-colors">
             <span className="text-lg text-slate-500 mr-1">{CURRENCY_SYMBOLS[state.currency]}</span>
             <input
               type="number"
@@ -120,7 +120,7 @@ export function QuickTuneModal({
         <div className="relative space-y-2">
           <label className="text-xs text-slate-500 block">{t("quickTune.safetyBuffer")}</label>
           <p className="text-[10px] text-slate-400">{t("quickTune.safetyBufferHelp")}</p>
-          <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-sky-500 transition-colors">
+          <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-cyan-400 transition-colors">
             <span className="text-lg text-slate-500 mr-1">{CURRENCY_SYMBOLS[state.currency]}</span>
             <input
               type="number"
@@ -140,7 +140,7 @@ export function QuickTuneModal({
               onClick={() => setPaydayEnabled((v) => !v)}
               aria-pressed={paydayEnabled}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                paydayEnabled ? "bg-sky-500" : "bg-white/[0.1]"
+                paydayEnabled ? "bg-cyan-400" : "bg-white/[0.1]"
               }`}
             >
               <span
@@ -161,7 +161,7 @@ export function QuickTuneModal({
                 value={paydayDay}
                 onChange={(e) => setPaydayDay(e.target.value)}
                 onFocus={(e) => e.target.select()}
-                className="w-20 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white tabular-nums focus:outline-none focus:border-sky-500"
+                className="w-20 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white tabular-nums focus:outline-none focus:border-cyan-400"
               />
               <span className="text-[10px] text-slate-400">{t("quickTune.paydayOnHelp")}</span>
             </div>
@@ -177,7 +177,7 @@ export function QuickTuneModal({
               onClick={() => setWeekendBooster((v) => !v)}
               aria-pressed={weekendBooster}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                weekendBooster ? "bg-sky-500" : "bg-white/[0.1]"
+                weekendBooster ? "bg-cyan-400" : "bg-white/[0.1]"
               }`}
             >
               <span

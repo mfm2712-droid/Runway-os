@@ -55,7 +55,7 @@ function ScenarioField({
       <div className="space-y-2.5">
         <div className="flex justify-between items-baseline">
           <span className="text-xs text-slate-500">{label}</span>
-          <span className="text-[10px] text-sky-400">{t("projection.editingExact")}</span>
+          <span className="text-[10px] text-cyan-400">{t("projection.editingExact")}</span>
         </div>
         <input
           autoFocus
@@ -66,7 +66,7 @@ function ScenarioField({
           onFocus={(e) => e.target.select()}
           onBlur={commit}
           onKeyDown={(e) => e.key === "Enter" && commit()}
-          className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500"
+          className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400"
         />
       </div>
     );
@@ -129,7 +129,7 @@ export function ProjectionLab({
 
   return (
     <div className="space-y-5">
-      <GlassCard className="p-5 space-y-3">
+      <GlassCard opaque className="p-5 space-y-3">
         <div className="flex justify-between items-center">
           <h4 className="text-sm font-semibold text-white">{t("projection.quickScenarios")}</h4>
           {dirty && (
@@ -160,7 +160,7 @@ export function ProjectionLab({
                   }}
                   aria-label={t("projection.editSideHustle")}
                   className={`px-2.5 flex items-center border-l border-white/[0.08] transition-colors ${
-                    editingAmount ? "text-sky-400 bg-white/[0.04]" : "text-slate-500 hover:text-slate-300"
+                    editingAmount ? "text-cyan-400 bg-white/[0.04]" : "text-slate-500 hover:text-slate-300"
                   }`}
                 >
                   <PencilIcon width={13} height={13} />
@@ -208,7 +208,7 @@ export function ProjectionLab({
                 }}
                 className={`text-[10px] px-2.5 py-1.5 rounded-full border transition-colors ${
                   sideHustleAmount === v
-                    ? "border-sky-400/50 text-sky-300 bg-sky-400/10"
+                    ? "border-cyan-400/50 text-cyan-400 bg-cyan-400/10"
                     : "border-white/[0.08] text-slate-500"
                 }`}
               >
@@ -220,8 +220,9 @@ export function ProjectionLab({
       </GlassCard>
 
       <GlassCard
-        className={`relative overflow-hidden p-5 space-y-1 border ${
-          sustainable ? "border-emerald-500/25" : "border-rose-500/25"
+        opaque
+        className={`relative overflow-hidden p-5 space-y-1 !border ${
+          sustainable ? "!border-mint-400/25" : "!border-red-400/25"
         }`}
       >
         <div className="mesh-glow opacity-40" />
@@ -231,17 +232,17 @@ export function ProjectionLab({
         <p className="relative text-lg font-bold tracking-tight tabular-nums text-white">
           {t("projection.runway", { value: Number.isFinite(runwayMonthsValue) ? runwayMonthsValue.toFixed(1) : "∞" })}
           <span className="text-slate-500 font-normal"> • </span>
-          <span className={sustainable ? "text-emerald-400" : "text-rose-400"}>
+          <span className={sustainable ? "text-mint-400" : "text-red-400"}>
             {sustainable ? t("projection.sustainable") : t("projection.zeroCash", { date: freedomDateLabel(zeroMonth, lang) })}
           </span>
         </p>
       </GlassCard>
 
-      <GlassCard className="p-5">
+      <GlassCard opaque className="p-5">
         <BurnProjectionChart points={points} zeroMonth={zeroMonth} currency={state.currency} />
       </GlassCard>
 
-      <GlassCard className="p-6 space-y-7">
+      <GlassCard opaque className="p-6 space-y-7">
         <div className="flex justify-between items-center">
           <h4 className="text-sm font-semibold text-white">{t("projection.title")}</h4>
           <span className="text-[10px] text-slate-500">{t("projection.dragToSimulate")}</span>
@@ -253,7 +254,7 @@ export function ProjectionLab({
           min={0}
           max={50000}
           step={50}
-          color="#38bdf8"
+          color="#00e5ff"
           currency={state.currency}
           onChange={(v) => setSandbox((s) => ({ ...s, cash: v }))}
         />
@@ -264,7 +265,7 @@ export function ProjectionLab({
           min={0}
           max={10000}
           step={10}
-          color="#fb7185"
+          color="#ff5c72"
           currency={state.currency}
           onChange={(v) => setSandbox((s) => ({ ...s, burn: v }))}
         />
@@ -275,7 +276,7 @@ export function ProjectionLab({
           min={0}
           max={8000}
           step={50}
-          color="#34d399"
+          color="#00ffc6"
           currency={state.currency}
           onChange={(v) => setSandbox((s) => ({ ...s, income: v }))}
         />
@@ -284,7 +285,7 @@ export function ProjectionLab({
           <button
             onClick={apply}
             disabled={!dirty && !applied}
-            className="w-full py-3.5 rounded-2xl text-sm font-semibold bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 disabled:opacity-30 active:scale-[0.98] transition-transform"
+            className="w-full py-3.5 rounded-2xl text-sm font-semibold bg-gradient-to-r from-cyan-400 to-mint-400 text-obsidian-950 disabled:opacity-30 active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
             {applied ? t("projection.applied") : t("projection.apply")}

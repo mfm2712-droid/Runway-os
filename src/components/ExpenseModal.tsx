@@ -106,7 +106,7 @@ export function ExpenseModal({
         >
           <motion.div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto"
+            className="relative w-full md:max-w-sm card-opaque glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto"
             variants={panelVariants(!!reduceMotion)}
             initial="hidden"
             animate="visible"
@@ -155,7 +155,7 @@ export function ExpenseModal({
           <>
             <div className="relative">
               <label className="text-xs text-slate-500 block mb-2">{t("expense.amount")}</label>
-              <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-4 focus-within:border-sky-500 transition-colors">
+              <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-4 focus-within:border-cyan-400 transition-colors">
                 <span className="text-2xl text-slate-500 mr-1">{CURRENCY_SYMBOLS[currency]}</span>
                 <input
                   autoFocus
@@ -167,7 +167,7 @@ export function ExpenseModal({
                   onChange={(e) => setAmount(e.target.value)}
                   onFocus={(e) => e.target.select()}
                   className="w-full bg-transparent text-3xl font-bold tracking-tight text-white tabular-nums focus:outline-none glow-text"
-                  style={{ color: valid ? "#38bdf8" : undefined }}
+                  style={{ color: valid ? "#00e5ff" : undefined }}
                 />
               </div>
             </div>
@@ -181,7 +181,7 @@ export function ExpenseModal({
                     onClick={() => selectCategory(c)}
                     className={`flex flex-col items-center justify-center gap-1 rounded-2xl py-3 border text-[10px] font-medium transition-all duration-150 active:scale-95 ${
                       category === c
-                        ? "bg-sky-500/15 border-sky-500/60 text-sky-300 shadow-[0_0_20px_-6px_rgba(56,189,248,0.6)]"
+                        ? "bg-cyan-400/15 border-cyan-400/60 text-cyan-400"
                         : "bg-white/[0.03] border-white/[0.06] text-slate-400"
                     }`}
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
@@ -206,7 +206,7 @@ export function ExpenseModal({
                       }}
                       className={`rounded-xl py-2.5 text-[10px] font-medium border transition-all duration-150 active:scale-95 ${
                         bnplPlan === p
-                          ? "bg-sky-500/15 border-sky-500/60 text-sky-300"
+                          ? "bg-cyan-400/15 border-cyan-400/60 text-cyan-400"
                           : "bg-white/[0.03] border-white/[0.06] text-slate-400"
                       }`}
                       style={{ transitionTimingFunction: "var(--ease-spring)" }}
@@ -225,7 +225,7 @@ export function ExpenseModal({
                 onChange={(e) => setNote(e.target.value)}
                 placeholder={t("expense.merchantPlaceholder")}
                 maxLength={80}
-                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500 transition-colors"
+                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400 transition-colors"
               />
             </div>
 
@@ -235,7 +235,7 @@ export function ExpenseModal({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-sky-500 transition-colors"
+                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors"
               />
             </div>
 

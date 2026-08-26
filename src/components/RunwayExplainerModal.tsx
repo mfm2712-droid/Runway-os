@@ -47,7 +47,7 @@ export function RunwayExplainerModal({
         >
           <motion.div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5"
+            className="relative w-full md:max-w-sm card-opaque glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5"
             variants={panelVariants(!!reduceMotion)}
             initial="hidden"
             animate="visible"
@@ -89,7 +89,7 @@ export function RunwayExplainerModal({
               </div>
             </div>
 
-            <div className="relative rounded-2xl bg-gradient-to-r from-sky-400/10 to-emerald-400/10 border border-sky-400/20 p-4 text-center space-y-1">
+            <div className="relative rounded-2xl bg-gradient-to-r from-cyan-400/10 to-mint-400/10 border border-cyan-400/20 p-4 text-center space-y-1">
               {zeroBurn ? (
                 <>
                   <p className="text-lg font-bold tracking-tight text-white">{t("runwayExplainer.sustainable")}</p>

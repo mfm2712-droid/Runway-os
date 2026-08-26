@@ -123,7 +123,7 @@ export function SettingsModal({
         >
           <motion.div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto"
+            className="relative w-full md:max-w-sm card-opaque glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto"
             variants={panelVariants(!!reduceMotion)}
             initial="hidden"
             animate="visible"
@@ -150,7 +150,7 @@ export function SettingsModal({
             {t("settings.planStatus")}
           </p>
           {trialStatus.kind === "pro" && (
-            <p className="text-sm text-emerald-300 font-semibold">{t("settings.proActive")}</p>
+            <p className="text-sm text-mint-400 font-semibold">{t("settings.proActive")}</p>
           )}
           {trialStatus.kind === "trial" && (
             <p className="text-sm text-violet-300 font-semibold">
@@ -158,7 +158,7 @@ export function SettingsModal({
             </p>
           )}
           {trialStatus.kind === "expired" && (
-            <p className="text-sm text-rose-300 font-semibold">{t("settings.trialExpired")}</p>
+            <p className="text-sm text-red-400 font-semibold">{t("settings.trialExpired")}</p>
           )}
           {trialStatus.kind === "pro" && meta.licenseKey?.startsWith("cus_") && (
             <div className="pt-1">
@@ -170,7 +170,7 @@ export function SettingsModal({
               >
                 {portalLoading ? t("settings.openingBilling") : t("settings.manageBilling")}
               </Button>
-              {portalError && <p className="text-[10px] text-rose-400 mt-1.5">{portalError}</p>}
+              {portalError && <p className="text-[10px] text-red-400 mt-1.5">{portalError}</p>}
             </div>
           )}
         </div>
@@ -184,7 +184,7 @@ export function SettingsModal({
                 onClick={() => onChangeCurrency(c)}
                 className={`flex flex-col items-center justify-center gap-0.5 rounded-2xl py-3 border text-xs font-medium transition-all duration-150 active:scale-95 ${
                   state.currency === c
-                    ? "bg-sky-500/15 border-sky-500/60 text-sky-300 shadow-[0_0_20px_-6px_rgba(56,189,248,0.6)]"
+                    ? "bg-cyan-400/15 border-cyan-400/60 text-cyan-400"
                     : "bg-white/[0.03] border-white/[0.06] text-slate-400"
                 }`}
                 style={{ transitionTimingFunction: "var(--ease-spring)" }}
@@ -205,7 +205,7 @@ export function SettingsModal({
                 onClick={() => setLang(l.value as Lang)}
                 className={`flex items-center justify-center gap-1.5 rounded-2xl py-3 border text-xs font-medium transition-all duration-150 active:scale-95 ${
                   lang === l.value
-                    ? "bg-sky-500/15 border-sky-500/60 text-sky-300 shadow-[0_0_20px_-6px_rgba(56,189,248,0.6)]"
+                    ? "bg-cyan-400/15 border-cyan-400/60 text-cyan-400"
                     : "bg-white/[0.03] border-white/[0.06] text-slate-400"
                 }`}
                 style={{ transitionTimingFunction: "var(--ease-spring)" }}
@@ -223,7 +223,7 @@ export function SettingsModal({
               onClick={toggleAudio}
               aria-pressed={!audioMuted}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                audioMuted ? "bg-white/[0.1]" : "bg-sky-500"
+                audioMuted ? "bg-white/[0.1]" : "bg-cyan-400"
               }`}
             >
               <span
@@ -241,7 +241,7 @@ export function SettingsModal({
             {!audioMuted && (
               <button
                 onClick={playClick}
-                className="shrink-0 text-[10px] font-medium text-sky-400 hover:text-sky-300 transition-colors"
+                className="shrink-0 text-[10px] font-medium text-cyan-400 hover:text-cyan-400 transition-colors"
               >
                 {t("settings.testSound")}
               </button>
@@ -284,9 +284,9 @@ export function SettingsModal({
             }}
           />
           {restoreStatus === "success" && (
-            <p className="text-[10px] text-emerald-400">✓ {restoreMessage}</p>
+            <p className="text-[10px] text-mint-400">✓ {restoreMessage}</p>
           )}
-          {restoreStatus === "error" && <p className="text-[10px] text-rose-400">{restoreMessage}</p>}
+          {restoreStatus === "error" && <p className="text-[10px] text-red-400">{restoreMessage}</p>}
         </div>
 
         <div className="relative space-y-2">
@@ -323,7 +323,7 @@ export function SettingsModal({
                   onClick={() => onChangeDevOverride(o.value)}
                   className={`rounded-xl py-2.5 text-[11px] font-medium border transition-colors ${
                     devOverride === o.value
-                      ? "bg-amber-500/15 border-amber-500/50 text-amber-300"
+                      ? "bg-orange-400/15 border-orange-400/50 text-orange-400"
                       : "bg-white/[0.03] border-white/[0.06] text-slate-400"
                   }`}
                 >

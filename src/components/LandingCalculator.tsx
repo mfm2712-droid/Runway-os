@@ -7,6 +7,8 @@ import { PremiumSlider } from "./ui/PremiumSlider";
 import { AnimatedNumber } from "./ui/AnimatedNumber";
 import { Button } from "./ui/Button";
 import { STORAGE_KEY, ONBOARDED_KEY, TRIAL_STARTED_KEY } from "../lib/storageKeys";
+import { track } from "../lib/analytics";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 
 const CURRENCY = "GBP" as const;
 
@@ -35,6 +37,7 @@ function hasExistingLedger(): boolean {
 }
 
 export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const { t } = useLanguage();
   const [cash, setCash] = useState(4000);
   const [outflows, setOutflows] = useState(1200);
   const [subs, setSubs] = useState(60);
@@ -46,6 +49,7 @@ export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) =
   const ringValue = Number.isFinite(runway) ? Math.min(1, runway / 6) : 1;
 
   const writeAndNavigate = () => {
+    track({ name: "trial_calculator_clicked" });
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(previewState));
     window.localStorage.setItem(ONBOARDED_KEY, JSON.stringify(true));
     // This instant-setup path is the trial's real start, same as finishing
@@ -68,9 +72,9 @@ export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) =
     <section className="space-y-5">
       <div className="text-center space-y-1.5">
         <p className="text-xs font-semibold text-sky-300 uppercase tracking-wider">
-          Test Your Numbers in 10s
+          {t("landing.calc.eyebrow")}
         </p>
-        <p className="text-xs text-slate-500">No sign-up — drag the sliders and see it live.</p>
+        <p className="text-xs text-slate-500">{t("landing.calc.subtitle")}</p>
       </div>
 
       <GlassCard strong className="relative overflow-hidden p-6 space-y-6">
@@ -85,23 +89,23 @@ export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) =
                 className="text-2xl font-extrabold tracking-tight tabular-nums text-white glow-text"
                 style={{ color: "#34d399" }}
               />
-              <span className="text-[9px] text-slate-400 mt-1">safe / day</span>
+              <span className="text-[9px] text-slate-400 mt-1">{t("landing.common.safePerDay")}</span>
             </div>
           </RingProgress>
           <p className="text-[11px] text-slate-500 mt-3">
-            Runway ·{" "}
+            {t("landing.calc.runwayLabel")}{" "}
             <AnimatedNumber
               value={runway}
               format={formatMonths}
               className="text-slate-300 font-semibold tabular-nums"
             />{" "}
-            mo
+            {t("landing.calc.months")}
           </p>
         </div>
 
         <div className="relative space-y-5">
           <PremiumSlider
-            label="Liquid Cash"
+            label={t("landing.calc.liquidCash")}
             value={cash}
             min={0}
             max={20000}
@@ -111,7 +115,7 @@ export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) =
             color="#38bdf8"
           />
           <PremiumSlider
-            label="Fixed Monthly Outflows"
+            label={t("landing.calc.fixedOutflows")}
             value={outflows}
             min={0}
             max={5000}
@@ -121,7 +125,7 @@ export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) =
             color="#fbbf24"
           />
           <PremiumSlider
-            label="Subscriptions"
+            label={t("landing.calc.subscriptions")}
             value={subs}
             min={0}
             max={500}
@@ -135,9 +139,7 @@ export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) =
         {confirmingOverwrite ? (
           <div className="relative space-y-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3.5">
             <p className="text-[11px] text-amber-200 leading-relaxed">
-              You already have real data saved in Runway OS on this device. Opening with these
-              test numbers will replace it — your actual balances, expenses, and subscriptions
-              will be gone.
+              {t("landing.calc.overwriteWarning")}
             </p>
             <div className="flex gap-2">
               <button
@@ -145,20 +147,20 @@ export function LandingCalculator({ onNavigate }: { onNavigate: (path: string) =
                 className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold glass text-white active:scale-[0.98] transition-transform"
                 style={{ transitionTimingFunction: "var(--ease-spring)" }}
               >
-                Cancel
+                {t("landing.calc.cancel")}
               </button>
               <button
                 onClick={writeAndNavigate}
                 className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold bg-rose-500/20 border border-rose-500/40 text-rose-300 active:scale-[0.98] transition-transform"
                 style={{ transitionTimingFunction: "var(--ease-spring)" }}
               >
-                Yes, overwrite my data
+                {t("landing.calc.confirmOverwrite")}
               </button>
             </div>
           </div>
         ) : (
           <Button variant="primary" onClick={openWithNumbers} className="relative w-full py-3.5 text-sm">
-            Open Runway OS with these numbers →
+            {t("landing.calc.openCta")}
           </Button>
         )}
       </GlassCard>

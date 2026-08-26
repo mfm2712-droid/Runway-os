@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { HeroSpendCard } from "../components/HeroSpendCard";
 import { StatPills } from "../components/StatPills";
+import { SafeSpendBreakdown } from "../components/SafeSpendBreakdown";
 import { ProjectionLab } from "../components/ProjectionLab";
 import { SubscriptionTracker } from "../components/SubscriptionTracker";
 import { ExpenseHistory } from "../components/ExpenseHistory";
@@ -20,6 +21,7 @@ import { SettingsModal } from "../components/SettingsModal";
 import { BackupNudge } from "../components/BackupNudge";
 import { Button } from "../components/ui/Button";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useDesignLabOverrides } from "../hooks/useDesignLabOverrides";
 import { useShortcutHandler } from "../hooks/useShortcutHandler";
 import { useStripeVerification } from "../hooks/useStripeVerification";
 import { uid } from "../lib/id";
@@ -105,6 +107,7 @@ const DEMO_STATE: FinanceState = {
 };
 
 export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const designLab = useDesignLabOverrides();
   const { t } = useLanguage();
   const [state, setState] = useLocalStorage<FinanceState>(STORAGE_KEY, BLANK_STATE);
   const [onboarded, setOnboarded] = useLocalStorage<boolean>(
@@ -278,7 +281,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
     <div className="relative text-slate-100 min-h-screen overflow-x-hidden">
       <div className="mesh-glow" />
 
-      <main className="relative max-w-md mx-auto min-h-screen px-4 md:px-6 pt-6 pb-28 space-y-6">
+      <main
+        className="relative max-w-md mx-auto min-h-screen px-[var(--dl-gutter,18px)] md:px-6 pt-6 pb-28 space-y-6"
+      >
         <AmbientLogoAura />
         <Header
           state={state}
@@ -287,6 +292,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
           onOpenSettings={() => setSettingsOpen(true)}
           stealthMode={stealthMode}
           onToggleStealth={() => setStealthMode((v) => !v)}
+          logoSpeed={designLab?.logoSpeed}
+          logoDirection={designLab?.logoDir}
+          logoPaused={designLab?.logoPaused}
         />
 
         {checkoutBanner === "verifying" && (
@@ -295,12 +303,12 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
           </div>
         )}
         {checkoutBanner === "success" && (
-          <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+          <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-mint-400/10 border border-mint-400/30 text-mint-400">
             {t("dashboard.subscriptionActive")}
           </div>
         )}
         {checkoutBanner === "error" && (
-          <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300">
+          <div className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-red-400/10 border border-red-400/30 text-red-400">
             {t("dashboard.paymentError")}
           </div>
         )}
@@ -308,7 +316,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         {trialStatus.kind === "trial" && (
           <button
             onClick={() => openPaywall("manual")}
-            className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-gradient-to-r from-violet-400/10 to-sky-400/10 border border-violet-400/25 text-violet-200 active:scale-[0.98] transition-transform"
+            className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-gradient-to-r from-violet-400/10 to-cyan-400/10 border border-violet-400/25 text-violet-200 active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
             {t("dashboard.proTrial", { hours: Math.max(1, Math.ceil(trialStatus.hoursLeft)) })}
@@ -318,7 +326,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         {trialStatus.kind === "expired" && (
           <button
             onClick={() => openPaywall("trial_expired")}
-            className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 active:scale-[0.98] transition-transform"
+            className="relative w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-4 py-2.5 rounded-2xl bg-red-400/10 border border-red-400/30 text-red-400 active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
             {t("dashboard.trialExpired")}
@@ -327,7 +335,11 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
 
         {backupDue && <BackupNudge onExport={exportBackup} onSnooze={snoozeBackup} />}
 
-        <div key={tab} className="space-y-5" style={{ animation: "floatIn 0.35s var(--ease-spring)" }}>
+        <div
+          key={tab}
+          className="space-y-[var(--dl-gap,9px)]"
+          style={{ animation: "floatIn 0.35s var(--ease-spring)" }}
+        >
           {tab === "overview" && (
             <>
               <SmartBriefingCard state={state} />
@@ -340,7 +352,14 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
                 tuneOpen={tuneOpen}
                 onOpenTune={() => setTuneOpen(true)}
                 onCloseTune={() => setTuneOpen(false)}
+                ringSize={designLab?.ringD}
+                ringStroke={designLab?.stroke}
+                ringGlowBlur={designLab ? 4 + designLab.bloom * 12 : undefined}
+                ringGlowOpacity={designLab?.bloomA}
+                heroFontSize={designLab?.hero}
+                heroFontWeight={designLab?.heroW}
               />
+              <SafeSpendBreakdown state={state} />
               <StatPills state={state} stealth={stealthMode} />
               <SpendDonutChart
                 state={state}
@@ -412,7 +431,13 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
         </div>
       </main>
 
-      <BottomNav active={tab} onChange={setTab} onQuickAdd={openManual} />
+      <BottomNav
+        active={tab}
+        onChange={setTab}
+        onQuickAdd={openManual}
+        navHeight={designLab?.navH}
+        showFab={designLab?.fab}
+      />
       <ExpenseModal
         open={modalOpen}
         currency={state.currency}

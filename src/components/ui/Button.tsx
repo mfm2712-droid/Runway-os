@@ -10,7 +10,7 @@ const timing = { transitionTimingFunction: "var(--ease-spring)" };
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-gradient-to-b from-sky-300 via-sky-400 to-sky-600 text-obsidian-950 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.55),inset_0_-1.5px_2px_rgba(2,16,32,0.25),0_10px_28px_-8px_rgba(56,189,248,0.65)] hover:brightness-110",
+    "bg-gradient-to-b from-cyan-400 via-cyan-500 to-mint-400 text-obsidian-950 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.55),inset_0_-1.5px_2px_rgba(2,16,32,0.25),0_10px_28px_-8px_rgba(25,217,160,0.65)] hover:brightness-110",
   glass: "glass glass-inset text-white hover:bg-white/[0.06]",
   ghost: "text-slate-400 hover:text-white",
 };

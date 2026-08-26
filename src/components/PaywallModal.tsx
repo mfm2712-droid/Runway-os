@@ -114,7 +114,7 @@ export function PaywallModal({
         >
           <motion.div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto"
+            className="relative w-full md:max-w-sm card-opaque glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-6 max-h-[90vh] overflow-y-auto"
             variants={panelVariants(!!reduceMotion)}
             initial="hidden"
             animate="visible"
@@ -149,7 +149,7 @@ export function PaywallModal({
             disabled={checkoutLoading !== null}
             className="text-left disabled:opacity-50"
           >
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 h-full flex flex-col hover:border-sky-400/40 transition-colors">
+            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 h-full flex flex-col hover:border-cyan-400/40 transition-colors">
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                 {t("paywall.monthly")}
               </p>
@@ -157,7 +157,7 @@ export function PaywallModal({
                 £2.99
               </p>
               <p className="text-[10px] text-slate-500 mb-3">{t("paywall.perMonth")}</p>
-              <span className="mt-auto text-[11px] font-semibold text-sky-300">
+              <span className="mt-auto text-[11px] font-semibold text-cyan-400">
                 {checkoutLoading === "monthly" ? t("paywall.redirecting") : t("paywall.chooseMonthly")}
               </span>
             </div>
@@ -168,8 +168,8 @@ export function PaywallModal({
             disabled={checkoutLoading !== null}
             className="text-left disabled:opacity-50"
           >
-            <div className="relative rounded-2xl bg-gradient-to-b from-sky-400/[0.08] to-emerald-400/[0.08] border border-sky-400/40 p-4 h-full flex flex-col">
-              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 whitespace-nowrap">
+            <div className="relative rounded-2xl bg-gradient-to-b from-cyan-400/[0.08] to-mint-400/[0.08] border border-cyan-400/40 p-4 h-full flex flex-col">
+              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-cyan-400 to-mint-400 text-obsidian-950 whitespace-nowrap">
                 {t("paywall.mostPopular")}
               </span>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1.5">
@@ -179,7 +179,7 @@ export function PaywallModal({
                 £25.00
               </p>
               <p className="text-[10px] text-slate-500 mb-3">{t("paywall.perYear")}</p>
-              <span className="mt-auto text-[11px] font-semibold text-emerald-300">
+              <span className="mt-auto text-[11px] font-semibold text-mint-400">
                 {checkoutLoading === "annual" ? t("paywall.redirecting") : t("paywall.chooseAnnual")}
               </span>
             </div>
@@ -187,7 +187,7 @@ export function PaywallModal({
         </div>
 
         {checkoutError && (
-          <p className="relative text-[10px] text-rose-400 -mt-2">{checkoutError}</p>
+          <p className="relative text-[10px] text-red-400 -mt-2">{checkoutError}</p>
         )}
 
         <ul className="relative text-[11px] text-slate-400 space-y-1.5 pl-1">
@@ -212,7 +212,7 @@ export function PaywallModal({
                 setRestoreState("idle");
               }}
               placeholder="you@example.com"
-              className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+              className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"
             />
             <Button
               variant="glass"
@@ -224,17 +224,17 @@ export function PaywallModal({
             </Button>
           </div>
           {restoreState === "not-found" && (
-            <p className="text-[10px] text-rose-400">
+            <p className="text-[10px] text-red-400">
               {t("paywall.notFound")}
             </p>
           )}
           {restoreState === "found" && (
-            <p className="text-[10px] text-emerald-400">
+            <p className="text-[10px] text-mint-400">
               {t("paywall.restored")}
             </p>
           )}
           {restoreState === "error" && (
-            <p className="text-[10px] text-rose-400">
+            <p className="text-[10px] text-red-400">
               {t("paywall.restoreError")}
             </p>
           )}
@@ -252,10 +252,10 @@ export function PaywallModal({
               placeholder={t("paywall.accessCode")}
               className={`flex-1 bg-white/[0.04] border rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none ${
                 tokenState === "invalid" || tokenState === "error"
-                  ? "border-rose-500/60 focus:border-rose-500"
+                  ? "border-red-400/60 focus:border-red-400"
                   : tokenState === "valid"
-                  ? "border-emerald-500/60 focus:border-emerald-500"
-                  : "border-white/[0.08] focus:border-sky-500"
+                  ? "border-mint-400/60 focus:border-mint-400"
+                  : "border-white/[0.08] focus:border-cyan-400"
               }`}
             />
             <Button
@@ -268,13 +268,13 @@ export function PaywallModal({
             </Button>
           </div>
           {tokenState === "invalid" && (
-            <p className="text-[10px] text-rose-400">{t("paywall.codeInvalid")}</p>
+            <p className="text-[10px] text-red-400">{t("paywall.codeInvalid")}</p>
           )}
           {tokenState === "error" && (
-            <p className="text-[10px] text-rose-400">{t("paywall.codeError")}</p>
+            <p className="text-[10px] text-red-400">{t("paywall.codeError")}</p>
           )}
           {tokenState === "valid" && (
-            <p className="text-[10px] text-emerald-400">{t("paywall.codeValid")}</p>
+            <p className="text-[10px] text-mint-400">{t("paywall.codeValid")}</p>
           )}
           <p className="text-[9px] text-slate-400 leading-relaxed">
             {t("paywall.footerNote")}

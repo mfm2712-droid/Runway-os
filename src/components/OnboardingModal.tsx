@@ -66,7 +66,7 @@ export function OnboardingModal({
           exit="exit"
         >
           <motion.div
-            className="relative w-full md:max-w-sm glass-strong glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-7"
+            className="relative w-full md:max-w-sm card-opaque glass-inset rounded-t-[32px] md:rounded-[32px] p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-7"
             variants={panelVariants(!!reduceMotion)}
             initial="hidden"
             animate="visible"
@@ -82,7 +82,7 @@ export function OnboardingModal({
             <span
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === step ? "w-6 bg-sky-400" : i < step ? "w-1.5 bg-sky-400/50" : "w-1.5 bg-white/[0.15]"
+                i === step ? "w-6 bg-cyan-400" : i < step ? "w-1.5 bg-cyan-400/50" : "w-1.5 bg-white/[0.15]"
               }`}
               style={{ transitionTimingFunction: "var(--ease-spring)" }}
             />
@@ -90,7 +90,7 @@ export function OnboardingModal({
         </div>
 
         <div className="relative text-center space-y-1.5">
-          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.2em]">
+          <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-[0.2em]">
             {t("onboarding.stepOf", { step })}
           </p>
           <h2 className="text-lg font-bold text-white leading-snug px-2">
@@ -102,7 +102,7 @@ export function OnboardingModal({
 
         <div className="relative" key={step} style={{ animation: "floatIn 0.25s var(--ease-spring)" }}>
           {step === 1 && (
-            <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-4 focus-within:border-sky-500 transition-colors">
+            <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-4 focus-within:border-cyan-400 transition-colors">
               <span className="text-2xl text-slate-500 mr-1">{sym}</span>
               <input
                 autoFocus
@@ -120,7 +120,7 @@ export function OnboardingModal({
           )}
 
           {step === 2 && (
-            <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-4 focus-within:border-sky-500 transition-colors">
+            <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-4 focus-within:border-cyan-400 transition-colors">
               <span className="text-2xl text-slate-500 mr-1">{sym}</span>
               <input
                 autoFocus
@@ -142,7 +142,7 @@ export function OnboardingModal({
               autoFocus
               value={paydayDay}
               onChange={(e) => setPaydayDay(e.target.value)}
-              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-4 text-xl font-bold tracking-tight text-white tabular-nums text-center focus:outline-none focus:border-sky-500 transition-colors"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-4 text-xl font-bold tracking-tight text-white tabular-nums text-center focus:outline-none focus:border-cyan-400 transition-colors"
             >
               {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
                 <option key={d} value={d} className="bg-obsidian-900 text-white">
@@ -166,7 +166,7 @@ export function OnboardingModal({
           <button
             onClick={advance}
             disabled={!stepValid}
-            className="flex-1 py-3.5 rounded-2xl text-sm font-semibold bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 disabled:opacity-30 active:scale-[0.98] transition-transform"
+            className="flex-1 py-3.5 rounded-2xl text-sm font-semibold bg-gradient-to-r from-cyan-400 to-mint-400 text-obsidian-950 disabled:opacity-30 active:scale-[0.98] transition-transform"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
             {step < 3 ? t("onboarding.continue") : t("onboarding.getStarted")}

@@ -8,7 +8,7 @@ export function PremiumSlider({
   step = 1,
   onChange,
   format,
-  color = "#38bdf8",
+  color = "#00e5ff",
 }: {
   label: string;
   value: number;

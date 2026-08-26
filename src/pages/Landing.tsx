@@ -5,8 +5,38 @@ import { Button } from "../components/ui/Button";
 import { LandingCalculator } from "../components/LandingCalculator";
 import { startCheckout, type Plan } from "../lib/checkout";
 import { track } from "../lib/analytics";
+import { useLanguage } from "../lib/i18n/LanguageContext";
+
+function LanguageToggle() {
+  const { lang, setLang } = useLanguage();
+  return (
+    <div className="absolute top-4 right-4 md:top-6 md:right-6 z-10 flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm p-1">
+      <button
+        onClick={() => setLang("en")}
+        aria-label="English"
+        aria-pressed={lang === "en"}
+        className={`w-7 h-7 rounded-full flex items-center justify-center text-base leading-none transition-opacity ${
+          lang === "en" ? "opacity-100" : "opacity-40 hover:opacity-70"
+        }`}
+      >
+        🇬🇧
+      </button>
+      <button
+        onClick={() => setLang("es")}
+        aria-label="Español"
+        aria-pressed={lang === "es"}
+        className={`w-7 h-7 rounded-full flex items-center justify-center text-base leading-none transition-opacity ${
+          lang === "es" ? "opacity-100" : "opacity-40 hover:opacity-70"
+        }`}
+      >
+        🇪🇸
+      </button>
+    </div>
+  );
+}
 
 export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const { t } = useLanguage();
   const [checkoutLoading, setCheckoutLoading] = useState<Plan | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -31,7 +61,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
     try {
       await startCheckout(plan);
     } catch {
-      setCheckoutError("Couldn't start checkout — Stripe may not be configured yet.");
+      setCheckoutError(t("landing.pricing.checkoutError"));
       setCheckoutLoading(null);
     }
   };
@@ -39,6 +69,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
   return (
     <div className="relative text-slate-100 min-h-screen overflow-x-hidden">
       <div className="mesh-glow" />
+      <LanguageToggle />
 
       <div className="relative max-w-3xl mx-auto px-4 md:px-8 py-16 space-y-24">
         {/* Hero */}
@@ -58,17 +89,14 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             </span>
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-[1.05] text-balance">
-            The friction-free
+            {t("landing.hero.titleLine1")}
             <br />
             <span className="bg-gradient-to-r from-sky-300 via-sky-400 to-emerald-300 bg-clip-text text-transparent">
-              financial operating system.
+              {t("landing.hero.titleLine2")}
             </span>
           </h1>
           <p className="text-slate-300 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-            One number that matters: your safe daily spending limit. No manual
-            categorization, no linked bank accounts, no subscription you forget to
-            cancel — plus a built-in AI copilot for the questions a spreadsheet
-            can't answer.
+            {t("landing.hero.subtitle")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-2">
             <div className="relative">
@@ -78,22 +106,23 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
               />
               <Button
                 variant="primary"
-                onClick={() => onNavigate("/app")}
+                onClick={() => {
+                  track({ name: "trial_cta_clicked", source: "hero" });
+                  onNavigate("/app");
+                }}
                 className="relative px-7 py-3.5 text-sm"
               >
-                Start Free 72-Hour Trial
+                {t("landing.hero.cta")}
               </Button>
             </div>
             <a
               href="#pricing"
               className="text-sm text-slate-400 hover:text-white transition-colors underline underline-offset-4 decoration-white/20"
             >
-              See pricing ↓
+              {t("landing.hero.seePricing")}
             </a>
           </div>
-          <p className="text-[11px] text-slate-500">
-            No card required to start · cancel anytime · set up in under 2 minutes
-          </p>
+          <p className="text-[11px] text-slate-500">{t("landing.hero.finePrint")}</p>
         </header>
 
         {/* Before / After — left is an illustrative mockup of spreadsheet chaos,
@@ -101,7 +130,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
           <div className="space-y-3">
             <p className="text-xs font-semibold text-rose-400 uppercase tracking-wider text-center">
-              Before
+              {t("landing.before.label")}
             </p>
             <GlassCard className="p-3">
               <div className="grid grid-cols-4 gap-px bg-white/[0.06] text-[9px] font-mono rounded-2xl overflow-hidden">
@@ -122,14 +151,12 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 })}
               </div>
             </GlassCard>
-            <p className="text-[11px] text-slate-500 text-center">
-              Untracked leaks buried in fifty rows of formulas.
-            </p>
+            <p className="text-[11px] text-slate-500 text-center">{t("landing.before.caption")}</p>
           </div>
 
           <div className="space-y-3">
             <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider text-center">
-              After
+              {t("landing.after.label")}
             </p>
             <div className="relative">
               <div
@@ -142,14 +169,12 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                     <span className="text-xl font-extrabold tracking-tight tabular-nums text-white glow-text" style={{ color: "#34d399" }}>
                       £45.00
                     </span>
-                    <span className="text-[9px] text-slate-400 mt-1">safe / day</span>
+                    <span className="text-[9px] text-slate-400 mt-1">{t("landing.common.safePerDay")}</span>
                   </div>
                 </RingProgress>
               </GlassCard>
             </div>
-            <p className="text-[11px] text-slate-500 text-center">
-              One glanceable number. That's the whole app.
-            </p>
+            <p className="text-[11px] text-slate-500 text-center">{t("landing.after.caption")}</p>
           </div>
         </section>
 
@@ -162,16 +187,16 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             {
-              title: "Daily Safe Spend",
-              body: "Reserves this month's fixed costs and already-logged expenses, then spreads what's left across the days remaining.",
+              title: t("landing.features.dailySafeSpend.title"),
+              body: t("landing.features.dailySafeSpend.body"),
             },
             {
-              title: "Zero-Income Runway",
-              body: "How many months your cash reserve covers if income stopped today, subscriptions included.",
+              title: t("landing.features.zeroIncomeRunway.title"),
+              body: t("landing.features.zeroIncomeRunway.body"),
             },
             {
-              title: "Subscription Leak Detector",
-              body: "Flag anything you no longer use and see the monthly cost of forgotten renewals at a glance.",
+              title: t("landing.features.leakDetector.title"),
+              body: t("landing.features.leakDetector.body"),
             },
           ].map((f) => (
             <GlassCard key={f.title} interactive className="p-5">
@@ -189,36 +214,33 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <div className="text-center md:text-left space-y-3">
                 <p className="text-[11px] font-semibold ai-gradient-text uppercase tracking-[0.2em]">
-                  ✨ AI Financial Copilot
+                  {t("landing.ai.eyebrow")}
                 </p>
                 <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight text-balance">
-                  Not just numbers — answers.
+                  {t("landing.ai.title")}
                 </h2>
                 <p className="text-sm text-slate-400 leading-relaxed max-w-sm mx-auto md:mx-0">
-                  Your numbers stay local by default. AI features send only what's
-                  needed — your financial snapshot and the question you ask — to a
-                  secured endpoint, only when you use them.
+                  {t("landing.ai.subtitle")}
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <p className="text-[10px] text-slate-400 uppercase tracking-wider px-1">
-                  Example conversation
+                  {t("landing.ai.exampleLabel")}
                 </p>
                 <div className="space-y-2">
                   <div className="flex justify-end">
                     <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md bg-sky-500 text-obsidian-950 text-sm font-medium">
-                      Can I afford £120 for a flight this weekend?
+                      {t("landing.ai.chatQuestion")}
                     </div>
                   </div>
                   <div className="flex justify-start">
                     <div className="max-w-[90%] space-y-1.5">
                       <span className="text-[11px] ai-gradient-text font-semibold px-1">
-                        ✨ Money Copilot
+                        {t("landing.ai.chatBadge")}
                       </span>
                       <div className="px-4 py-3 rounded-2xl rounded-bl-md glass border border-violet-400/15 text-sm text-slate-200 leading-relaxed">
-                        Yes — you'd have £84 left in this month's safe-to-spend
-                        after that. Runway drops from 4.2 to 4.0 months.
+                        {t("landing.ai.chatAnswer")}
                       </div>
                     </div>
                   </div>
@@ -229,16 +251,16 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 {
-                  title: "Ask Money Copilot",
-                  body: "“Can I afford this?” “How do I extend my runway?” Get a direct answer grounded in your real numbers, not generic advice.",
+                  title: t("landing.ai.feature1.title"),
+                  body: t("landing.ai.feature1.body"),
                 },
                 {
-                  title: "Scan a Receipt",
-                  body: "Drop a photo or paste a line of text. Merchant, amount, category, and recurring-vs-one-off are extracted and logged for you.",
+                  title: t("landing.ai.feature2.title"),
+                  body: t("landing.ai.feature2.body"),
                 },
                 {
-                  title: "Morning Briefing",
-                  body: "One sentence, every time you open the app: what's safe to spend, and the single change that would help most.",
+                  title: t("landing.ai.feature3.title"),
+                  body: t("landing.ai.feature3.body"),
                 },
               ].map((f) => (
                 <div key={f.title} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4">
@@ -254,9 +276,9 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
         <section id="pricing" className="max-w-sm mx-auto space-y-4 scroll-mt-8">
           <div className="text-center space-y-1.5">
             <p className="text-xs font-semibold text-violet-300 uppercase tracking-wider">
-              ✨ Free for 72 hours
+              {t("landing.pricing.eyebrow")}
             </p>
-            <p className="text-xs text-slate-500">Full access to everything. Cancel anytime, no card required to start.</p>
+            <p className="text-xs text-slate-500">{t("landing.pricing.subtitle")}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -270,14 +292,14 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 className="p-4 pb-5 space-y-1 text-center h-full hover:border-sky-400/40 transition-colors"
               >
                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                  Monthly
+                  {t("landing.pricing.monthly")}
                 </p>
                 <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
                   £2.99
                 </p>
-                <p className="text-[10px] text-slate-500 mb-2">/ month</p>
+                <p className="text-[10px] text-slate-500 mb-2">{t("landing.pricing.perMonth")}</p>
                 <p className="text-[11px] font-semibold text-sky-300">
-                  {checkoutLoading === "monthly" ? "Redirecting…" : "Choose Monthly →"}
+                  {checkoutLoading === "monthly" ? t("landing.pricing.redirecting") : t("landing.pricing.chooseMonthly")}
                 </p>
               </GlassCard>
             </button>
@@ -293,17 +315,17 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 className="relative p-4 pb-5 space-y-1 text-center h-full border border-sky-400/40"
               >
                 <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 text-obsidian-950 whitespace-nowrap">
-                  Most Popular · Save 30%
+                  {t("landing.pricing.mostPopular")}
                 </span>
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1.5">
-                  Annual
+                  {t("landing.pricing.annual")}
                 </p>
                 <p className="text-2xl font-extrabold tracking-tight tabular-nums text-white">
                   £25.00
                 </p>
-                <p className="text-[10px] text-slate-500 mb-2">/ year</p>
+                <p className="text-[10px] text-slate-500 mb-2">{t("landing.pricing.perYear")}</p>
                 <p className="text-[11px] font-semibold text-emerald-300">
-                  {checkoutLoading === "annual" ? "Redirecting…" : "Choose Annual →"}
+                  {checkoutLoading === "annual" ? t("landing.pricing.redirecting") : t("landing.pricing.chooseAnnual")}
                 </p>
               </GlassCard>
             </button>
@@ -314,64 +336,42 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
           )}
 
           <p className="text-[10px] text-slate-400 text-center">
-            You're only charged if you pick a plan above. The free trial itself
-            (button below) never asks for a card.
+            {t("landing.pricing.chargeDisclaimer")}
           </p>
 
           <ul className="text-xs text-slate-400 space-y-2 text-left max-w-[220px] mx-auto">
-            <li>✓ Unlimited Projection Lab scenarios</li>
-            <li>✓ Money Copilot: ask, scan receipts, daily briefing</li>
-            <li>✓ Core numbers are local-first — nothing leaves your browser until you ask the AI</li>
+            <li>{t("landing.pricing.bullet1")}</li>
+            <li>{t("landing.pricing.bullet2")}</li>
+            <li>{t("landing.pricing.bullet3")}</li>
           </ul>
 
           <Button
             variant="primary"
-            onClick={() => onNavigate("/app")}
+            onClick={() => {
+              track({ name: "trial_cta_clicked", source: "pricing" });
+              onNavigate("/app");
+            }}
             className="w-full py-3.5 text-sm"
           >
-            Start Free 72-Hour Trial
+            {t("landing.hero.cta")}
           </Button>
         </section>
 
         {/* FAQ — plain <details>/<summary>, no JS state needed for the accordion */}
         <section className="max-w-xl mx-auto w-full space-y-4">
           <h2 className="text-xl font-bold text-white text-center tracking-tight">
-            Questions, answered
+            {t("landing.faq.title")}
           </h2>
           <GlassCard className="divide-y divide-white/[0.06]">
             {[
-              {
-                q: "Do I need to connect my bank?",
-                a: "No. Runway OS never asks for bank logins or open banking access — you enter your cash balance and outflows yourself, and it does the maths from there.",
-              },
-              {
-                q: "Where is my data stored?",
-                a: "In your browser's local storage, by default and for everything financial. AI features (Money Copilot, receipt scanning) only send data off your device when you actively use them, for that one request.",
-              },
-              {
-                q: "What is Daily Safe Spend / Runway?",
-                a: "Daily Safe Spend is what's left to spend today once this month's fixed costs and spending are set aside. Runway is how many months your cash lasts at zero income. The app has a built-in explainer with your real numbers under the Runway stat.",
-              },
-              {
-                q: "Is there a free trial?",
-                a: "Yes — 72 hours of full access, no card required to start.",
-              },
-              {
-                q: "How much does Pro cost?",
-                a: "£2.99/month, or £25/year if you'd rather pay annually (about 30% cheaper).",
-              },
-              {
-                q: "Can I cancel?",
-                a: "Anytime, through Stripe's own Billing Portal (Settings → Manage Billing) — no calls, no retention scripts.",
-              },
-              {
-                q: "Does email sync my data?",
-                a: "No. Restoring access by email only re-activates your Pro subscription via Stripe — it doesn't bring across your balances, expenses or subscriptions. For that, use Settings → Export/Import backup.",
-              },
-              {
-                q: "What if I switch phones?",
-                a: "Export a backup from Settings and import it on the new device — that's what moves your numbers across. Restoring Pro access by email is a separate thing and only unlocks your subscription, not your data.",
-              },
+              { q: t("landing.faq.q1"), a: t("landing.faq.a1") },
+              { q: t("landing.faq.q2"), a: t("landing.faq.a2") },
+              { q: t("landing.faq.q3"), a: t("landing.faq.a3") },
+              { q: t("landing.faq.q4"), a: t("landing.faq.a4") },
+              { q: t("landing.faq.q5"), a: t("landing.faq.a5") },
+              { q: t("landing.faq.q6"), a: t("landing.faq.a6") },
+              { q: t("landing.faq.q7"), a: t("landing.faq.a7") },
+              { q: t("landing.faq.q8"), a: t("landing.faq.a8") },
             ].map(({ q, a }) => (
               <details key={q} className="group p-4">
                 <summary className="flex items-center justify-between gap-3 text-sm font-medium text-white cursor-pointer list-none">
@@ -394,14 +394,14 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
                 alt="Runway OS"
                 className="w-6 h-6 rounded-lg border border-white/10 object-cover"
               />
-              <span className="text-xs font-semibold text-slate-400">Runway OS</span>
+              <span className="text-xs font-semibold text-slate-400">{t("landing.footer.brand")}</span>
             </div>
             <nav className="flex items-center gap-5 text-xs text-slate-500">
               <button onClick={() => onNavigate("/privacy")} className="hover:text-white transition-colors">
-                Privacy
+                {t("landing.footer.privacy")}
               </button>
               <button onClick={() => onNavigate("/terms")} className="hover:text-white transition-colors">
-                Terms
+                {t("landing.footer.terms")}
               </button>
               <a href="mailto:support@runwayos.app" className="hover:text-white transition-colors">
                 support@runwayos.app
@@ -409,7 +409,7 @@ export function Landing({ onNavigate }: { onNavigate: (path: string) => void }) 
             </nav>
           </div>
           <p className="text-[11px] text-slate-400 text-center sm:text-left">
-            Runway OS is an independent tool and is not financial advice.
+            {t("landing.footer.disclaimer")}
           </p>
         </footer>
       </div>

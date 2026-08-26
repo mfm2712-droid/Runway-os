@@ -46,7 +46,7 @@ export function CooldownModule({
   };
 
   return (
-    <GlassCard className="p-6 space-y-4">
+    <GlassCard opaque className="p-6 space-y-4">
       <div className="flex justify-between items-center">
         <div>
           <h4 className="text-sm font-semibold text-white">{t("cooldown.title")}</h4>
@@ -54,7 +54,7 @@ export function CooldownModule({
         </div>
         <button
           onClick={() => setAdding((v) => !v)}
-          className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-medium transition-colors"
+          className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-400 font-medium transition-colors"
         >
           {adding ? (
             t("subs.cancel")
@@ -72,7 +72,7 @@ export function CooldownModule({
             placeholder={t("cooldown.itemPlaceholder")}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"
           />
           <input
             type="number"
@@ -81,13 +81,13 @@ export function CooldownModule({
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             onFocus={(e) => e.target.select()}
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"
           />
           <input
             placeholder={t("cooldown.whyPlaceholder")}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"
           />
           <Button variant="primary" onClick={submit} className="w-full py-2.5 text-xs">
             {t("cooldown.start")}
@@ -143,13 +143,13 @@ export function CooldownModule({
               <div className="w-full bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-1000 ${
-                    expired ? "bg-emerald-400" : "bg-amber-400"
+                    expired ? "bg-mint-400" : "bg-orange-400"
                   }`}
                   style={{ width: `${elapsedPct}%` }}
                 />
               </div>
 
-              <p className="text-[11px] text-rose-300/90">
+              <p className="text-[11px] text-red-400/90">
                 {t("cooldown.costsPrefix")}{" "}
                 <span className="font-semibold tracking-tight tabular-nums">{days.toFixed(1)} {t("cooldown.days")}</span>{" "}
                 {t("cooldown.costsSuffix")}
@@ -157,11 +157,11 @@ export function CooldownModule({
               <div className="grid grid-cols-2 gap-2 text-[10px]">
                 <div className="rounded-lg bg-white/[0.03] px-2.5 py-2">
                   <p className="text-slate-500">{t("cooldown.runwayCost")}</p>
-                  <p className="text-rose-300 font-semibold tracking-tight tabular-nums">−{days.toFixed(1)} {t("cooldown.days")}</p>
+                  <p className="text-red-400 font-semibold tracking-tight tabular-nums">−{days.toFixed(1)} {t("cooldown.days")}</p>
                 </div>
                 <div className="rounded-lg bg-white/[0.03] px-2.5 py-2">
                   <p className="text-slate-500">{t("cooldown.lowersLimit")}</p>
-                  <p className="text-rose-300 font-semibold tracking-tight tabular-nums">−{formatCurrency(dailyHit, state.currency)}{t("cooldown.perDay")}</p>
+                  <p className="text-red-400 font-semibold tracking-tight tabular-nums">−{formatCurrency(dailyHit, state.currency)}{t("cooldown.perDay")}</p>
                 </div>
               </div>
 
@@ -173,7 +173,7 @@ export function CooldownModule({
                       playPop();
                       onBuySafely(item);
                     }}
-                    className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold bg-sky-500/15 border border-sky-500/30 text-sky-300 active:scale-[0.97] transition-transform"
+                    className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold bg-cyan-400/15 border border-cyan-400/30 text-cyan-400 active:scale-[0.97] transition-transform"
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
                     {t("cooldown.buySafely")}
@@ -184,14 +184,14 @@ export function CooldownModule({
                       playPop();
                       onDiscard(item);
                     }}
-                    className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 active:scale-[0.97] transition-transform"
+                    className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold bg-mint-400/15 border border-mint-400/30 text-mint-400 active:scale-[0.97] transition-transform"
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
                     {t("cooldown.discardAndBank")} <span className="tabular-nums">{formatCurrency(item.price, state.currency)}</span>
                   </button>
                 </div>
               ) : (
-                <p className="text-center text-[10px] text-amber-400/80 py-1">
+                <p className="text-center text-[10px] text-orange-400/80 py-1">
                   {t("cooldown.unlocksIn", { time: formatCountdown(remaining) })}
                 </p>
               )}
