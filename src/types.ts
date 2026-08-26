@@ -45,18 +45,20 @@ export interface WishlistItem {
   addedAt: string; // ISO timestamp
 }
 
-export type Currency = "GBP" | "EUR" | "USD";
+export type Currency = "GBP" | "EUR" | "USD" | "CHF";
 
 export const CURRENCY_SYMBOLS: Record<Currency, string> = {
   GBP: "£",
   EUR: "€",
   USD: "$",
+  CHF: "CHF",
 };
 
 export const CURRENCY_LABELS: Record<Currency, string> = {
   GBP: "British Pound",
   EUR: "Euro",
   USD: "US Dollar",
+  CHF: "Swiss Franc",
 };
 
 export interface FinanceState {

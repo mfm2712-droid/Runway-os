@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Expense, FinanceState } from "../../types";
-import { dailySafeSpend, isBurnSpike, runwayMonths } from "../calculations";
+import type { Currency, Expense, FinanceState } from "../../types";
+import { CURRENCY_LABELS, CURRENCY_SYMBOLS } from "../../types";
+import { dailySafeSpend, formatCurrency, isBurnSpike, runwayMonths } from "../calculations";
 import { projectBalances, monthsToZero, type ScenarioInput } from "../projection";
 import { computeTrialStatus, TRIAL_HOURS } from "../trial";
 
@@ -24,6 +25,35 @@ function expenseThisMonth(amount: number, today: Date): Expense {
   return { id: "e1", amount, category: "other", date: `${y}-${m}-15` };
 }
 
+describe("formatCurrency", () => {
+  it("formats GBP, EUR, USD and CHF with the correct currency indicator", () => {
+    expect(formatCurrency(1234.5, "GBP")).toBe("£1,234.50");
+    expect(formatCurrency(1234.5, "EUR")).toBe("€1,234.50");
+    expect(formatCurrency(1234.5, "USD")).toBe("US$1,234.50");
+    expect(formatCurrency(1234.5, "CHF")).toBe("CHF 1,234.50");
+  });
+
+  it("handles zero and negative amounts in CHF", () => {
+    expect(formatCurrency(0, "CHF")).toBe("CHF 0.00");
+    expect(formatCurrency(-50, "CHF")).toBe("-CHF 50.00");
+  });
+
+  it("returns the infinity symbol for non-finite amounts regardless of currency", () => {
+    expect(formatCurrency(Infinity, "CHF")).toBe("∞");
+    expect(formatCurrency(NaN, "CHF")).toBe("∞");
+  });
+
+  it("defines a symbol and label for every supported currency, including CHF", () => {
+    const currencies: Currency[] = ["GBP", "EUR", "USD", "CHF"];
+    for (const c of currencies) {
+      expect(CURRENCY_SYMBOLS[c]).toBeTruthy();
+      expect(CURRENCY_LABELS[c]).toBeTruthy();
+    }
+    expect(CURRENCY_SYMBOLS.CHF).toBe("CHF");
+    expect(CURRENCY_LABELS.CHF).toBe("Swiss Franc");
+  });
+});
+
 describe("dailySafeSpend", () => {
   it("divides the remaining budget evenly across the horizon without weekendBooster", () => {
     const today = new Date(2024, 0, 1); // Monday, 31 days left in January
@@ -40,6 +70,14 @@ describe("dailySafeSpend", () => {
     const today = new Date(2024, 0, 1);
     const state = buildState({ cashBalance: 100, fixedMonthlyOutflows: 5000 });
     expect(dailySafeSpend(state, today)).toBe(0);
+  });
+
+  it("is unaffected by which currency the state is denominated in (CHF vs GBP)", () => {
+    const today = new Date(2024, 0, 1);
+    const gbpState = buildState({ cashBalance: 4000, fixedMonthlyOutflows: 1200, currency: "GBP" });
+    const chfState = buildState({ cashBalance: 4000, fixedMonthlyOutflows: 1200, currency: "CHF" });
+    expect(dailySafeSpend(chfState, today)).toBe(dailySafeSpend(gbpState, today));
+    expect(runwayMonths(chfState)).toBe(runwayMonths(gbpState));
   });
 
   it("subtracts the safety buffer from what's available", () => {

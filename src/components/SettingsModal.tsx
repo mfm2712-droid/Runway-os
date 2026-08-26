@@ -17,7 +17,7 @@ import { useSyncSubscriptionCheck } from "../hooks/useSyncSubscriptionCheck";
 import { useLanguage } from "../lib/i18n/LanguageContext";
 import { LANGUAGES, type Lang } from "../lib/i18n/translations";
 
-const CURRENCIES: Currency[] = ["GBP", "EUR", "USD"];
+const CURRENCIES: Currency[] = ["GBP", "EUR", "USD", "CHF"];
 
 const DEV_OVERRIDE_KEYS: { value: DevOverride; labelKey: string }[] = [
   { value: null, labelKey: "settings.devReal" },
@@ -177,7 +177,7 @@ export function SettingsModal({
 
         <div className="relative space-y-2">
           <label className="text-xs text-slate-500 block">{t("settings.currency")}</label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {CURRENCIES.map((c) => (
               <button
                 key={c}
