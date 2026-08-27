@@ -1,26 +1,8 @@
-import { useRef, type CSSProperties, type ReactNode } from "react";
+import { forwardRef, useRef, type CSSProperties, type ReactNode } from "react";
 
 let ringIdCounter = 0;
 
-export function RingProgress({
-  value,
-  size = 220,
-  strokeWidth = 14,
-  color = "#00ffc6",
-  colorEnd,
-  /** Full multi-stop gradient along the stroke — overrides color/colorEnd when given. Each stop is `{ offset: "0%"..."100%", color }`. */
-  stops,
-  trackColor = "rgba(255,255,255,0.06)",
-  /** When true, the outer box is sized by CSS (via `className`) instead of a fixed `size`px box — `size` still drives the internal stroke/radius math via viewBox, so the drawing scales with whatever size the container ends up at. */
-  fluid = false,
-  className = "",
-  style,
-  /** Outer bloom blur radius in px — `drop-shadow(0 0 {glowBlur}px ...)`. */
-  glowBlur = 14,
-  /** Outer bloom alpha (0..1) applied to the glow colour. */
-  glowOpacity = 0.5,
-  children,
-}: {
+export const RingProgress = forwardRef<HTMLDivElement, {
   value: number; // 0..1
   size?: number;
   strokeWidth?: number;
@@ -35,7 +17,21 @@ export function RingProgress({
   glowBlur?: number;
   glowOpacity?: number;
   children?: ReactNode;
-}) {
+}>(function RingProgress({
+  value,
+  size = 220,
+  strokeWidth = 14,
+  color = "#00ffc6",
+  colorEnd,
+  stops,
+  trackColor = "rgba(255,255,255,0.06)",
+  fluid = false,
+  className = "",
+  style,
+  glowBlur = 14,
+  glowOpacity = 0.5,
+  children,
+}, ref) {
   const clamped = Math.max(0, Math.min(1, value));
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -50,6 +46,7 @@ export function RingProgress({
 
   return (
     <div
+      ref={ref}
       className={`relative inline-flex items-center justify-center ${className}`}
       style={fluid ? style : { width: size, height: size, ...style }}
     >
@@ -106,4 +103,4 @@ export function RingProgress({
       <div className="absolute inset-0 flex items-center justify-center">{children}</div>
     </div>
   );
-}
+});

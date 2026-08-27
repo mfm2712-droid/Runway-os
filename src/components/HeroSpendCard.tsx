@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import type { FinanceState } from "../types";
 import {
   dailySafeSpend,
@@ -67,6 +68,51 @@ export function HeroSpendCard({
   });
   const ringColor = ringColorForPct(pct);
 
+  // The ring's widest usable chord for centered text is roughly its own
+  // diameter. Longer formatted amounts (a longer currency code like "CHF",
+  // or just a bigger number with a thousands separator) need more room than
+  // short ones like "£248.43" — so instead of always shrinking the number
+  // to fit a fixed ring, we first ask the ring to grow to absorb the extra
+  // width (up to a cap), then MEASURE how much it actually got to grow —
+  // on a narrow phone `48vw` is often already at or below the base ring
+  // size, so the requested growth can be silently clamped by the viewport
+  // — and only shrink the font as a last resort based on that real,
+  // measured diameter, never the merely-requested one. This is driven
+  // purely by the formatted string's length, never by currency code, so it
+  // applies identically to every currency (including any future one) with
+  // no special-casing, and never changes the layout for amounts that
+  // already fit at the original size.
+  const formattedSafeSpend = formatCurrency(safeSpend, state.currency);
+  const CHAR_WIDTH_RATIO = 0.56; // empirical, Geist bold tabular-nums at this weight
+  const RING_TEXT_FIT = 0.88; // fraction of ring diameter usable by centered text
+  const BASE_CHARS = 9; // "£1,234.56"-length amounts fit at the original size, untouched
+  const MAX_RING_SCALE = 1.4; // ring may grow up to 40% larger before font size is touched
+
+  const neededScale =
+    formattedSafeSpend.length > BASE_CHARS
+      ? (formattedSafeSpend.length * CHAR_WIDTH_RATIO * heroFontSize) / (ringSize * RING_TEXT_FIT)
+      : 1;
+  const ringScale = Math.max(1, Math.min(MAX_RING_SCALE, neededScale));
+  const requestedRingSize = ringSize * ringScale;
+  const requestedRingStroke = ringStroke * ringScale;
+
+  const ringRef = useRef<HTMLDivElement>(null);
+  const [measuredRingDiameter, setMeasuredRingDiameter] = useState(ringSize);
+  useLayoutEffect(() => {
+    const el = ringRef.current;
+    if (!el) return;
+    const update = () => setMeasuredRingDiameter(el.getBoundingClientRect().width);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [requestedRingSize]);
+
+  const fittedHeroFontSize = Math.min(
+    heroFontSize,
+    (measuredRingDiameter * RING_TEXT_FIT) / (formattedSafeSpend.length * CHAR_WIDTH_RATIO),
+  );
+
   return (
     <GlassCard opaque className="relative overflow-hidden px-6 py-10 flex flex-col items-center text-center">
       <div className="mesh-glow" />
@@ -88,12 +134,13 @@ export function HeroSpendCard({
       >
         <div style={{ transform: "translateY(-7px)" }}>
           <RingProgress
+            ref={ringRef}
             value={pct}
-            size={ringSize}
-            strokeWidth={ringStroke}
+            size={requestedRingSize}
+            strokeWidth={requestedRingStroke}
             fluid
-            className="w-[48vw] aspect-square"
-            style={{ maxWidth: ringSize }}
+            className="aspect-square"
+            style={{ width: `min(48vw, ${requestedRingSize}px)`, maxWidth: requestedRingSize }}
             trackColor={hexToRgba(depleted ? RING_NEGATIVE : ringColor, 0.19)}
             glowBlur={ringGlowBlur}
             glowOpacity={ringGlowOpacity}
@@ -107,7 +154,7 @@ export function HeroSpendCard({
                 value={safeSpend}
                 format={(v) => formatCurrency(v, state.currency)}
                 className="tracking-[-0.015em] tabular-nums"
-                style={{ fontSize: heroFontSize, fontWeight: heroFontWeight, color: depleted ? RING_NEGATIVE : "#f8fafc" }}
+                style={{ fontSize: fittedHeroFontSize, fontWeight: heroFontWeight, color: depleted ? RING_NEGATIVE : ringColor }}
               />
               <span className="text-xs text-slate-400 mt-2">
                 {t("hero.safeForNextDays", { days, plural: days === 1 ? "" : "s" })}
