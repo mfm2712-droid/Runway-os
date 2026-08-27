@@ -84,13 +84,18 @@ export function HeroSpendCard({
   // already fit at the original size.
   const formattedSafeSpend = formatCurrency(safeSpend, state.currency);
   const CHAR_WIDTH_RATIO = 0.56; // empirical, Geist bold tabular-nums at this weight
-  const RING_TEXT_FIT = 0.88; // fraction of ring diameter usable by centered text
+  const RING_GROWTH_FIT = 0.88; // used only to decide how much the RING ITSELF should grow
+  // Fraction of the (possibly grown) ring diameter actually reserved for text. Deliberately
+  // tighter than RING_GROWTH_FIT above — this is the real safety margin: at the default
+  // 186px ring it reserves ~20px of clear space per side, comfortably past the 12-16px
+  // minimum, verified empirically for GBP/EUR/USD/CHF at both short and long amounts.
+  const CONTENT_FIT = 0.78;
   const BASE_CHARS = 9; // "£1,234.56"-length amounts fit at the original size, untouched
   const MAX_RING_SCALE = 1.4; // ring may grow up to 40% larger before font size is touched
 
   const neededScale =
     formattedSafeSpend.length > BASE_CHARS
-      ? (formattedSafeSpend.length * CHAR_WIDTH_RATIO * heroFontSize) / (ringSize * RING_TEXT_FIT)
+      ? (formattedSafeSpend.length * CHAR_WIDTH_RATIO * heroFontSize) / (ringSize * RING_GROWTH_FIT)
       : 1;
   const ringScale = Math.max(1, Math.min(MAX_RING_SCALE, neededScale));
   const requestedRingSize = ringSize * ringScale;
@@ -108,9 +113,10 @@ export function HeroSpendCard({
     return () => ro.disconnect();
   }, [requestedRingSize]);
 
+  const contentMaxWidth = measuredRingDiameter * CONTENT_FIT;
   const fittedHeroFontSize = Math.min(
     heroFontSize,
-    (measuredRingDiameter * RING_TEXT_FIT) / (formattedSafeSpend.length * CHAR_WIDTH_RATIO),
+    contentMaxWidth / (formattedSafeSpend.length * CHAR_WIDTH_RATIO),
   );
 
   return (
@@ -153,10 +159,18 @@ export function HeroSpendCard({
               <AnimatedNumber
                 value={safeSpend}
                 format={(v) => formatCurrency(v, state.currency)}
-                className="tracking-[-0.015em] tabular-nums"
+                className="tracking-[-0.015em] tabular-nums whitespace-nowrap"
                 style={{ fontSize: fittedHeroFontSize, fontWeight: heroFontWeight, color: depleted ? RING_NEGATIVE : ringColor }}
               />
-              <span className="text-xs text-slate-400 mt-2">
+              {/* The secondary line has its own, looser width budget than the
+                  currency figure above — it's a much smaller font and the
+                  static phrase already fits on one line at the ring's normal
+                  size, so it only needs to wrap for unusually long translated
+                  strings, not be squeezed to the number's tighter budget. */}
+              <span
+                className="text-xs text-slate-400 mt-2 mx-auto text-center leading-snug"
+                style={{ maxWidth: measuredRingDiameter * 0.85 }}
+              >
                 {t("hero.safeForNextDays", { days, plural: days === 1 ? "" : "s" })}
                 {state.paydayDay ? t("hero.toPayday") : ""}
               </span>
