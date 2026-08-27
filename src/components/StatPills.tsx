@@ -20,6 +20,8 @@ function StatRow({
   secondary,
   onInfoClick,
   infoLabel,
+  onClick,
+  ariaLabel,
 }: {
   icon: ReactNode;
   title: string;
@@ -27,9 +29,17 @@ function StatRow({
   secondary: ReactNode;
   onInfoClick?: () => void;
   infoLabel?: string;
+  onClick: () => void;
+  ariaLabel: string;
 }) {
   return (
-    <div className="card-opaque rounded-[14px] h-[54px] px-3.5 flex items-center gap-3">
+    <div className="relative card-opaque rounded-[14px] h-[54px] px-3.5 flex items-center gap-3">
+      <button
+        onClick={onClick}
+        aria-label={ariaLabel}
+        className="absolute inset-0 rounded-[14px] cursor-pointer active:scale-[0.98] transition-transform duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+        style={{ transitionTimingFunction: "var(--ease-spring)" }}
+      />
       <span className="h-7 w-7 shrink-0 rounded-[8px] border border-cyan-400/20 bg-cyan-400/5 flex items-center justify-center text-cyan-400">
         {icon}
       </span>
@@ -37,9 +47,12 @@ function StatRow({
         <p className="text-[15px] font-medium text-white truncate">{title}</p>
         {onInfoClick && (
           <button
-            onClick={onInfoClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              onInfoClick();
+            }}
             aria-label={infoLabel}
-            className="text-slate-600 hover:text-slate-400 transition-colors -m-1 p-1 shrink-0"
+            className="relative z-10 text-slate-600 hover:text-slate-400 transition-colors -m-1 p-1 shrink-0"
           >
             <InfoIcon width={11} height={11} />
           </button>
@@ -56,7 +69,17 @@ function StatRow({
   );
 }
 
-export function StatPills({ state, stealth = false }: { state: FinanceState; stealth?: boolean }) {
+export function StatPills({
+  state,
+  stealth = false,
+  onOpenFixedCosts,
+  onOpenRecurring,
+}: {
+  state: FinanceState;
+  stealth?: boolean;
+  onOpenFixedCosts?: () => void;
+  onOpenRecurring?: () => void;
+}) {
   const { t } = useLanguage();
   const runway = runwayMonths(state);
   const subsTotal = subscriptionsTotal(state);
@@ -82,6 +105,11 @@ export function StatPills({ state, stealth = false }: { state: FinanceState; ste
         <StatRow
           icon={<ClockIcon width={15} height={15} />}
           title={t("stats.runway")}
+          onClick={() => {
+            playClick();
+            setExplainerOpen(true);
+          }}
+          ariaLabel={t("stats.runwayCardAria")}
           onInfoClick={() => {
             playClick();
             setExplainerOpen(true);
@@ -98,12 +126,22 @@ export function StatPills({ state, stealth = false }: { state: FinanceState; ste
         <StatRow
           icon={<WalletIcon width={15} height={15} />}
           title={t("stats.fixedCosts")}
+          onClick={() => {
+            playClick();
+            onOpenFixedCosts?.();
+          }}
+          ariaLabel={t("stats.fixedCostsCardAria")}
           primary={<span className={maskClass}>{formatCurrency(state.fixedMonthlyOutflows, state.currency)}</span>}
           secondary={t("stats.next30Days")}
         />
         <StatRow
           icon={<RefreshIcon width={15} height={15} />}
           title={t("stats.recurringLeaks")}
+          onClick={() => {
+            playClick();
+            onOpenRecurring?.();
+          }}
+          ariaLabel={t("stats.recurringLeaksCardAria")}
           primary={<span className={maskClass}>{formatCurrency(subsTotal, state.currency)}</span>}
           secondary={
             unusedCount > 0

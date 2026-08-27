@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import type { Currency, Expense, FinanceState } from "../../types";
+import type { Currency, Expense, FinanceState, Subscription } from "../../types";
 import { CURRENCY_LABELS, CURRENCY_SYMBOLS } from "../../types";
-import { dailySafeSpend, formatCurrency, isBurnSpike, runwayMonths } from "../calculations";
+import {
+  dailySafeSpend,
+  formatCurrency,
+  isBurnSpike,
+  isSubscriptionExpired,
+  removeExpensesByIds,
+  runwayMonths,
+  subscriptionsTotal,
+  totalMonthlyOutflow,
+  unusedSubscriptionsTotal,
+} from "../calculations";
 import { projectBalances, monthsToZero, type ScenarioInput } from "../projection";
 import { computeTrialStatus, TRIAL_HOURS } from "../trial";
 
@@ -279,5 +289,125 @@ describe("computeTrialStatus", () => {
   it("expires once TRIAL_HOURS have elapsed", () => {
     const wellPastTrial = new Date(Date.now() - (TRIAL_HOURS + 1) * 3600_000).toISOString();
     expect(computeTrialStatus(wellPastTrial, null, null)).toEqual({ kind: "expired" });
+  });
+});
+
+describe("removeExpensesByIds", () => {
+  const expenses: Expense[] = [
+    { id: "e1", amount: 10, category: "food", date: "2024-01-01" },
+    { id: "e2", amount: 20, category: "transport", date: "2024-01-02" },
+    { id: "e3", amount: 30, category: "shopping", date: "2024-01-03" },
+  ];
+
+  it("removes only the expenses whose id is in the given list", () => {
+    const result = removeExpensesByIds(expenses, ["e2"]);
+    expect(result.map((e) => e.id)).toEqual(["e1", "e3"]);
+  });
+
+  it("removes multiple expenses at once", () => {
+    const result = removeExpensesByIds(expenses, ["e1", "e3"]);
+    expect(result.map((e) => e.id)).toEqual(["e2"]);
+  });
+
+  it("is a no-op when none of the ids match", () => {
+    const result = removeExpensesByIds(expenses, ["does-not-exist"]);
+    expect(result).toEqual(expenses);
+  });
+
+  it("returns an empty array when every id is removed", () => {
+    const result = removeExpensesByIds(expenses, ["e1", "e2", "e3"]);
+    expect(result).toEqual([]);
+  });
+
+  it("does not mutate the original array", () => {
+    const original = [...expenses];
+    removeExpensesByIds(expenses, ["e2"]);
+    expect(expenses).toEqual(original);
+  });
+});
+
+describe("isSubscriptionExpired", () => {
+  function buildSub(overrides: Partial<Subscription> = {}): Subscription {
+    return { id: "s1", name: "Test Sub", amount: 10, renewsOn: 1, flaggedUnused: false, ...overrides };
+  }
+
+  it("is never expired when expiresOn is unset (auto-renew)", () => {
+    const today = new Date(2024, 5, 15);
+    expect(isSubscriptionExpired(buildSub(), today)).toBe(false);
+  });
+
+  it("is still active on the expiration day itself", () => {
+    const today = new Date(2024, 5, 15);
+    expect(isSubscriptionExpired(buildSub({ expiresOn: "2024-06-15" }), today)).toBe(false);
+  });
+
+  it("is expired the day after the expiration date", () => {
+    const today = new Date(2024, 5, 16);
+    expect(isSubscriptionExpired(buildSub({ expiresOn: "2024-06-15" }), today)).toBe(true);
+  });
+
+  it("is not yet expired before the expiration date", () => {
+    const today = new Date(2024, 5, 1);
+    expect(isSubscriptionExpired(buildSub({ expiresOn: "2024-06-15" }), today)).toBe(false);
+  });
+});
+
+describe("expired subscription exclusion from active calculations", () => {
+  function buildState(overrides: Partial<FinanceState> = {}): FinanceState {
+    return {
+      cashBalance: 4000,
+      fixedMonthlyOutflows: 1200,
+      safetyBuffer: 0,
+      paydayDay: undefined,
+      currency: "GBP",
+      subscriptions: [],
+      expenses: [],
+      wishlist: [],
+      ...overrides,
+    };
+  }
+
+  it("excludes an expired subscription from subscriptionsTotal", () => {
+    const today = new Date(2024, 5, 16);
+    const state = buildState({
+      subscriptions: [
+        { id: "s1", name: "Active", amount: 10, renewsOn: 1, flaggedUnused: false },
+        { id: "s2", name: "Expired", amount: 25, renewsOn: 1, flaggedUnused: false, expiresOn: "2024-06-15" },
+      ],
+    });
+    expect(subscriptionsTotal(state, today)).toBe(10);
+  });
+
+  it("excludes an expired-and-flagged subscription from unusedSubscriptionsTotal", () => {
+    const today = new Date(2024, 5, 16);
+    const state = buildState({
+      subscriptions: [
+        { id: "s1", name: "Expired unused", amount: 15, renewsOn: 1, flaggedUnused: true, expiresOn: "2024-06-15" },
+        { id: "s2", name: "Active unused", amount: 5, renewsOn: 1, flaggedUnused: true },
+      ],
+    });
+    expect(unusedSubscriptionsTotal(state, today)).toBe(5);
+  });
+
+  it("propagates the exclusion into totalMonthlyOutflow and therefore runway/burn", () => {
+    const today = new Date(2024, 5, 16);
+    const withExpired = buildState({
+      fixedMonthlyOutflows: 1000,
+      subscriptions: [{ id: "s1", name: "Expired", amount: 500, renewsOn: 1, flaggedUnused: false, expiresOn: "2024-06-15" }],
+    });
+    // totalMonthlyOutflow ignores `today` (defaults to now), so pin the sub's
+    // expiry far in the past relative to the real clock to make this robust.
+    const longExpired = buildState({
+      fixedMonthlyOutflows: 1000,
+      subscriptions: [{ id: "s1", name: "Expired", amount: 500, renewsOn: 1, flaggedUnused: false, expiresOn: "2000-01-01" }],
+    });
+    expect(totalMonthlyOutflow(longExpired)).toBe(1000);
+    // Sanity check the same subscription WOULD count if still active.
+    const stillActive = buildState({
+      fixedMonthlyOutflows: 1000,
+      subscriptions: [{ id: "s1", name: "Active", amount: 500, renewsOn: 1, flaggedUnused: false }],
+    });
+    expect(totalMonthlyOutflow(stillActive)).toBe(1500);
+    expect(subscriptionsTotal(withExpired, today)).toBe(0);
   });
 });

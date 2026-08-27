@@ -25,6 +25,7 @@ import { useDesignLabOverrides } from "../hooks/useDesignLabOverrides";
 import { useShortcutHandler } from "../hooks/useShortcutHandler";
 import { useStripeVerification } from "../hooks/useStripeVerification";
 import { uid } from "../lib/id";
+import { removeExpensesByIds } from "../lib/calculations";
 import { computeTrialStatus, type DevOverride } from "../lib/trial";
 import { track } from "../lib/analytics";
 import { buildBackup, downloadBackup, isBackupDue, type BackupMeta } from "../lib/backupUtils";
@@ -233,7 +234,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
 
   const updateSubscription = (
     id: string,
-    patch: { name: string; amount: number; renewsOn: number },
+    patch: { name: string; amount: number; renewsOn: number; expiresOn?: string },
   ) =>
     setState((s) => ({
       ...s,
@@ -262,6 +263,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
 
   const removeExpense = (id: string) =>
     setState((s) => ({ ...s, expenses: s.expenses.filter((x) => x.id !== id) }));
+
+  const removeExpenses = (ids: string[]) =>
+    setState((s) => ({ ...s, expenses: removeExpensesByIds(s.expenses, ids) }));
 
   const addWishlistItem = (item: Omit<WishlistItem, "id" | "addedAt">) =>
     setState((s) => ({
@@ -360,7 +364,12 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
                 heroFontWeight={designLab?.heroW}
               />
               <SafeSpendBreakdown state={state} />
-              <StatPills state={state} stealth={stealthMode} />
+              <StatPills
+                state={state}
+                stealth={stealthMode}
+                onOpenFixedCosts={() => setTuneOpen(true)}
+                onOpenRecurring={() => setTab("subscriptions")}
+              />
               <SpendDonutChart
                 state={state}
                 stealth={stealthMode}
@@ -424,6 +433,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (path: string) => void }
               expenses={state.expenses}
               currency={state.currency}
               onRemove={removeExpense}
+              onRemoveMany={removeExpenses}
               onAddExpense={openManual}
               stealth={stealthMode}
             />

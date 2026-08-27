@@ -61,6 +61,9 @@ export const EN: Dict = {
   "stats.subscriptionCountOther": "{count} subscriptions",
   "stats.unused": "{count} unused · {amount}",
   "stats.sustainable": "Sustainable",
+  "stats.runwayCardAria": "View runway and burn rate breakdown",
+  "stats.fixedCostsCardAria": "Edit fixed monthly costs",
+  "stats.recurringLeaksCardAria": "View recurring subscriptions and leaks",
   "safeSpendBreakdown.title": "How this number is calculated",
   "safeSpendBreakdown.cashBalance": "Cash balance",
   "safeSpendBreakdown.costsAndSpent": "Costs & spent this month",
@@ -107,6 +110,8 @@ export const EN: Dict = {
   "donut.tapForDetails": "tap a row for details",
   "donut.vsLastMonth": "vs last mo",
   "donut.thisMonth": "this month",
+  "donut.collapse": "Collapse spend breakdown",
+  "donut.expand": "Expand spend breakdown",
 
   // Category labels (spend breakdown buckets)
   "bucket.housing": "Housing",
@@ -160,6 +165,12 @@ export const EN: Dict = {
   "subs.copyDraft": "Copy Draft",
   "subs.copied": "✓ Copied",
   "subs.markCancelled": "Mark as Cancelled",
+  "subs.lifecycle": "Renewal",
+  "subs.autoRenew": "Auto-renew",
+  "subs.expiresOn": "Expires on",
+  "subs.expiresOnDateLabel": "Expiration date",
+  "subs.expired": "Expired",
+  "subs.expiredOn": "Expired on {date}",
 
   // Expense history
   "history.thisMonth": "This Month",
@@ -168,6 +179,14 @@ export const EN: Dict = {
   "history.noExpensesYet": "No expenses yet",
   "history.noExpensesDetail": "Every logged expense sharpens your Daily Safe Spend for the rest of the month.",
   "history.recentExpenses": "Recent Expenses",
+  "history.selectAll": "Select all",
+  "history.selectExpense": "Select expense",
+  "history.selectedOne": "{count} selected",
+  "history.selectedOther": "{count} selected",
+  "history.deleteSelected": "Delete selected",
+  "history.confirmDeleteMessage": "Delete {count} expense{plural}? This can't be undone.",
+  "history.confirmDeleteConfirm": "Delete",
+  "history.confirmDeleteCancel": "Cancel",
 
   // Add Expense modal
   "expense.title": "Add Expense",
@@ -523,6 +542,9 @@ export const ES: Dict = {
   "stats.subscriptionCountOther": "{count} suscripciones",
   "stats.unused": "{count} sin usar · {amount}",
   "stats.sustainable": "Sostenible",
+  "stats.runwayCardAria": "Ver desglose del runway y burn rate",
+  "stats.fixedCostsCardAria": "Editar gastos fijos mensuales",
+  "stats.recurringLeaksCardAria": "Ver suscripciones recurrentes y fugas",
   "safeSpendBreakdown.title": "Cómo se calcula este número",
   "safeSpendBreakdown.cashBalance": "Efectivo disponible",
   "safeSpendBreakdown.costsAndSpent": "Gastos y compromisos este mes",
@@ -569,6 +591,8 @@ export const ES: Dict = {
   "donut.tapForDetails": "toca una fila para ver detalles",
   "donut.vsLastMonth": "vs mes pasado",
   "donut.thisMonth": "este mes",
+  "donut.collapse": "Contraer desglose de gastos",
+  "donut.expand": "Expandir desglose de gastos",
 
   // Category labels (spend breakdown buckets)
   "bucket.housing": "Vivienda",
@@ -622,6 +646,12 @@ export const ES: Dict = {
   "subs.copyDraft": "Copiar Borrador",
   "subs.copied": "✓ Copiado",
   "subs.markCancelled": "Marcar como Cancelada",
+  "subs.lifecycle": "Renovación",
+  "subs.autoRenew": "Renovación automática",
+  "subs.expiresOn": "Vence el",
+  "subs.expiresOnDateLabel": "Fecha de vencimiento",
+  "subs.expired": "Vencida",
+  "subs.expiredOn": "Venció el {date}",
 
   // Expense history
   "history.thisMonth": "Este Mes",
@@ -630,6 +660,14 @@ export const ES: Dict = {
   "history.noExpensesYet": "Aún no hay gastos",
   "history.noExpensesDetail": "Cada gasto registrado afina tu Gasto Diario Seguro para el resto del mes.",
   "history.recentExpenses": "Gastos Recientes",
+  "history.selectAll": "Seleccionar todo",
+  "history.selectExpense": "Seleccionar gasto",
+  "history.selectedOne": "{count} seleccionado",
+  "history.selectedOther": "{count} seleccionados",
+  "history.deleteSelected": "Eliminar seleccionados",
+  "history.confirmDeleteMessage": "¿Eliminar {count} gasto{plural}? No se puede deshacer.",
+  "history.confirmDeleteConfirm": "Eliminar",
+  "history.confirmDeleteCancel": "Cancelar",
 
   // Add Expense modal
   "expense.title": "Añadir Gasto",

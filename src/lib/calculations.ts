@@ -21,14 +21,32 @@ export function spendingHorizonDays(state: FinanceState, today: Date = new Date(
   return daysLeftInMonth(today);
 }
 
-export function subscriptionsTotal(state: FinanceState): number {
-  return state.subscriptions.reduce((sum, s) => sum + s.amount, 0);
+/**
+ * True once `sub.expiresOn` has passed — the expiration day itself still
+ * counts as active (a plan expiring "on" a date is valid through that date).
+ * A subscription with no `expiresOn` auto-renews and never expires.
+ */
+export function isSubscriptionExpired(sub: Subscription, today: Date = new Date()): boolean {
+  if (!sub.expiresOn) return false;
+  return sub.expiresOn < localISODate(today);
 }
 
-export function unusedSubscriptionsTotal(state: FinanceState): number {
+export function subscriptionsTotal(state: FinanceState, today: Date = new Date()): number {
   return state.subscriptions
-    .filter((s) => s.flaggedUnused)
+    .filter((s) => !isSubscriptionExpired(s, today))
     .reduce((sum, s) => sum + s.amount, 0);
+}
+
+export function unusedSubscriptionsTotal(state: FinanceState, today: Date = new Date()): number {
+  return state.subscriptions
+    .filter((s) => s.flaggedUnused && !isSubscriptionExpired(s, today))
+    .reduce((sum, s) => sum + s.amount, 0);
+}
+
+/** Removes expenses whose id is in `ids` — pure helper behind bulk-delete in the History tab. */
+export function removeExpensesByIds(expenses: FinanceState["expenses"], ids: Iterable<string>) {
+  const idSet = new Set(ids);
+  return expenses.filter((e) => !idSet.has(e.id));
 }
 
 export function totalMonthlyOutflow(state: FinanceState): number {

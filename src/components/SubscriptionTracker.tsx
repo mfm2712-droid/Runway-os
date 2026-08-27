@@ -1,7 +1,12 @@
 import { useState } from "react";
 import type { Currency, FinanceState, Subscription } from "../types";
 import { CURRENCY_SYMBOLS } from "../types";
-import { formatCurrency, subscriptionRunwayImpactDays, subscriptionsRunwayImpactDays } from "../lib/calculations";
+import {
+  formatCurrency,
+  isSubscriptionExpired,
+  subscriptionRunwayImpactDays,
+  subscriptionsRunwayImpactDays,
+} from "../lib/calculations";
 import { generateCancellationEmail, generateNegotiationScript } from "../lib/ai/client";
 import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
@@ -37,8 +42,9 @@ function SummaryBar({
 }) {
   const { t } = useLanguage();
   const currency = state.currency;
-  const total = subscriptions.reduce((sum, s) => sum + s.amount, 0);
-  const flaggable = subscriptions.filter((s) => s.flaggedUnused).reduce((sum, s) => sum + s.amount, 0);
+  const active = subscriptions.filter((s) => !isSubscriptionExpired(s));
+  const total = active.reduce((sum, s) => sum + s.amount, 0);
+  const flaggable = active.filter((s) => s.flaggedUnused).reduce((sum, s) => sum + s.amount, 0);
   const impactDays = subscriptionsRunwayImpactDays(state);
 
   return (
@@ -118,6 +124,42 @@ function AmountDayFields({
   );
 }
 
+function LifecycleFields({
+  autoRenew,
+  onAutoRenewChange,
+  expiresOn,
+  onExpiresOnChange,
+}: {
+  autoRenew: boolean;
+  onAutoRenewChange: (v: boolean) => void;
+  expiresOn: string;
+  onExpiresOnChange: (v: string) => void;
+}) {
+  const { t } = useLanguage();
+  return (
+    <div className="space-y-1.5">
+      <label className="text-[10px] text-slate-500 block">{t("subs.lifecycle")}</label>
+      <SegmentedControl
+        value={autoRenew ? "auto" : "expires"}
+        onChange={(v) => onAutoRenewChange(v === "auto")}
+        options={[
+          { value: "auto", label: t("subs.autoRenew") },
+          { value: "expires", label: t("subs.expiresOn") },
+        ]}
+      />
+      {!autoRenew && (
+        <input
+          type="date"
+          value={expiresOn}
+          onChange={(e) => onExpiresOnChange(e.target.value)}
+          aria-label={t("subs.expiresOnDateLabel")}
+          className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400 animate-[floatIn_0.15s_var(--ease-spring)]"
+        />
+      )}
+    </div>
+  );
+}
+
 function EditSubscriptionForm({
   sub,
   currency,
@@ -126,13 +168,15 @@ function EditSubscriptionForm({
 }: {
   sub: Subscription;
   currency: Currency;
-  onSave: (patch: { name: string; amount: number; renewsOn: number }) => void;
+  onSave: (patch: { name: string; amount: number; renewsOn: number; expiresOn?: string }) => void;
   onCancel: () => void;
 }) {
   const { t } = useLanguage();
   const [name, setName] = useState(sub.name);
   const [amount, setAmount] = useState(String(sub.amount));
   const [renewsOn, setRenewsOn] = useState(String(sub.renewsOn));
+  const [autoRenew, setAutoRenew] = useState(!sub.expiresOn);
+  const [expiresOn, setExpiresOn] = useState(sub.expiresOn ?? "");
 
   const save = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -143,6 +187,7 @@ function EditSubscriptionForm({
       name: name.trim(),
       amount: amt,
       renewsOn: Math.min(31, Math.max(1, Number.isFinite(day) ? day : 1)),
+      expiresOn: autoRenew ? undefined : expiresOn || undefined,
     });
   };
 
@@ -163,6 +208,12 @@ function EditSubscriptionForm({
         onAmountChange={setAmount}
         renewsOn={renewsOn}
         onRenewsOnChange={setRenewsOn}
+      />
+      <LifecycleFields
+        autoRenew={autoRenew}
+        onAutoRenewChange={setAutoRenew}
+        expiresOn={expiresOn}
+        onExpiresOnChange={setExpiresOn}
       />
       <div className="flex gap-2">
         <Button variant="primary" onClick={save} className="flex-1 py-2.5 text-xs">
@@ -316,7 +367,10 @@ export function SubscriptionTracker({
   onAdd: (sub: Omit<Subscription, "id">) => void;
   onRemove: (id: string) => void;
   onToggleFlag: (id: string) => void;
-  onUpdate: (id: string, patch: { name: string; amount: number; renewsOn: number }) => void;
+  onUpdate: (
+    id: string,
+    patch: { name: string; amount: number; renewsOn: number; expiresOn?: string },
+  ) => void;
 }) {
   const { t, lang } = useLanguage();
   const [adding, setAdding] = useState(false);
@@ -325,6 +379,8 @@ export function SubscriptionTracker({
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [renewsOn, setRenewsOn] = useState("1");
+  const [autoRenew, setAutoRenew] = useState(true);
+  const [expiresOn, setExpiresOn] = useState("");
 
   const submit = () => {
     const amt = parseFloat(amount);
@@ -335,10 +391,13 @@ export function SubscriptionTracker({
       amount: amt,
       renewsOn: Math.min(31, Math.max(1, Number.isFinite(renewsN) ? renewsN : 1)),
       flaggedUnused: false,
+      expiresOn: autoRenew ? undefined : expiresOn || undefined,
     });
     setName("");
     setAmount("");
     setRenewsOn("1");
+    setAutoRenew(true);
+    setExpiresOn("");
     setAdding(false);
   };
 
@@ -390,6 +449,12 @@ export function SubscriptionTracker({
               renewsOn={renewsOn}
               onRenewsOnChange={setRenewsOn}
             />
+            <LifecycleFields
+              autoRenew={autoRenew}
+              onAutoRenewChange={setAutoRenew}
+              expiresOn={expiresOn}
+              onExpiresOnChange={setExpiresOn}
+            />
             <Button variant="primary" onClick={submit} className="w-full py-2.5 text-xs">
               {t("subs.addSubscription")}
             </Button>
@@ -418,13 +483,16 @@ export function SubscriptionTracker({
             const days = daysSince(s.flaggedSince);
             const expanded = expandedId === s.id;
             const editing = editingId === s.id;
+            const expired = isSubscriptionExpired(s);
             const impactDays = subscriptionRunwayImpactDays(state, s);
             return (
               <li
                 key={s.id}
-                onClick={() => s.flaggedUnused && setExpandedId(expanded ? null : s.id)}
+                onClick={() => !expired && s.flaggedUnused && setExpandedId(expanded ? null : s.id)}
                 className={`text-xs p-3.5 rounded-2xl border group transition-colors ${
-                  s.flaggedUnused
+                  expired
+                    ? "bg-white/[0.012] border-white/[0.04] opacity-60"
+                    : s.flaggedUnused
                     ? "bg-red-400/[0.04] border-red-400/20 cursor-pointer"
                     : "bg-white/[0.025] border-white/[0.06]"
                 }`}
@@ -434,15 +502,25 @@ export function SubscriptionTracker({
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="font-medium text-slate-200 truncate">{s.name}</p>
-                      {s.flaggedUnused && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-400/15 text-red-400 shrink-0">
-                          {t("subs.unusedDays", { days })}
+                      {expired ? (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/[0.08] text-slate-400 shrink-0">
+                          {t("subs.expired")}
                         </span>
+                      ) : (
+                        s.flaggedUnused && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-400/15 text-red-400 shrink-0">
+                            {t("subs.unusedDays", { days })}
+                          </span>
+                        )
                       )}
                     </div>
                     <p className="text-[10px] text-slate-500">
-                      {s.flaggedUnused ? t("subs.tapToReview") : ""}
-                      {t("subs.renewsOnThe", { day: renewalDay(s.renewsOn, lang) })}
+                      {expired
+                        ? t("subs.expiredOn", { date: s.expiresOn ?? "" })
+                        : s.expiresOn
+                        ? t("subs.expiresOn") + " " + s.expiresOn
+                        : (s.flaggedUnused ? t("subs.tapToReview") : "") +
+                          t("subs.renewsOnThe", { day: renewalDay(s.renewsOn, lang) })}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
@@ -450,7 +528,7 @@ export function SubscriptionTracker({
                       <p className="font-semibold tracking-tight text-slate-200 tabular-nums">
                         {formatCurrency(s.amount, state.currency)}/mo
                       </p>
-                      {Number.isFinite(impactDays) && impactDays > 0 && (
+                      {!expired && Number.isFinite(impactDays) && impactDays > 0 && (
                         <p className="text-[10px] font-medium text-red-400 tabular-nums">
                           −{impactDays.toFixed(1)} {t("subs.daysAbbrev")}
                         </p>

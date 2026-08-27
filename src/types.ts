@@ -35,6 +35,7 @@ export interface Subscription {
   renewsOn: number; // day of month, 1-31
   flaggedUnused: boolean;
   flaggedSince?: string; // ISO date — set when flaggedUnused becomes true
+  expiresOn?: string; // YYYY-MM-DD — when set, the sub is excluded from active totals/runway once past this date; absent means it auto-renews indefinitely
 }
 
 export interface WishlistItem {
